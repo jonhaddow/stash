@@ -246,14 +246,14 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 			};
 		} else {
 			const parsed = parseFeed(await readText(res), f.url);
-			// Imported feeds have never been fetched: everything already there starts read.
-			const itemsAdded = await storeItems(
-				db,
-				f.id,
-				parsed,
-				now,
-				f.lastFetchedAt ? null : now.toISOString()
-			);
+			// No entries yet (an imported feed, even if earlier fetches failed): what's
+			// already in it starts read, so only new entries show as unread.
+			const [any] = await db
+				.select({ id: item.id })
+				.from(item)
+				.where(eq(item.feedId, f.id))
+				.limit(1);
+			const itemsAdded = await storeItems(db, f.id, parsed, now, any ? null : now.toISOString());
 			cache = { etag: res.headers.get('etag'), lastModified: res.headers.get('last-modified') };
 			result = { status: 'ok', httpStatus: res.status, itemsAdded, ms: Date.now() - started };
 		}

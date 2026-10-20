@@ -157,7 +157,9 @@ describe('imported feeds', () => {
 			.insert(feedTable)
 			.values({ title: 'Blog', url, createdAt: now.toISOString() })
 			.returning();
-		await syncFeed(db, f, now, fetcher);
+		// Refused at first (Reddit does this), then fine.
+		await syncFeed(db, f, now, fakeFetch({ [url]: 429 }));
+		await syncFeed(db, (await getFeed(db, f.id))!, now, fetcher);
 		const items = await listItems(db, {});
 		expect(items.map((i) => [i.title, !!i.readAt])).toEqual([
 			['new', true],

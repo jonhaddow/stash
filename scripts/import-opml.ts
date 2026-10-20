@@ -5,17 +5,9 @@
 //   node scripts/import-opml.ts feeds.opml > /tmp/import.sql
 //   wrangler d1 execute stash --remote --file /tmp/import.sql
 import { readFileSync } from 'node:fs';
+import { attr } from '../src/lib/server/parse.ts';
 
 const xml = readFileSync(process.argv[2], 'utf8');
-const decode = (s: string) =>
-	s.replace(
-		/&(amp|lt|gt|quot|apos|#39);/g,
-		(_, e: string) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", '#39': "'" })[e]!
-	);
-const attr = (tag: string, name: string) => {
-	const m = new RegExp(`\\s${name}="([^"]*)"`).exec(tag);
-	return m ? decode(m[1]) : null;
-};
 const sql = (s: string | null) => (s === null ? 'NULL' : `'${s.replaceAll("'", "''")}'`);
 
 const now = new Date().toISOString();
