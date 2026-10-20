@@ -15,4 +15,5 @@
 - **Reddit** subreddit links go straight to `/r/<name>/.rss`, and requests send a descriptive User-Agent, since Reddit refuses many servers. If it still refuses Cloudflare, the sync log will show it.
 - **Its own look**: Manrope, warm paper and ink, deep amber for actions and unread. Plants' floating tab bar. Follows the device's light or dark setting.
 - **No push notifications** in v1.
+- **Unread count on the app icon** (October 2026): the Badging API, set from the layout's unread count whenever the app is open or comes back to the front. iOS shows it only once notifications are allowed (a button in Settings). It doesn't update while the app is closed: that would need Web Push from the cron, and iOS doesn't allow silent pushes (each one must show a notification).
 - **Imports are one-off scripts**, not a Settings page (October 2026): `scripts/import-opml.ts` writes SQL for `wrangler d1 execute`. Imported feeds start with everything read (Jon's call): their first fetch marks all existing entries read, so only new ones show as unread.

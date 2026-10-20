@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
-	import { beforeNavigate } from '$app/navigation';
+	import { beforeNavigate, invalidate } from '$app/navigation';
 	import { page, updated } from '$app/state';
 	// Served with the app (not Google Fonts): no extra connections before text shows.
 	import '@fontsource-variable/manrope';
@@ -27,17 +27,27 @@
 	});
 
 	// Coming back to the app from the background: if a new version was deployed
-	// meanwhile, load it straight away.
-	async function reloadIfUpdated() {
-		if (document.visibilityState === 'visible' && (await updated.check())) location.reload();
+	// meanwhile, load it straight away; otherwise refresh the unread count.
+	async function onVisible() {
+		if (document.visibilityState !== 'visible') return;
+		if (await updated.check()) location.reload();
+		else if (data.user) void invalidate('app:unread');
 	}
+
+	// The unread count on the home-screen icon too. iOS shows it only once
+	// notifications are allowed (Settings), and it changes only while the app is open.
+	$effect(() => {
+		if (!('setAppBadge' in navigator)) return;
+		const set = data.unread ? navigator.setAppBadge(data.unread) : navigator.clearAppBadge();
+		set.catch(() => {});
+	});
 </script>
 
 <svelte:head>
 	<link rel="preload" href={font} as="font" type="font/woff2" crossorigin="anonymous" />
 </svelte:head>
 
-<svelte:document onvisibilitychange={reloadIfUpdated} />
+<svelte:document onvisibilitychange={onVisible} />
 
 {@render children()}
 

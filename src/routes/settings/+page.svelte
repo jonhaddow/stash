@@ -4,6 +4,20 @@
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
+
+	// iOS shows the unread count on the app icon only once notifications are
+	// allowed. Unset until mounted: there's no Notification on the server.
+	let permission = $state<NotificationPermission>();
+	$effect(() => {
+		if ('Notification' in window && 'setAppBadge' in navigator)
+			permission = Notification.permission;
+	});
+
+	async function allow() {
+		permission = await Notification.requestPermission();
+		// The layout set the badge before it was allowed; set it again now.
+		if (permission === 'granted' && data.unread) void navigator.setAppBadge(data.unread);
+	}
 </script>
 
 <svelte:head>
@@ -52,6 +66,26 @@
 		{/if}
 	</section>
 
+	{#if permission}
+		<section class="group">
+			<h2>Icon badge</h2>
+			{#if permission === 'granted'}
+				<p class="muted">The app icon shows how many feed entries are unread.</p>
+			{:else if permission === 'denied'}
+				<p class="muted">
+					Notifications are off for Stash, so the app icon can't show the unread count. Turn them on
+					in iOS Settings → Notifications → Stash.
+				</p>
+			{:else}
+				<p class="muted">
+					Show how many feed entries are unread on the app icon. iOS asks to allow notifications
+					first; Stash doesn't send any.
+				</p>
+				<button class="btn" onclick={allow}>Show the unread count</button>
+			{/if}
+		</section>
+	{/if}
+
 	<form method="POST" action="/logout">
 		<button class="btn danger">Sign out ({data.user?.name})</button>
 	</form>
@@ -92,7 +126,7 @@
 		font-size: 15px;
 		line-height: 1.4;
 	}
-	form .btn {
+	.btn {
 		width: 100%;
 	}
 </style>
