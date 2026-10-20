@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb } from './test-db.ts';
-import { item, syncLog } from './db/schema.ts';
+import { feed as feedTable, item, syncLog } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import type { Fetch } from './http.ts';
 import {
@@ -141,5 +141,27 @@ describe('reading', () => {
 		await markAllRead(db, {}, '2026-10-19T12:00:00.000Z', now);
 		const items = await listItems(db, { unreadOnly: true });
 		expect(items.map((i) => i.title)).toEqual(['b']);
+	});
+});
+
+describe('imported feeds', () => {
+	it('start with everything read', async () => {
+		const url = 'https://blog.example/feed.xml';
+		const fetcher = fakeFetch({
+			[url]: rss([
+				{ guid: 'new', date: '2026-10-19T00:00:00Z' },
+				{ guid: 'old', date: '2026-09-01T00:00:00Z' }
+			])
+		});
+		const [f] = await db
+			.insert(feedTable)
+			.values({ title: 'Blog', url, createdAt: now.toISOString() })
+			.returning();
+		await syncFeed(db, f, now, fetcher);
+		const items = await listItems(db, {});
+		expect(items.map((i) => [i.title, !!i.readAt])).toEqual([
+			['new', true],
+			['old', true]
+		]);
 	});
 });

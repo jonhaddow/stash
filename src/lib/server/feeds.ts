@@ -11,7 +11,7 @@ const DAY = 24 * 60 * MIN;
 export const FEED_EVERY_MS = 30 * MIN;
 /** Feeds fetched per cron run (every 5 minutes); keeps each run inside the free plan's CPU. */
 export const FEEDS_PER_RUN = 5;
-/** On a feed's first fetch, entries older than this start out read. */
+/** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 30;
 /** Rows per insert: D1 allows 100 bound values per query, and an item has 7. */
@@ -83,7 +83,13 @@ export async function addFeed(
 			createdAt: now.toISOString()
 		})
 		.returning();
-	const added = await storeItems(db, row.id, parsed, now, true);
+	const added = await storeItems(
+		db,
+		row.id,
+		parsed,
+		now,
+		new Date(now.getTime() - FRESH_MS).toISOString()
+	);
 	await recordFetch(db, row.id, now, {
 		status: 'ok',
 		httpStatus: 200,
@@ -138,8 +144,14 @@ export function feedLog(db: DB, feedId: number) {
 
 // ---- Syncing ----
 
-/** Adds entries not seen before; returns how many. */
-async function storeItems(db: DB, feedId: number, parsed: ParsedFeed, now: Date, first: boolean) {
+/** Adds entries not seen before; returns how many. Ones published before `readBefore` start read. */
+async function storeItems(
+	db: DB,
+	feedId: number,
+	parsed: ParsedFeed,
+	now: Date,
+	readBefore: string | null = null
+) {
 	const byGuid = new Map(parsed.items.map((i) => [i.guid, i]));
 	const guids = [...byGuid.keys()];
 	const seen = new Set<string>();
@@ -155,7 +167,7 @@ async function storeItems(db: DB, feedId: number, parsed: ParsedFeed, now: Date,
 		.filter((i) => !seen.has(i.guid))
 		.map((i) => {
 			const publishedAt = i.publishedAt && i.publishedAt < nowIso ? i.publishedAt : nowIso;
-			const old = first && now.getTime() - Date.parse(publishedAt) > FRESH_MS;
+			const old = readBefore !== null && publishedAt <= readBefore;
 			return {
 				feedId,
 				guid: i.guid,
@@ -234,7 +246,14 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 			};
 		} else {
 			const parsed = parseFeed(await readText(res), f.url);
-			const itemsAdded = await storeItems(db, f.id, parsed, now, false);
+			// Imported feeds have never been fetched: everything already there starts read.
+			const itemsAdded = await storeItems(
+				db,
+				f.id,
+				parsed,
+				now,
+				f.lastFetchedAt ? null : now.toISOString()
+			);
 			cache = { etag: res.headers.get('etag'), lastModified: res.headers.get('last-modified') };
 			result = { status: 'ok', httpStatus: res.status, itemsAdded, ms: Date.now() - started };
 		}
