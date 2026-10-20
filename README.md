@@ -6,7 +6,7 @@ Stack: SvelteKit 3 (Svelte 5) on Cloudflare Workers, Drizzle ORM on Cloudflare D
 
 ## Installing on a phone
 
-Open https://stash.app.haddow.me in Safari, sign in, then Share → Add to Home Screen. For the share sheet, make a key in Settings → Share sheet and follow the steps there to build the "Save to Stash" Shortcut.
+Live since 20 October 2026. Open https://stash.app.haddow.me in Safari, sign in, then Share → Add to Home Screen. For the share sheet, make a key in Settings → Share sheet and follow the steps there to build the "Save to Stash" Shortcut.
 
 ## Running locally
 
