@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { formatDateTime } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
@@ -15,6 +16,8 @@
 
 	async function allow() {
 		permission = await Notification.requestPermission();
+		// The layout set the badge before it was allowed; set it again now.
+		if (permission === 'granted' && page.data.unread) void navigator.setAppBadge(page.data.unread);
 	}
 </script>
 
