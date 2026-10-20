@@ -5,7 +5,7 @@
 - **Buttons, not swipes**: Readkit's left and right swipes were hard to remember. Rows have a visible Done (Later) or Save (Feeds) button.
 - **Links open the original page; no article extraction** (October 2026): Jon reads on the site (or, later, in the Reddit/HN apps). Also keeps the Worker well inside the free plan's CPU.
 - **Articles and videos are filtered apart**, on both tabs: different reading sessions. Decided by the link's site (`kind.ts`: YouTube, Vimeo and so on).
-- **Feeds have read/unread, but nothing to tick off** (October 2026): opening an entry marks it read; unread ones are bold with a dot. Entries are never removed. "Mark all read" is there if wanted, and stops at when the page loaded. A new feed's entries older than a week start out read, so adding one doesn't flood the list.
+- **Feeds have read/unread, but nothing to tick off** (October 2026): opening an entry marks it read; unread ones are bold with a dot. Entries are never removed. "Mark all read" is there if wanted, and stops at when the page loaded. A feed added in the app starts with entries older than a week read, so adding one doesn't flood the list.
 - **Feeds are a separate list, not a river to triage**: Save copies an entry to Later; Later doesn't empty the feed.
 - **Folders one level deep** (YouTube channels, blogs, Reddit), made while adding or editing a feed.
 - **Done goes to a hidden archive** (Settings → Archive), not deleted; it'll also hold the Instapaper history.
@@ -16,3 +16,4 @@
 - **Its own look**: Manrope, warm paper and ink, deep amber for actions and unread. Plants' floating tab bar. Follows the device's light or dark setting.
 - **No push notifications** in v1.
 - **Unread count on the app icon** (October 2026): the Badging API, set from the layout's unread count whenever the app is open or comes back to the front. iOS shows it only once notifications are allowed (a button in Settings). It doesn't update while the app is closed: that would need Web Push from the cron, and iOS doesn't allow silent pushes (each one must show a notification).
+- **Imports are one-off scripts**, not a Settings page (October 2026): `scripts/import-opml.ts` writes SQL for `wrangler d1 execute`. Imported feeds start with everything read (Jon's call): their first fetch marks all existing entries read, so only new ones show as unread.
