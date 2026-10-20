@@ -1,0 +1,38 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "stash",
+	"compatibility_date": "2026-10-03",
+	"compatibility_flags": ["nodejs_als"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	// Only served on stash.app.haddow.me (sign-in sends people back there).
+	"workers_dev": false,
+	"routes": [{ "pattern": "stash.app.haddow.me", "custom_domain": true }],
+	// Keeps request logs and console output (Workers Logs, free tier) for debugging.
+	"observability": {
+		"enabled": true
+	},
+	"triggers": {
+		// Feed polling (worker/entry.js): a few feeds each run, oldest first.
+		"crons": ["*/5 * * * *"]
+	},
+	"vars": {
+		"APP_ORIGIN": "https://stash.app.haddow.me",
+		// Public OAuth client ID; the secret is a Worker secret (GOOGLE_CLIENT_SECRET).
+		"GOOGLE_CLIENT_ID": "856408914710-dgcs4pkdkahr6jchr0pefodiobhjrmv4.apps.googleusercontent.com"
+	},
+	// Off: branch previews would share the live D1 database.
+	"preview_urls": false,
+	"d1_databases": [
+		{
+			// Created with --jurisdiction eu, so the data stays in the EU.
+			"binding": "DB",
+			"database_name": "stash",
+			"database_id": "d9e993f7-1810-4f7f-bb18-3b7da177478a",
+			"migrations_dir": "drizzle"
+		}
+	]
+}

@@ -1,0 +1,29 @@
+import { fail } from '@sveltejs/kit';
+import { kindParam } from '#lib/kind.ts';
+import { cleanUrl, listSaved, saveLink, setArchived } from '#lib/server/saved.ts';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ locals, url }) => {
+	const kind = kindParam(url.searchParams);
+	return { kind, links: await listSaved(locals.db, { kind }) };
+};
+
+export const actions: Actions = {
+	add: async ({ request, locals }) => {
+		const raw = (await request.formData()).get('url');
+		const url = cleanUrl(raw);
+		if (!url) return fail(400, { error: 'That doesn’t look like a link', url: String(raw ?? '') });
+		await saveLink(locals.db, url);
+		return { added: true };
+	},
+	done: async ({ request, locals }) => {
+		const form = await request.formData();
+		const id = Number(form.get('id'));
+		await setArchived(locals.db, id, new Date().toISOString());
+		return { done: { id, title: String(form.get('title') ?? '') } };
+	},
+	undo: async ({ request, locals }) => {
+		await setArchived(locals.db, Number((await request.formData()).get('id')), null);
+		return { undone: true };
+	}
+};

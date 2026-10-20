@@ -1,0 +1,38 @@
+import { expect, test } from '@playwright/test';
+import { open } from './helpers.ts';
+
+test('lists saved links, filtered by articles and videos', async ({ page }) => {
+	await open(page, '/');
+	await expect(page.getByText('3 links')).toBeVisible();
+	await expect(page.getByRole('link', { name: /^A long read about tea/ })).toHaveAttribute(
+		'href',
+		'https://blog.example/long-read'
+	);
+	await page.getByRole('link', { name: 'Videos' }).click();
+	await expect(page.getByText('1 video')).toBeVisible();
+	await expect(page.getByRole('link', { name: /^How to make bread/ })).toBeVisible();
+	await expect(page.getByRole('link', { name: /^A long read/ })).toBeHidden();
+});
+
+test('Done archives a link, and Undo brings it back', async ({ page }) => {
+	await open(page, '/');
+	await page.getByRole('button', { name: 'Done: A news story' }).click();
+	await expect(page.getByRole('status')).toContainText('Done: A news story');
+	await expect(page.getByRole('link', { name: /^A news story/ })).toBeHidden();
+	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
+	await expect(page.getByRole('link', { name: /^A news story/ })).toBeVisible();
+});
+
+test('the archive lists finished links', async ({ page }) => {
+	await open(page, '/archive');
+	await expect(page.getByRole('link', { name: /^Something finished/ })).toBeVisible();
+});
+
+test('a pasted link that isn’t one is refused', async ({ page }) => {
+	await open(page, '/');
+	// type=url would stop the form; the server's check is what's tested.
+	await page.getByLabel('Link to save').evaluate((el) => el.setAttribute('type', 'text'));
+	await page.getByLabel('Link to save').fill('not a link');
+	await page.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page.getByRole('alert')).toHaveText('That doesn’t look like a link');
+});
