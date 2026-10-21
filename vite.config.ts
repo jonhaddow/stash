@@ -33,7 +33,8 @@ export default defineConfig({
 					'script-src': ['self'],
 					'style-src': ['self', 'unsafe-inline'],
 					'font-src': ['self'],
-					'img-src': ['self', 'data:', 'blob:'],
+					// Thumbnails come from the feeds' and pages' own sites.
+					'img-src': ['self', 'data:', 'blob:', 'https:'],
 					// YouTube videos play in the app.
 					'frame-src': ['https://www.youtube-nocookie.com'],
 					'object-src': ['none'],

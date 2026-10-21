@@ -28,7 +28,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
 	save: async ({ request, locals }) => {
 		const form = await request.formData();
-		await saveLink(locals.db, String(form.get('url')), String(form.get('title')));
+		await saveLink(locals.db, String(form.get('url')), {
+			title: String(form.get('title')),
+			image: form.get('image') ? String(form.get('image')) : null
+		});
 		return { saved: true };
 	},
 	unsave: async ({ request, locals }) => {

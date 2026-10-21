@@ -16,8 +16,8 @@ export const RATE_LIMITED_MS = 2 * 60 * MIN;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 30;
-/** Rows per insert: D1 allows 100 bound values per query, and an item has 7. */
-const INSERT_CHUNK = 14;
+/** Rows per insert: D1 allows 100 bound values per query, and an item has 8. */
+const INSERT_CHUNK = 12;
 
 // ---- Finding a feed ----
 
@@ -177,6 +177,7 @@ async function storeItems(
 				url: i.url,
 				title: i.title,
 				kind: kindOf(i.url),
+				imageUrl: i.image,
 				publishedAt,
 				readAt: old ? nowIso : null
 			};
@@ -325,6 +326,7 @@ export function listItems(
 			url: item.url,
 			title: item.title,
 			kind: item.kind,
+			imageUrl: item.imageUrl,
 			publishedAt: item.publishedAt,
 			readAt: item.readAt,
 			feedTitle: feed.title,

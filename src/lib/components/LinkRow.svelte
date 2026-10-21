@@ -9,12 +9,13 @@
 	import { ago } from '#lib/time.ts';
 	import Player from './Player.svelte';
 
-	// A link in a list: title, where it's from and when, opening the original
+	// A link in a list: title, where it's from and when, and a thumbnail, opening the original
 	// page (YouTube videos play in the app instead). Swiping it right or left
 	// past the threshold does that side's action. Buttons (the archive's) to its right.
 	let {
 		url,
 		title,
+		image,
 		source,
 		at,
 		unread,
@@ -26,6 +27,8 @@
 	}: {
 		url: string;
 		title: string;
+		/** A thumbnail; YouTube videos without one get the video's own. */
+		image?: string | null;
 		/** Where it's from; the link's site if not given. */
 		source?: string;
 		at: string;
@@ -41,6 +44,9 @@
 
 	const video = $derived(youtubeId(url));
 	let playing = $state(false);
+	const thumb = $derived(image || (video ? `https://i.ytimg.com/vi/${video}/mqdefault.jpg` : null));
+	// Images that fail to load (gone, or hotlinking refused) leave just the title.
+	let broken = $state(false);
 
 	const THRESHOLD = 80;
 	let li: HTMLLIElement;
@@ -127,13 +133,25 @@
 		style:translate="{dx}px 0"
 		{onclick}
 	>
-		<span class="title">{title}</span>
-		<span class="meta">
-			{#if unread}<span class="dot" aria-label="Unread"></span>{/if}
-			<span class="source">{source ?? hostOf(url)}</span>
-			<span>· {ago(at)}</span>
-			{#if saved}<span class="saved">· In Later</span>{/if}
+		<span class="text">
+			<span class="title">{title}</span>
+			<span class="meta">
+				{#if unread}<span class="dot" aria-label="Unread"></span>{/if}
+				<span class="source">{source ?? hostOf(url)}</span>
+				<span>· {ago(at)}</span>
+				{#if saved}<span class="saved">· In Later</span>{/if}
+			</span>
 		</span>
+		{#if thumb && !broken}
+			<img
+				src={thumb}
+				alt=""
+				loading="lazy"
+				referrerpolicy="no-referrer"
+				draggable="false"
+				onerror={() => (broken = true)}
+			/>
+		{/if}
 	</a>
 	{#if actions}<div class="actions">{@render actions()}</div>{/if}
 	{#if playing && video}
@@ -157,12 +175,30 @@
 		flex: 1;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		gap: 4px;
+		align-items: center;
+		gap: 12px;
 		padding: 14px 16px;
 		text-decoration: none;
 		background: var(--card);
 		transition: translate 0.2s ease-out;
+	}
+	.text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	img {
+		flex-shrink: 0;
+		width: 88px;
+		aspect-ratio: 16 / 10;
+		object-fit: cover;
+		border-radius: 8px;
+		background: var(--line);
+	}
+	li.read img {
+		opacity: 0.6;
 	}
 	a.dragging {
 		transition: none;

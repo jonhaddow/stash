@@ -47,6 +47,7 @@
 				<LinkRow
 					url={link.url}
 					title={link.title}
+					image={link.imageUrl}
 					at={link.addedAt}
 					right={{
 						label: 'Archive',

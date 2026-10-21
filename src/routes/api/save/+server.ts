@@ -16,6 +16,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = (await request.json().catch(() => ({}))) as { url?: unknown; title?: unknown };
 	const url = cleanUrl(body.url);
 	if (!url) error(400, 'That doesn’t look like a link');
-	const row = await saveLink(locals.db, url, typeof body.title === 'string' ? body.title : null);
+	const row = await saveLink(locals.db, url, {
+		title: typeof body.title === 'string' ? body.title : null
+	});
 	return text(`Saved: ${row.title}`, { status: 201 });
 };
