@@ -5,9 +5,10 @@
 	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
+	import UndoBar from '#lib/components/UndoBar.svelte';
 	import type { PageProps } from './$types';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 
 	// Read or unread here (opened or swiped): shown straight away, before the next load says so.
 	const readNow = new SvelteMap<number, boolean>();
@@ -17,6 +18,12 @@
 		readNow.set(id, read);
 		// keepalive: the request outlives the page if the link replaces it.
 		void fetch(`/items/${id}/read`, { method: read ? 'POST' : 'DELETE', keepalive: true });
+	}
+
+	/** Read or saved by a swipe: the server marks it read, so drop any override here (or Undo would bring it back looking read). */
+	function dealWith(action: 'read' | 'save', id: number) {
+		readNow.delete(id);
+		return act(actionHere(action), { id });
 	}
 
 	/** This page's URL with one filter changed (and paging reset). */
@@ -81,10 +88,9 @@
 					{unread}
 					saved={!!it.savedId}
 					onopen={() => setRead(it.id, true)}
-					right={{
-						label: unread ? 'Read' : 'Unread',
-						run: () => setRead(it.id, unread)
-					}}
+					right={data.unreadOnly
+						? { label: 'Read', away: true, run: () => dealWith('read', it.id) }
+						: { label: unread ? 'Read' : 'Unread', run: () => setRead(it.id, unread) }}
 					left={it.savedId
 						? {
 								label: 'Out of Later',
@@ -92,7 +98,8 @@
 							}
 						: {
 								label: 'Later',
-								run: () => act(actionHere('save'), { id: it.id })
+								away: data.unreadOnly,
+								run: () => dealWith('save', it.id)
 							}}
 				/>
 			{/each}
@@ -110,6 +117,16 @@
 		</p>
 	{/if}
 </main>
+
+{#if form?.done}
+	{#key form.done}
+		<UndoBar
+			message="{form.done.savedId ? 'In Later' : 'Read'}: {form.done.title}"
+			action={actionHere('undo')}
+			fields={{ id: form.done.id, savedId: form.done.savedId ?? '' }}
+		/>
+	{/key}
+{/if}
 
 <style>
 	header {
