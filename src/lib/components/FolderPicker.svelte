@@ -54,7 +54,6 @@
 	.new {
 		min-height: 44px;
 		padding: 8px 14px;
-		border-radius: 22px;
 		border: 1.5px dashed var(--field);
 		background: none;
 		font-size: 16px;

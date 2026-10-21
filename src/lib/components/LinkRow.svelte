@@ -185,10 +185,10 @@
 		min-width: 0;
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 14px 16px;
+		gap: 16px;
+		padding: 16px 0;
 		text-decoration: none;
-		background: var(--card);
+		background: var(--bg);
 		transition: translate 0.2s ease-out;
 	}
 	.text {
@@ -200,11 +200,11 @@
 	}
 	img {
 		flex-shrink: 0;
-		width: 88px;
-		aspect-ratio: 16 / 10;
+		width: 76px;
+		aspect-ratio: 1;
 		object-fit: cover;
-		border-radius: 8px;
 		background: var(--line);
+		filter: saturate(0.6);
 	}
 	li.read img {
 		opacity: 0.6;
@@ -231,9 +231,10 @@
 		color: var(--on-accent);
 	}
 	.title {
-		font-size: 16px;
-		font-weight: 600;
-		line-height: 1.3;
+		font-family: var(--serif);
+		font-size: 20px;
+		font-weight: 500;
+		line-height: 1.25;
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
 		line-clamp: 3;
@@ -247,13 +248,18 @@
 		font-weight: 500;
 	}
 	.unread .title {
-		font-weight: 750;
+		font-weight: 700;
 	}
+	/* Above the title, like a newspaper's kicker. */
 	.meta {
+		order: -1;
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		font-size: 13px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
 		color: var(--muted);
 		min-width: 0;
 	}

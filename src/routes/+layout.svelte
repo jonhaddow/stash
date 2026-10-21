@@ -6,7 +6,6 @@
 	import '@fontsource-variable/manrope';
 	import font from '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url';
 	import './app.css';
-	import './looks.css';
 
 	let { data, children }: LayoutProps = $props();
 
@@ -95,21 +94,16 @@
 {/if}
 
 <style>
-	/* A floating, frosted pill; the page scrolls under it. */
+	/* Docked along the bottom, under a rule. */
 	nav {
 		position: fixed;
-		left: 50%;
-		bottom: calc(12px + env(safe-area-inset-bottom));
-		translate: -50% 0;
-		width: min(calc(100% - 32px), 360px);
-		height: var(--tabs);
-		padding: 6px;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--card) 78%, transparent);
-		backdrop-filter: blur(20px) saturate(1.6);
-		-webkit-backdrop-filter: blur(20px) saturate(1.6);
-		border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
-		box-shadow: 0 8px 28px rgb(0 0 0 / 0.12);
+		left: 0;
+		bottom: 0;
+		width: 100%;
+		height: calc(var(--tabs) + env(safe-area-inset-bottom));
+		padding-bottom: env(safe-area-inset-bottom);
+		background: var(--bg);
+		border-top: 1px solid var(--ink);
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
@@ -119,14 +113,13 @@
 		align-items: center;
 		justify-content: center;
 		gap: 2px;
-		border-radius: 999px;
-		font-size: 11px;
+		font-size: 10px;
 		font-weight: 700;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
 		color: var(--muted);
 		text-decoration: none;
-		transition:
-			background-color 0.2s,
-			color 0.2s;
+		transition: color 0.2s;
 	}
 	.icon {
 		position: relative;
@@ -137,8 +130,7 @@
 		height: 24px;
 	}
 	nav a.active {
-		color: var(--accent);
-		background: color-mix(in srgb, var(--accent) 12%, transparent);
+		color: var(--ink);
 	}
 	.badge {
 		position: absolute;
@@ -147,12 +139,53 @@
 		min-width: 18px;
 		height: 18px;
 		padding: 0 5px;
-		border-radius: 9px;
 		background: var(--accent);
 		color: var(--on-accent);
 		font-size: 11px;
 		font-weight: 800;
 		line-height: 18px;
 		text-align: center;
+	}
+
+	/* On a laptop: a masthead along the top, words only. */
+	@media (min-width: 960px) {
+		nav {
+			top: 0;
+			bottom: auto;
+			height: 64px;
+			padding: 0 max(32px, calc(50% - 288px));
+			display: flex;
+			align-items: center;
+			gap: 28px;
+			border-top: 0;
+			border-bottom: 1px solid var(--ink);
+		}
+		nav::before {
+			content: 'Stash';
+			margin-right: auto;
+			font-family: var(--serif);
+			font-size: 24px;
+			font-weight: 700;
+			font-style: italic;
+			color: var(--ink);
+		}
+		nav a {
+			flex-direction: row;
+			gap: 6px;
+			height: 100%;
+			font-size: 12px;
+		}
+		nav a.active {
+			box-shadow: inset 0 -3px 0 var(--accent);
+		}
+		.icon {
+			order: 1;
+		}
+		.icon svg {
+			display: none;
+		}
+		.badge {
+			position: static;
+		}
 	}
 </style>

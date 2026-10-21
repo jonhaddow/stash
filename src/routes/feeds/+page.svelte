@@ -160,7 +160,6 @@
 	}
 	.filters .chip {
 		min-height: 46px;
-		border-radius: 16px;
 	}
 	.more {
 		align-self: center;

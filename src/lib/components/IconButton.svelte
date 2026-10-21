@@ -41,7 +41,6 @@
 		width: 44px;
 		height: 44px;
 		border: 0;
-		border-radius: 50%;
 		background: none;
 		color: var(--muted);
 		cursor: pointer;

@@ -35,9 +35,8 @@
 		margin: auto;
 		padding: 0;
 		border: 0;
-		background: var(--card);
+		background: var(--bg);
 		color: var(--ink);
-		border-radius: var(--radius);
 		overflow: hidden;
 	}
 	dialog::backdrop {

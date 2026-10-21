@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { fromB64url } from '#lib/base64url.ts';
-	import { looks } from '#lib/looks.ts';
 	import { formatDateTime } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
@@ -115,29 +114,6 @@
 		</section>
 	{/if}
 
-	<section class="group">
-		<h2>Experimental: look</h2>
-		<p class="muted">Mock-ups of other designs, to try on this device. Classic is the real one.</p>
-		<form method="POST" action="?/look">
-			<fieldset class="segments">
-				<legend class="sr">Look</legend>
-				{#each looks as l (l.id)}
-					<label>
-						<input
-							type="radio"
-							name="look"
-							value={l.id}
-							checked={data.look === l.id}
-							onchange={(e) => e.currentTarget.form?.requestSubmit()}
-						/>
-						{l.label}
-					</label>
-				{/each}
-			</fieldset>
-		</form>
-		<p class="muted">{looks.find((l) => l.id === data.look)?.about}</p>
-	</section>
-
 	<form method="POST" action="/logout">
 		<button class="btn danger">Sign out ({data.user?.name})</button>
 	</form>
@@ -147,7 +123,7 @@
 	.list a {
 		display: flex;
 		justify-content: space-between;
-		padding: 14px 16px;
+		padding: 14px 0;
 		text-decoration: none;
 		font-weight: 700;
 	}
@@ -180,10 +156,5 @@
 	}
 	.btn {
 		width: 100%;
-	}
-	fieldset {
-		margin: 0;
-		border: 0;
-		min-width: 0;
 	}
 </style>

@@ -47,7 +47,6 @@
 		min-height: 36px;
 		padding: 0 34px 0 14px;
 		border: 0;
-		border-radius: 18px;
 		background: var(--line);
 		font-size: 14px;
 		font-weight: 700;

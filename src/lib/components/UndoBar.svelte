@@ -29,7 +29,6 @@
 		justify-content: space-between;
 		gap: 12px;
 		padding: 6px 6px 6px 16px;
-		border-radius: 24px;
 		background: var(--ink);
 		color: var(--bg);
 		font-weight: 600;
@@ -46,11 +45,16 @@
 		min-height: 40px;
 		padding: 0 16px;
 		border: 0;
-		border-radius: 20px;
 		background: color-mix(in srgb, var(--bg) 18%, transparent);
 		color: inherit;
 		font-weight: 800;
 		cursor: pointer;
+	}
+	/* On a laptop the tabs are along the top. */
+	@media (min-width: 960px) {
+		.undo {
+			bottom: calc(24px + env(safe-area-inset-bottom));
+		}
 	}
 	@keyframes rise {
 		from {

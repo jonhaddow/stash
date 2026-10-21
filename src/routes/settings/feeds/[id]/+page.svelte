@@ -22,7 +22,7 @@
 		<a href={f.url} target="_blank" rel="noopener noreferrer">{f.url}</a>
 	</p>
 
-	<form class="card edit" method="POST" action="?/save" use:enhance>
+	<form class="edit" method="POST" action="?/save" use:enhance>
 		<label class="field">
 			Name
 			<input name="title" value={f.title} required maxlength="200" />
@@ -80,7 +80,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
-		padding: 16px;
 	}
 	.group {
 		display: flex;
@@ -101,7 +100,7 @@
 		display: flex;
 		align-items: baseline;
 		gap: 10px;
-		padding: 12px 16px;
+		padding: 12px 0;
 		font-size: 14px;
 	}
 	.log :global(.dot) {
