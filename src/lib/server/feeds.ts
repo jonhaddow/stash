@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, lt, lte, not, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind } from '../kind.ts';
 import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -11,6 +11,8 @@ const DAY = 24 * 60 * MIN;
 export const FEED_EVERY_MS = 30 * MIN;
 /** Feeds fetched per cron run (every 5 minutes); keeps each run inside the free plan's CPU. */
 export const FEEDS_PER_RUN = 5;
+/** A feed refused with 429 (too many requests; Reddit does this) waits this long before trying again. */
+export const RATE_LIMITED_MS = 2 * 60 * MIN;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 30;
@@ -267,17 +269,34 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 
 /** The cron's job: the feeds fetched longest ago (if due), and tidying old logs. */
 export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workersFetch) {
-	const due = await db
+	const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
+	const waiting = await db
 		.select()
 		.from(feed)
 		.where(
 			or(
 				isNull(feed.lastFetchedAt),
-				lte(feed.lastFetchedAt, new Date(now.getTime() - FEED_EVERY_MS).toISOString())
+				and(
+					lte(feed.lastFetchedAt, ago(FEED_EVERY_MS)),
+					or(
+						isNull(feed.lastError),
+						not(eq(feed.lastError, 'HTTP 429')),
+						lte(feed.lastFetchedAt, ago(RATE_LIMITED_MS))
+					)
+				)
 			)
 		)
-		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt))
-		.limit(FEEDS_PER_RUN);
+		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt));
+	// Reddit refuses several requests at once, so its feeds go one per run.
+	let reddit = false;
+	const due = waiting
+		.filter((f) => {
+			if (!isReddit(f.url)) return true;
+			if (reddit) return false;
+			reddit = true;
+			return true;
+		})
+		.slice(0, FEEDS_PER_RUN);
 	const results = await Promise.all(
 		due.map(async (f) => ({ feed: f.title, ...(await syncFeed(db, f, now, fetcher)) }))
 	);
@@ -286,6 +305,8 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 		.where(lt(syncLog.at, new Date(now.getTime() - LOG_DAYS * DAY).toISOString()));
 	return results;
 }
+
+const isReddit = (url: string) => /(^|\.)reddit\.com$/.test(new URL(url).hostname);
 
 // ---- Reading ----
 

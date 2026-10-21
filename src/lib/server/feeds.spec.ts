@@ -128,6 +128,40 @@ describe('syncing', () => {
 	});
 });
 
+describe('syncDue', () => {
+	const at = (min: number) => new Date(now.getTime() + min * 60_000);
+
+	it('fetches one Reddit feed each run', async () => {
+		const pages: Record<string, string> = {};
+		for (const sub of ['a', 'b', 'c']) pages[`https://www.reddit.com/r/${sub}/.rss`] = rss([]);
+		pages['https://blog.example/feed.xml'] = rss([]);
+		pages['https://blog.example/other.xml'] = rss([]);
+		const fetcher = fakeFetch(pages);
+		await db
+			.insert(feedTable)
+			.values(Object.keys(pages).map((url) => ({ title: url, url, createdAt: now.toISOString() })));
+		expect((await syncDue(db, now, fetcher)).map((r) => r.feed)).toEqual([
+			'https://www.reddit.com/r/a/.rss',
+			'https://blog.example/feed.xml',
+			'https://blog.example/other.xml'
+		]);
+		expect((await syncDue(db, at(5), fetcher)).map((r) => r.feed)).toEqual([
+			'https://www.reddit.com/r/b/.rss'
+		]);
+	});
+
+	it('leaves a feed refused with 429 for two hours', async () => {
+		const url = 'https://www.reddit.com/r/a/.rss';
+		await db.insert(feedTable).values({ title: 'r/a', url, createdAt: now.toISOString() });
+		expect(await syncDue(db, now, fakeFetch({ [url]: 429 }))).toMatchObject([
+			{ status: 'error', error: 'HTTP 429' }
+		]);
+		const fetcher = fakeFetch({ [url]: rss([]) });
+		expect(await syncDue(db, at(60), fetcher)).toEqual([]);
+		expect(await syncDue(db, at(120), fetcher)).toMatchObject([{ status: 'ok' }]);
+	});
+});
+
 describe('reading', () => {
 	it('marks everything read up to a time', async () => {
 		const url = 'https://blog.example/feed.xml';
