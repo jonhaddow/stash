@@ -34,7 +34,14 @@ const escape = (s: string) =>
 type Listing = {
 	data: {
 		children: {
-			data: { name: string; title: string; permalink: string; created_utc: number };
+			data: {
+				name: string;
+				title: string;
+				permalink: string;
+				created_utc: number;
+				/** A URL, or a word like "self" or "default" when there's no picture. */
+				thumbnail?: string;
+			};
 		}[];
 	};
 };
@@ -45,10 +52,15 @@ export function listingToAtom(listing: Listing, sub: string) {
 		({ data: p }) =>
 			`<entry><id>${escape(p.name)}</id><title>${escape(p.title)}</title>` +
 			`<link href="${escape(`https://www.reddit.com${p.permalink}`)}"/>` +
-			`<published>${new Date(p.created_utc * 1000).toISOString()}</published></entry>`
+			`<published>${new Date(p.created_utc * 1000).toISOString()}</published>` +
+			// The thumbnail, as Reddit's own .rss gives it.
+			(p.thumbnail?.startsWith('https://')
+				? `<media:thumbnail url="${escape(p.thumbnail)}"/>`
+				: '') +
+			`</entry>`
 	);
 	return (
-		`<feed xmlns="http://www.w3.org/2005/Atom"><title>r/${escape(sub)}</title>` +
+		`<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/"><title>r/${escape(sub)}</title>` +
 		`<link rel="alternate" href="https://www.reddit.com/r/${escape(sub)}/"/>` +
 		`${entries.join('')}</feed>`
 	);

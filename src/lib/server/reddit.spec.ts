@@ -11,7 +11,17 @@ const LISTING = {
 					name: 't3_abc',
 					title: 'Tom & Jerry <3',
 					permalink: '/r/movies/comments/abc/tom_jerry/',
-					created_utc: 1792341208
+					created_utc: 1792341208,
+					thumbnail: 'https://b.thumbs.redditmedia.com/x.jpg'
+				}
+			},
+			{
+				data: {
+					name: 't3_def',
+					title: 'A text post',
+					permalink: '/r/movies/comments/def/a_text_post/',
+					created_utc: 1792341208,
+					thumbnail: 'self'
 				}
 			}
 		]
@@ -73,7 +83,15 @@ describe('withReddit', () => {
 				guid: 't3_abc',
 				url: 'https://www.reddit.com/r/movies/comments/abc/tom_jerry/',
 				title: 'Tom & Jerry <3',
-				publishedAt: '2026-10-18T16:33:28.000Z'
+				publishedAt: '2026-10-18T16:33:28.000Z',
+				image: 'https://b.thumbs.redditmedia.com/x.jpg'
+			},
+			{
+				guid: 't3_def',
+				url: 'https://www.reddit.com/r/movies/comments/def/a_text_post/',
+				title: 'A text post',
+				publishedAt: '2026-10-18T16:33:28.000Z',
+				image: null
 			}
 		]);
 	});
