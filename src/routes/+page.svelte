@@ -65,7 +65,7 @@
 
 {#if form?.done}
 	{#key form.done.id}
-		<UndoBar message="Done: {form.done.title}" action="?/undo" fields={{ id: form.done.id }} />
+		<UndoBar message="Archived: {form.done.title}" action="?/undo" fields={{ id: form.done.id }} />
 	{/key}
 {/if}
 

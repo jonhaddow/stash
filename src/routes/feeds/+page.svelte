@@ -43,7 +43,16 @@
 	<header>
 		<h1>Feeds</h1>
 		{#if unreadHere}
-			<form method="POST" action="?/readAll" use:enhance>
+			<form
+				method="POST"
+				action="?/readAll"
+				use:enhance={() =>
+					async ({ update }) => {
+						// Swiped-unread ones are read now too.
+						readNow.clear();
+						await update();
+					}}
+			>
 				<input type="hidden" name="upTo" value={data.loadedAt} />
 				<button class="btn quiet small">Mark all read</button>
 			</form>
@@ -84,17 +93,18 @@
 	{#if data.items.length}
 		<ul class="list">
 			{#each data.items as it (it.id)}
+				{@const unread = isUnread(it)}
 				<LinkRow
 					url={it.url}
 					title={it.title}
 					source={it.feedTitle}
 					at={it.publishedAt}
-					unread={isUnread(it)}
+					{unread}
 					saved={!!it.savedId}
 					onopen={() => setRead(it.id, true)}
 					right={{
-						label: isUnread(it) ? 'Read' : 'Unread',
-						run: () => setRead(it.id, isUnread(it))
+						label: unread ? 'Read' : 'Unread',
+						run: () => setRead(it.id, unread)
 					}}
 					left={it.savedId
 						? { label: 'Out of Later', run: () => act('?/unsave', { savedId: it.savedId! }) }

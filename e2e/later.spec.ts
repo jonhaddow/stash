@@ -17,7 +17,7 @@ test('lists saved links, filtered by articles and videos', async ({ page }) => {
 test('swiping right archives a link, and Undo brings it back', async ({ page }) => {
 	await open(page, '/');
 	await swipe(page, page.getByRole('listitem').filter({ hasText: 'A news story' }), 150);
-	await expect(page.getByRole('status')).toContainText('Done: A news story');
+	await expect(page.getByRole('status')).toContainText('Archived: A news story');
 	await expect(page.getByRole('link', { name: /^A news story/ })).toBeHidden();
 	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
 	await expect(page.getByRole('link', { name: /^A news story/ })).toBeVisible();

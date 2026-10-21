@@ -75,7 +75,8 @@
 		dragging = false;
 		swiped = true;
 		if (swipe && Math.abs(dx) >= THRESHOLD) {
-			void swipe.run();
+			// If it fails (offline, say), the row comes back.
+			Promise.resolve(swipe.run()).catch(() => (dx = 0));
 			if (swipe.away) {
 				dx = Math.sign(dx) * li.offsetWidth;
 				return;
