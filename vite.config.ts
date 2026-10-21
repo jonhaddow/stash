@@ -5,7 +5,11 @@ import { execSync } from 'node:child_process';
 
 function commit() {
 	try {
-		return process.env.WORKERS_CI_COMMIT_SHA ?? execSync('git rev-parse HEAD').toString().trim();
+		// A build started by hand with only a branch gets "main" here, not a commit.
+		const sha = process.env.WORKERS_CI_COMMIT_SHA;
+		return sha && /^[0-9a-f]{40}$/.test(sha)
+			? sha
+			: execSync('git rev-parse HEAD').toString().trim();
 	} catch {
 		return undefined; // SvelteKit's default, a timestamp
 	}
