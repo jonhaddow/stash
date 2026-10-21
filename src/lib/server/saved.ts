@@ -44,9 +44,8 @@ export async function saveLink(
 	given: { title?: string | null; image?: string | null } = {},
 	{ now = new Date(), fetcher = workersFetch }: { now?: Date; fetcher?: Fetch } = {}
 ) {
-	const page = given.title?.trim()
-		? { title: given.title.trim(), image: given.image ?? null }
-		: await fetchPage(fetcher, url);
+	const title = given.title?.trim();
+	const page = title ? { title, image: given.image ?? null } : await fetchPage(fetcher, url);
 	const addedAt = now.toISOString();
 	const [row] = await db
 		.insert(saved)

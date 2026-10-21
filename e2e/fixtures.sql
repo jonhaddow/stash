@@ -21,6 +21,6 @@ INSERT INTO item (feed_id, guid, url, title, kind, published_at, read_at) VALUES
 INSERT INTO sync_log (feed_id, at, status, http_status, items_added, error, ms) VALUES
 	(2, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'), 'error', 503, 0, 'HTTP 503', 820),
 	(2, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours'), 'ok', 200, 2, NULL, 410);
--- Thumbnails (they load from the internet; rows without one show just the title).
-UPDATE saved SET image_url = 'https://picsum.photos/seed/tea/320/200' WHERE url = 'https://blog.example/long-read';
-UPDATE item SET image_url = 'https://picsum.photos/seed/oolong/320/200' WHERE guid = 't1';
+-- Thumbnails (rows without one show just the title).
+UPDATE saved SET image_url = '/icon-192.png' WHERE url = 'https://blog.example/long-read';
+UPDATE item SET image_url = '/icon-192.png' WHERE guid = 't1';

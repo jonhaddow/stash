@@ -92,12 +92,7 @@
 							}
 						: {
 								label: 'Later',
-								run: () =>
-									act(actionHere('save'), {
-										url: it.url,
-										title: it.title,
-										image: it.imageUrl ?? ''
-									})
+								run: () => act(actionHere('save'), { id: it.id })
 							}}
 				/>
 			{/each}

@@ -87,33 +87,28 @@ function firstImg(html: string) {
 }
 
 /**
- * An entry's thumbnail: Media RSS (YouTube, Reddit), an image enclosure or
- * iTunes image, else the first <img> in its HTML, which is often escaped.
+ * An entry's thumbnail: Media RSS (YouTube, Reddit) or an image enclosure, else
+ * the first <img> in its HTML (in CDATA, or escaped, so unescaped first).
  */
 function entryImage(block: string) {
-	for (const [tag] of block.matchAll(/<(media:thumbnail|media:content|enclosure)\b[^>]*>/gi)) {
-		const type = attr(tag, 'type') ?? '';
+	for (const [tag, name] of block.matchAll(
+		/<(media:thumbnail|media:content|enclosure)\b[^>]*>/gi
+	)) {
 		const url = attr(tag, 'url');
 		if (
 			url &&
-			(/^media:thumbnail/i.test(tag.slice(1)) ||
-				type.startsWith('image/') ||
+			(name.toLowerCase() === 'media:thumbnail' ||
+				attr(tag, 'type')?.startsWith('image/') ||
 				attr(tag, 'medium') === 'image')
 		)
 			return url;
 	}
-	const itunes = /<itunes:image\b[^>]*>/i.exec(block);
-	const href = itunes && attr(itunes[0], 'href');
-	if (href) return href;
-	return (
-		firstImg(block) ??
-		firstImg(
-			block
-				.replace(/&lt;/g, '<')
-				.replace(/&gt;/g, '>')
-				.replace(/&quot;/g, '"')
-				.replace(/&amp;/g, '&')
-		)
+	return firstImg(
+		block
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&quot;/g, '"')
+			.replace(/&amp;/g, '&')
 	);
 }
 
