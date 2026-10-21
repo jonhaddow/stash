@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hostOf, kindOf, youtubeId } from './kind.ts';
+import { hackUrl, hostOf, kindOf, youtubeId } from './kind.ts';
 
 describe('kindOf', () => {
 	it('knows video sites, with or without www', () => {
@@ -41,5 +41,18 @@ describe('youtubeId', () => {
 		expect(youtubeId('https://www.youtube.com/watch')).toBeNull();
 		expect(youtubeId('https://vimeo.com/1234567')).toBeNull();
 		expect(youtubeId('not a url')).toBeNull();
+	});
+});
+
+describe('hackUrl', () => {
+	it('turns a Hacker News thread into a Hack link', () => {
+		expect(hackUrl('https://news.ycombinator.com/item?id=37620043')).toBe(
+			'hack://item?id=37620043'
+		);
+	});
+	it('is null for other Hacker News pages, other sites and nonsense', () => {
+		expect(hackUrl('https://news.ycombinator.com/news')).toBeNull();
+		expect(hackUrl('https://example.com/item?id=1')).toBeNull();
+		expect(hackUrl('not a url')).toBeNull();
 	});
 });

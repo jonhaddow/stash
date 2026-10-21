@@ -5,12 +5,13 @@
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { hostOf, youtubeId } from '#lib/kind.ts';
+	import { hackUrl, hostOf, youtubeId } from '#lib/kind.ts';
 	import { ago } from '#lib/time.ts';
 	import Player from './Player.svelte';
 
 	// A link in a list: title, where it's from and when, and a thumbnail, opening the original
-	// page (YouTube videos play in the app instead). Swiping it right or left
+	// page (YouTube videos play in the app instead,
+	// and Hacker News threads open in Hack on iOS). Swiping it right or left
 	// past the threshold does that side's action. Buttons (the archive's) to its right.
 	let {
 		url,
@@ -43,6 +44,7 @@
 	} = $props();
 
 	const video = $derived(youtubeId(url));
+	const hack = $derived(hackUrl(url));
 	let playing = $state(false);
 	const thumb = $derived(image || (video ? `https://i.ytimg.com/vi/${video}/mqdefault.jpg` : null));
 	// Images that fail to load (gone, or hotlinking refused) leave just the title.
@@ -106,6 +108,10 @@
 		if (video) {
 			e.preventDefault();
 			playing = true;
+		} else if (hack && /iPhone|iPad/.test(navigator.userAgent)) {
+			// Hacker News threads open in the Hack app on the phone; the laptop keeps the page.
+			e.preventDefault();
+			location.href = hack;
 		}
 	}
 </script>
