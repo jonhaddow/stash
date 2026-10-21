@@ -19,7 +19,8 @@ function filterFrom(params: URLSearchParams): ItemFilter {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const filter = filterFrom(url.searchParams);
-	const unreadOnly = url.searchParams.get('unread') === '1';
+	// Unread ones by default; ?all=1 shows read ones too.
+	const unreadOnly = url.searchParams.get('all') !== '1';
 	const before = url.searchParams.get('before');
 	const [folders, counts, items] = await Promise.all([
 		listFolders(locals.db),
