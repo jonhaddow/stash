@@ -20,6 +20,12 @@
 		void fetch(`/items/${id}/read`, { method: read ? 'POST' : 'DELETE', keepalive: true });
 	}
 
+	/** Read or saved by a swipe: the server marks it read, so drop any override here (or Undo would bring it back looking read). */
+	function dealWith(action: 'read' | 'save', id: number) {
+		readNow.delete(id);
+		return act(actionHere(action), { id });
+	}
+
 	/** This page's URL with one filter changed (and paging reset). */
 	function withParam(name: string, value: string | null) {
 		const url = new URL(page.url.href);
@@ -83,7 +89,7 @@
 					saved={!!it.savedId}
 					onopen={() => setRead(it.id, true)}
 					right={data.unreadOnly
-						? { label: 'Read', away: true, run: () => act(actionHere('read'), { id: it.id }) }
+						? { label: 'Read', away: true, run: () => dealWith('read', it.id) }
 						: { label: unread ? 'Read' : 'Unread', run: () => setRead(it.id, unread) }}
 					left={it.savedId
 						? {
@@ -93,10 +99,7 @@
 						: {
 								label: 'Later',
 								away: data.unreadOnly,
-								run: () => {
-									readNow.delete(it.id);
-									return act(actionHere('save'), { id: it.id });
-								}
+								run: () => dealWith('save', it.id)
 							}}
 				/>
 			{/each}
