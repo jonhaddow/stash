@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind } from '../kind.ts';
 import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -11,6 +11,8 @@ const DAY = 24 * 60 * MIN;
 export const FEED_EVERY_MS = 30 * MIN;
 /** Feeds fetched per cron run (every 5 minutes); keeps each run inside the free plan's CPU. */
 export const FEEDS_PER_RUN = 5;
+/** A feed refused with 429 (too many requests; Reddit does this) waits this long before trying again. */
+export const RATE_LIMITED_MS = 2 * 60 * MIN;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 30;
@@ -19,11 +21,12 @@ const INSERT_CHUNK = 14;
 
 // ---- Finding a feed ----
 
+const isReddit = (hostname: string) => /(^|\.)reddit\.com$/.test(hostname);
+
 /** Subreddits have feeds at a known address, and Reddit's pages often refuse servers. */
 function knownFeed(url: URL) {
 	const sub = /^\/r\/([\w-]+)/.exec(url.pathname);
-	if (/(^|\.)reddit\.com$/.test(url.hostname) && sub)
-		return `https://www.reddit.com/r/${sub[1]}/.rss`;
+	if (isReddit(url.hostname) && sub) return `https://www.reddit.com/r/${sub[1]}/.rss`;
 	return null;
 }
 
@@ -267,17 +270,35 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 
 /** The cron's job: the feeds fetched longest ago (if due), and tidying old logs. */
 export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workersFetch) {
-	const due = await db
+	const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
+	const waiting = await db
 		.select()
 		.from(feed)
 		.where(
 			or(
 				isNull(feed.lastFetchedAt),
-				lte(feed.lastFetchedAt, new Date(now.getTime() - FEED_EVERY_MS).toISOString())
+				and(
+					lte(feed.lastFetchedAt, ago(FEED_EVERY_MS)),
+					or(
+						isNull(feed.lastError),
+						ne(feed.lastError, 'HTTP 429'),
+						lte(feed.lastFetchedAt, ago(RATE_LIMITED_MS))
+					)
+				)
 			)
 		)
-		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt))
-		.limit(FEEDS_PER_RUN);
+		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt));
+	// Reddit refuses several requests at once, so its feeds go one per run.
+	const due: Feed[] = [];
+	let reddit = false;
+	for (const f of waiting) {
+		if (due.length === FEEDS_PER_RUN) break;
+		if (isReddit(new URL(f.url).hostname)) {
+			if (reddit) continue;
+			reddit = true;
+		}
+		due.push(f);
+	}
 	const results = await Promise.all(
 		due.map(async (f) => ({ feed: f.title, ...(await syncFeed(db, f, now, fetcher)) }))
 	);
