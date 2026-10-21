@@ -29,6 +29,9 @@ declare global {
 			GOOGLE_CLIENT_ID: string;
 			/** Worker secret: `wrangler secret put GOOGLE_CLIENT_SECRET`. */
 			GOOGLE_CLIENT_SECRET: string;
+			/** Stash's Reddit app (Worker secrets), for subreddit feeds through the API. */
+			REDDIT_CLIENT_ID?: string;
+			REDDIT_CLIENT_SECRET?: string;
 			/** Authenticates the cron's call to /sync. */
 			CRON_SECRET?: string;
 			/** e.g. https://stash.app.haddow.me (used by the cron). */

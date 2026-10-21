@@ -3,7 +3,11 @@ import { kindOf, type Kind } from '../kind.ts';
 import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
+import { isReddit, withReddit } from './reddit.ts';
 import { findFeedLink, looksLikeFeed, parseFeed, type ParsedFeed } from './parse.ts';
+
+/** Fetching feeds: subreddits through Reddit's API (reddit.ts), the rest directly. */
+const feedFetch = withReddit(workersFetch);
 
 const MIN = 60_000;
 const DAY = 24 * 60 * MIN;
@@ -19,8 +23,6 @@ const INSERT_CHUNK = 14;
 
 // ---- Finding a feed ----
 
-const isReddit = (hostname: string) => /(^|\.)reddit\.com$/.test(hostname);
-
 /** Subreddits have feeds at a known address, and Reddit's pages often refuse servers. */
 function knownFeed(url: URL) {
 	const sub = /^\/r\/([\w-]+)/.exec(url.pathname);
@@ -31,7 +33,7 @@ function knownFeed(url: URL) {
 /** A feed from a feed URL or a page that links to one. Throws a readable message if none. */
 export async function discoverFeed(
 	input: string,
-	fetcher: Fetch = workersFetch
+	fetcher: Fetch = feedFetch
 ): Promise<{ url: string; parsed: ParsedFeed }> {
 	const url = knownFeed(new URL(input)) ?? input;
 	const res = await get(fetcher, url);
@@ -68,7 +70,7 @@ export async function addFeed(
 	db: DB,
 	input: string,
 	folderId: number | null,
-	{ now = new Date(), fetcher = workersFetch }: { now?: Date; fetcher?: Fetch } = {}
+	{ now = new Date(), fetcher = feedFetch }: { now?: Date; fetcher?: Fetch } = {}
 ) {
 	const started = Date.now();
 	const { url, parsed } = await discoverFeed(input, fetcher);
@@ -227,7 +229,7 @@ async function recordFetch(
 }
 
 /** Fetches one feed (conditionally, so unchanged feeds are cheap) and logs how it went. */
-export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch = workersFetch) {
+export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch = feedFetch) {
 	const started = Date.now();
 	const headers: Record<string, string> = {};
 	if (f.etag) headers['if-none-match'] = f.etag;
@@ -267,7 +269,7 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 }
 
 /** The cron's job: the feeds fetched longest ago (if due), and tidying old logs. */
-export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workersFetch) {
+export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFetch) {
 	const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
 	const waiting = await db
 		.select()

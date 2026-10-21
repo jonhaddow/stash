@@ -28,7 +28,7 @@ Everything is in the D1 database `stash`: `npx wrangler d1 export stash --remote
 
 ## Configuration
 
-Vars in `wrangler.jsonc` (`APP_ORIGIN`, `GOOGLE_CLIENT_ID`). Secrets (`wrangler secret put`): `GOOGLE_CLIENT_SECRET`, `CRON_SECRET` (any long random string; authenticates the cron's call to `/sync`).
+Vars in `wrangler.jsonc` (`APP_ORIGIN`, `GOOGLE_CLIENT_ID`). Secrets (`wrangler secret put`): `GOOGLE_CLIENT_SECRET`, `CRON_SECRET` (any long random string; authenticates the cron's call to `/sync`), `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET` (a Reddit app at reddit.com/prefs/apps, for subreddit feeds; without them, Reddit's public `.rss`, which mostly answers 429 to Cloudflare).
 
 ## Deploying
 

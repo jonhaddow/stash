@@ -8,6 +8,7 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 - `src/lib/server/feeds.ts`: finding and adding feeds, syncing (conditional requests, logs), folders, listing and marking entries read
 - `src/lib/server/saved.ts`: saving links (title fetched from the page), Later and the archive
 - `src/lib/server/http.ts`: fetching other sites (User-Agent, timeout, size cap)
+- `src/lib/server/reddit.ts`: subreddit `.rss` requests go to Reddit's signed-in API (Jon's app, `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` secrets, from 1Password's "Reddit API") and come back as Atom
 - `src/lib/kind.ts`: article or video, by the link's site; YouTube video IDs for the player (`components/Player.svelte`)
 - `src/routes/sync`: called by the cron (`worker/entry.js`) with `CRON_SECRET`
 - `src/routes/api/save`: the iOS Shortcut, `Authorization: Bearer <token>` (Settings makes the token; only its hash is kept)
