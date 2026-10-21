@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hostOf, kindOf } from './kind.ts';
+import { hostOf, kindOf, youtubeId } from './kind.ts';
 
 describe('kindOf', () => {
 	it('knows video sites, with or without www', () => {
@@ -18,5 +18,21 @@ describe('kindOf', () => {
 describe('hostOf', () => {
 	it('drops www', () => {
 		expect(hostOf('https://www.theverge.com/a')).toBe('theverge.com');
+	});
+});
+
+describe('youtubeId', () => {
+	it('finds the video in each kind of link', () => {
+		expect(youtubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42')).toBe('dQw4w9WgXcQ');
+		expect(youtubeId('https://m.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+		expect(youtubeId('https://youtu.be/dQw4w9WgXcQ?si=x')).toBe('dQw4w9WgXcQ');
+		expect(youtubeId('https://youtube.com/shorts/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+		expect(youtubeId('https://www.youtube.com/live/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+	});
+	it('is null for channels, other sites and nonsense', () => {
+		expect(youtubeId('https://www.youtube.com/@bread')).toBeNull();
+		expect(youtubeId('https://www.youtube.com/watch')).toBeNull();
+		expect(youtubeId('https://vimeo.com/1234567')).toBeNull();
+		expect(youtubeId('not a url')).toBeNull();
 	});
 });

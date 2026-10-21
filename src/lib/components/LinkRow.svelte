@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { hostOf } from '#lib/kind.ts';
+	import { hostOf, youtubeId } from '#lib/kind.ts';
 	import { ago } from '#lib/time.ts';
+	import Player from './Player.svelte';
 
 	// A link in a list: title, where it's from and when, opening the original
-	// page; buttons to its right.
+	// page (YouTube videos play in the app instead); buttons to its right.
 	let {
 		url,
 		title,
@@ -24,10 +25,21 @@
 		onopen?: () => void;
 		actions?: Snippet;
 	} = $props();
+
+	const video = $derived(youtubeId(url));
+	let playing = $state(false);
+
+	function onclick(e: MouseEvent) {
+		onopen?.();
+		if (video) {
+			e.preventDefault();
+			playing = true;
+		}
+	}
 </script>
 
 <li class:unread class:read={unread === false}>
-	<a href={url} target="_blank" rel="noopener noreferrer" onclick={onopen}>
+	<a href={url} target="_blank" rel="noopener noreferrer" {onclick}>
 		<span class="title">{title}</span>
 		<span class="meta">
 			{#if unread}<span class="dot" aria-label="Unread"></span>{/if}
@@ -36,6 +48,9 @@
 		</span>
 	</a>
 	{#if actions}<div class="actions">{@render actions()}</div>{/if}
+	{#if playing && video}
+		<Player id={video} {title} {url} onclose={() => (playing = false)} />
+	{/if}
 </li>
 
 <style>

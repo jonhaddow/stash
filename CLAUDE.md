@@ -1,6 +1,6 @@
 # Stash
 
-Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and Inoreader). A PWA at https://stash.app.haddow.me, for one person. Two tabs: **Later** (saved links; Done sends one to a hidden archive) and **Feeds** (RSS/Atom entries in one-level folders, read when opened, Save copies one to Later). Links open the original page; there's no article extraction. A cron polls a few feeds every 5 minutes, and each feed has a sync log. Links come in from the iOS share sheet through a Shortcut that posts to `/api/save` with a token. SvelteKit 3 (Svelte 5) on Cloudflare Workers, D1 via Drizzle. The same stack and setup as `~/code/plants` and `~/code/budget` (copy code patterns from there, not their look: stash has its own, see `app.css`).
+Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and Inoreader). A PWA at https://stash.app.haddow.me, for one person. Two tabs: **Later** (saved links; Done sends one to a hidden archive) and **Feeds** (RSS/Atom entries in one-level folders, read when opened, Save copies one to Later). Links open the original page (YouTube videos play in an embedded player); there's no article extraction. A cron polls a few feeds every 5 minutes, and each feed has a sync log. Links come in from the iOS share sheet through a Shortcut that posts to `/api/save` with a token. SvelteKit 3 (Svelte 5) on Cloudflare Workers, D1 via Drizzle. The same stack and setup as `~/code/plants` and `~/code/budget` (copy code patterns from there, not their look: stash has its own, see `app.css`).
 
 ## Where things are
 
@@ -8,7 +8,7 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 - `src/lib/server/feeds.ts`: finding and adding feeds, syncing (conditional requests, logs), folders, listing and marking entries read
 - `src/lib/server/saved.ts`: saving links (title fetched from the page), Later and the archive
 - `src/lib/server/http.ts`: fetching other sites (User-Agent, timeout, size cap)
-- `src/lib/kind.ts`: article or video, by the link's site
+- `src/lib/kind.ts`: article or video, by the link's site; YouTube video IDs for the player (`components/Player.svelte`)
 - `src/routes/sync`: called by the cron (`worker/entry.js`) with `CRON_SECRET`
 - `src/routes/api/save`: the iOS Shortcut, `Authorization: Bearer <token>` (Settings makes the token; only its hash is kept)
 - Routes: `/` Later, `/feeds`, `/settings`, `/settings/feeds` (+ `[id]` with its sync log), `/archive`
