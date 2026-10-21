@@ -5,9 +5,10 @@
 	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
+	import UndoBar from '#lib/components/UndoBar.svelte';
 	import type { PageProps } from './$types';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 
 	// Read or unread here (opened or swiped): shown straight away, before the next load says so.
 	const readNow = new SvelteMap<number, boolean>();
@@ -81,10 +82,9 @@
 					{unread}
 					saved={!!it.savedId}
 					onopen={() => setRead(it.id, true)}
-					right={{
-						label: unread ? 'Read' : 'Unread',
-						run: () => setRead(it.id, unread)
-					}}
+					right={data.unreadOnly
+						? { label: 'Read', away: true, run: () => act(actionHere('read'), { id: it.id }) }
+						: { label: unread ? 'Read' : 'Unread', run: () => setRead(it.id, unread) }}
 					left={it.savedId
 						? {
 								label: 'Out of Later',
@@ -92,7 +92,11 @@
 							}
 						: {
 								label: 'Later',
-								run: () => act(actionHere('save'), { id: it.id })
+								away: data.unreadOnly,
+								run: () => {
+									readNow.delete(it.id);
+									return act(actionHere('save'), { id: it.id });
+								}
 							}}
 				/>
 			{/each}
@@ -110,6 +114,16 @@
 		</p>
 	{/if}
 </main>
+
+{#if form?.done}
+	{#key form.done}
+		<UndoBar
+			message="{form.done.savedId ? 'In Later' : 'Read'}: {form.done.title}"
+			action={actionHere('undo')}
+			fields={{ id: form.done.id, savedId: form.done.savedId ?? '' }}
+		/>
+	{/key}
+{/if}
 
 <style>
 	header {

@@ -1,8 +1,15 @@
 import { error, fail } from '@sveltejs/kit';
 import { kindParam } from '#lib/kind.ts';
-import { PAGE, getItem, hasFeeds, listItems, markAllRead } from '#lib/server/feeds.ts';
+import { PAGE, getItem, hasFeeds, listItems, markAllRead, setRead } from '#lib/server/feeds.ts';
 import { saveLink, setArchived } from '#lib/server/saved.ts';
+import type { DB } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
+
+async function formItem(db: DB, form: FormData) {
+	const it = await getItem(db, Number(form.get('id')));
+	if (!it) error(404);
+	return it;
+}
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const kind = kindParam(url.searchParams);
@@ -26,11 +33,26 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
+	// Swipes. Read or saved, an entry is dealt with, so both mark it read; the
+	// answer is for the Undo bar.
+	read: async ({ request, locals }) => {
+		const it = await formItem(locals.db, await request.formData());
+		await setRead(locals.db, it.id, true);
+		return { done: { id: it.id, title: it.title, savedId: null } };
+	},
 	save: async ({ request, locals }) => {
-		const it = await getItem(locals.db, Number((await request.formData()).get('id')));
-		if (!it) error(404);
-		await saveLink(locals.db, it.url, { title: it.title, image: it.imageUrl });
-		return { saved: true };
+		const it = await formItem(locals.db, await request.formData());
+		const row = await saveLink(locals.db, it.url, { title: it.title, image: it.imageUrl });
+		await setRead(locals.db, it.id, true);
+		return { done: { id: it.id, title: it.title, savedId: row.id } };
+	},
+	/** Back to unread, and out of Later if it was saved. */
+	undo: async ({ request, locals }) => {
+		const form = await request.formData();
+		await setRead(locals.db, Number(form.get('id')), false);
+		const savedId = Number(form.get('savedId'));
+		if (savedId) await setArchived(locals.db, savedId, new Date().toISOString());
+		return { undone: true };
 	},
 	unsave: async ({ request, locals }) => {
 		const form = await request.formData();
