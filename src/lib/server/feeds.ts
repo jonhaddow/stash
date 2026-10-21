@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lt, lte, not, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind } from '../kind.ts';
 import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -21,11 +21,12 @@ const INSERT_CHUNK = 14;
 
 // ---- Finding a feed ----
 
+const isReddit = (hostname: string) => /(^|\.)reddit\.com$/.test(hostname);
+
 /** Subreddits have feeds at a known address, and Reddit's pages often refuse servers. */
 function knownFeed(url: URL) {
 	const sub = /^\/r\/([\w-]+)/.exec(url.pathname);
-	if (/(^|\.)reddit\.com$/.test(url.hostname) && sub)
-		return `https://www.reddit.com/r/${sub[1]}/.rss`;
+	if (isReddit(url.hostname) && sub) return `https://www.reddit.com/r/${sub[1]}/.rss`;
 	return null;
 }
 
@@ -280,7 +281,7 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 					lte(feed.lastFetchedAt, ago(FEED_EVERY_MS)),
 					or(
 						isNull(feed.lastError),
-						not(eq(feed.lastError, 'HTTP 429')),
+						ne(feed.lastError, 'HTTP 429'),
 						lte(feed.lastFetchedAt, ago(RATE_LIMITED_MS))
 					)
 				)
@@ -288,15 +289,16 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 		)
 		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt));
 	// Reddit refuses several requests at once, so its feeds go one per run.
+	const due: Feed[] = [];
 	let reddit = false;
-	const due = waiting
-		.filter((f) => {
-			if (!isReddit(f.url)) return true;
-			if (reddit) return false;
+	for (const f of waiting) {
+		if (due.length === FEEDS_PER_RUN) break;
+		if (isReddit(new URL(f.url).hostname)) {
+			if (reddit) continue;
 			reddit = true;
-			return true;
-		})
-		.slice(0, FEEDS_PER_RUN);
+		}
+		due.push(f);
+	}
 	const results = await Promise.all(
 		due.map(async (f) => ({ feed: f.title, ...(await syncFeed(db, f, now, fetcher)) }))
 	);
@@ -305,8 +307,6 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 		.where(lt(syncLog.at, new Date(now.getTime() - LOG_DAYS * DAY).toISOString()));
 	return results;
 }
-
-const isReddit = (url: string) => /(^|\.)reddit\.com$/.test(new URL(url).hostname);
 
 // ---- Reading ----
 
