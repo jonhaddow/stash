@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Fetch } from './http.ts';
 import { parseFeed } from './parse.ts';
-import { apiUrl, resetRedditToken, withReddit } from './reddit.ts';
+import { apiUrl, withReddit } from './reddit.ts';
 
 const LISTING = {
 	data: {
@@ -32,8 +32,6 @@ function fakeReddit(calls: { url: string; headers: Headers }[]): Fetch {
 
 const creds = () => ({ id: 'id', secret: 'secret' });
 
-beforeEach(() => resetRedditToken());
-
 describe('apiUrl', () => {
 	it('maps subreddit feeds to the API, keeping the query', () => {
 		expect(apiUrl('https://www.reddit.com/r/movies/top/.rss?t=week&limit=5')).toBe(
@@ -46,6 +44,8 @@ describe('apiUrl', () => {
 	it('leaves everything else alone', () => {
 		expect(apiUrl('https://www.reddit.com/r/movies/')).toBeNull();
 		expect(apiUrl('https://blog.example/feed.rss')).toBeNull();
+		expect(apiUrl('https://www.reddit.com/user/someone/.rss')).toBeNull();
+		expect(apiUrl('https://www.reddit.com/r/movies/comments/abc/.rss')).toBeNull();
 	});
 });
 
