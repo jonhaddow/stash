@@ -8,8 +8,11 @@ test('feed entries by folder, unread in bold, and saving one for later', async (
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeHidden();
 
-	await page.getByRole('link', { name: 'Unread', exact: true }).click();
+	// Unread ones only, unless the Unread chip is turned off.
 	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeHidden();
+	await page.getByRole('link', { name: 'Unread', exact: true }).click();
+	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeVisible();
+	await page.getByRole('link', { name: 'Unread', exact: true }).click();
 
 	// Swiping left saves it; swiping again takes it back out (leaving Later as later.spec.ts expects).
 	const row = () => page.getByRole('listitem').filter({ hasText: 'Sourdough in a day' });
@@ -51,7 +54,7 @@ test('opening an entry marks it read', async ({ page, context }) => {
 	await (await popup).close();
 	await read;
 	await expect(row.getByLabel('Unread')).toBeHidden();
-	await open(page, '/feeds');
+	await open(page, '/feeds?all=1');
 	await expect(
 		page.getByRole('listitem').filter({ hasText: 'Green tea, cold' }).getByLabel('Unread')
 	).toBeHidden();
@@ -71,4 +74,8 @@ test('mark all read', async ({ page }) => {
 	await page.getByRole('button', { name: 'Mark all read' }).click();
 	await expect(page.getByRole('button', { name: 'Mark all read' })).toBeHidden();
 	await expect(page.getByLabel('Unread', { exact: true })).toHaveCount(0);
+	await expect(page.getByText('All caught up.')).toBeVisible();
+	// Only this folder's: it stays put, and YouTube's entry is still unread.
+	await expect(page).toHaveURL(/folder=2/);
+	await expect(page.getByRole('link', { name: /^YouTube\s*1/ })).toBeVisible();
 });

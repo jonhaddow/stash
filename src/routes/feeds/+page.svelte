@@ -28,6 +28,10 @@
 		return url.pathname + url.search;
 	}
 
+	/** A form action on this page's URL, keeping its filters ("?/name" alone would drop them). */
+	const actionHere = (name: string) =>
+		page.url.search ? `${page.url.search}&/${name}` : `?/${name}`;
+
 	const unreadHere = $derived(
 		data.folderId
 			? (data.folders.find((f) => f.id === data.folderId)?.unread ?? 0)
@@ -45,7 +49,7 @@
 		{#if unreadHere}
 			<form
 				method="POST"
-				action="?/readAll"
+				action={actionHere('readAll')}
 				use:enhance={() =>
 					async ({ update }) => {
 						// Swiped-unread ones are read now too.
@@ -84,7 +88,7 @@
 		<a
 			class="chip"
 			class:on={data.unreadOnly}
-			href={withParam('unread', data.unreadOnly ? null : '1')}
+			href={withParam('all', data.unreadOnly ? '1' : null)}
 			aria-current={data.unreadOnly ? 'true' : undefined}
 			data-sveltekit-replacestate>Unread</a
 		>
@@ -107,8 +111,14 @@
 						run: () => setRead(it.id, unread)
 					}}
 					left={it.savedId
-						? { label: 'Out of Later', run: () => act('?/unsave', { savedId: it.savedId! }) }
-						: { label: 'Later', run: () => act('?/save', { url: it.url, title: it.title }) }}
+						? {
+								label: 'Out of Later',
+								run: () => act(actionHere('unsave'), { savedId: it.savedId! })
+							}
+						: {
+								label: 'Later',
+								run: () => act(actionHere('save'), { url: it.url, title: it.title })
+							}}
 				/>
 			{/each}
 		</ul>
@@ -118,7 +128,7 @@
 	{:else if data.paged}
 		<p class="empty muted">No older entries.</p>
 	{:else if data.folders.length || data.totalUnread}
-		<p class="empty muted">Nothing here{data.unreadOnly ? ' unread' : ''}.</p>
+		<p class="empty muted">{data.unreadOnly ? 'All caught up.' : 'Nothing here.'}</p>
 	{:else}
 		<p class="empty muted">
 			No feeds yet. <a href="/settings/feeds">Add one</a> from a site, YouTube channel or subreddit.
