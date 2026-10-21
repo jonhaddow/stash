@@ -1,5 +1,5 @@
-import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
-import { kindOf, type Kind } from '../kind.ts';
+import { and, asc, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { kindOf, type Kind, type Order } from '../kind.ts';
 import { saved } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
@@ -47,12 +47,13 @@ export async function saveLink(
 	const title = given.title?.trim();
 	const page = title ? { title, image: given.image ?? null } : await fetchPage(fetcher, url);
 	const addedAt = now.toISOString();
+	const finalTitle = page.title || new URL(url).hostname;
 	const [row] = await db
 		.insert(saved)
 		.values({
 			url,
-			title: page.title || new URL(url).hostname,
-			kind: kindOf(url),
+			title: finalTitle,
+			kind: kindOf(url, finalTitle),
 			imageUrl: page.image,
 			addedAt
 		})
@@ -64,8 +65,13 @@ export async function saveLink(
 /** Later (or the archive), newest first. */
 export function listSaved(
 	db: DB,
-	{ kind, archived = false }: { kind?: Kind | null; archived?: boolean }
+	{
+		kind,
+		archived = false,
+		order = 'newest'
+	}: { kind?: Kind | null; archived?: boolean; order?: Order }
 ) {
+	const by = order === 'oldest' ? asc : desc;
 	return db
 		.select()
 		.from(saved)
@@ -75,7 +81,7 @@ export function listSaved(
 				kind ? eq(saved.kind, kind) : undefined
 			)
 		)
-		.orderBy(archived ? desc(saved.archivedAt) : desc(saved.addedAt))
+		.orderBy(archived ? by(saved.archivedAt) : by(saved.addedAt))
 		.limit(archived ? 200 : 500);
 }
 

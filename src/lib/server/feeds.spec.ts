@@ -177,6 +177,22 @@ describe('reading', () => {
 		const items = await listItems(db, { unreadOnly: true });
 		expect(items.map((i) => i.title)).toEqual(['b']);
 	});
+
+	it('lists oldest first, paging on to newer ones', async () => {
+		const url = 'https://blog.example/feed.xml';
+		const fetcher = fakeFetch({
+			[url]: rss([
+				{ guid: 'c', date: '2026-10-20T00:00:00Z' },
+				{ guid: 'a', date: '2026-10-18T00:00:00Z' },
+				{ guid: 'b', date: '2026-10-19T00:00:00Z' }
+			])
+		});
+		await addFeed(db, url, null, { now, fetcher });
+		const all = await listItems(db, { order: 'oldest' });
+		expect(all.map((i) => i.title)).toEqual(['a', 'b', 'c']);
+		const after = await listItems(db, { order: 'oldest', from: all[0].publishedAt });
+		expect(after.map((i) => i.title)).toEqual(['b', 'c']);
+	});
 });
 
 describe('imported feeds', () => {

@@ -13,7 +13,7 @@
 
 	function href(value: Kind | null) {
 		const url = new URL(page.url.href);
-		url.searchParams.delete('before');
+		url.searchParams.delete('from');
 		if (value) url.searchParams.set('kind', value);
 		else url.searchParams.delete('kind');
 		return url.pathname + url.search;

@@ -1,5 +1,5 @@
 import { error, fail } from '@sveltejs/kit';
-import { kindParam } from '#lib/kind.ts';
+import { kindParam, orderOf } from '#lib/kind.ts';
 import { PAGE, getItem, hasFeeds, listItems, markAllRead, setRead } from '#lib/server/feeds.ts';
 import { saveLink, setArchived } from '#lib/server/saved.ts';
 import type { DB } from '#lib/server/db/index.ts';
@@ -11,19 +11,21 @@ async function formItem(db: DB, form: FormData) {
 	return it;
 }
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 	const kind = kindParam(url.searchParams);
 	// Unread ones by default; ?all=1 shows read ones too.
 	const unreadOnly = url.searchParams.get('all') !== '1';
-	const before = url.searchParams.get('before');
+	const order = orderOf(cookies.get('order-feeds'));
+	const from = url.searchParams.get('from');
 	const [anyFeeds, items] = await Promise.all([
 		hasFeeds(locals.db),
-		listItems(locals.db, { kind, unreadOnly, before })
+		listItems(locals.db, { kind, unreadOnly, order, from })
 	]);
 	return {
 		kind,
 		unreadOnly,
-		paged: !!before,
+		order,
+		paged: !!from,
 		hasFeeds: anyFeeds,
 		items,
 		more: items.length === PAGE ? items.at(-1)!.publishedAt : null,

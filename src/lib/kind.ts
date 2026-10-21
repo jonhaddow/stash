@@ -13,7 +13,11 @@ const VIDEO_HOSTS = [
 	'nebula.tv'
 ];
 
-export function kindOf(url: string): Kind {
+/** Hacker News marks links to talks and other videos like this. */
+const VIDEO_TITLE = /\[video\]/i;
+
+export function kindOf(url: string, title?: string | null): Kind {
+	if (title && VIDEO_TITLE.test(title)) return 'video';
 	try {
 		const host = new URL(url).hostname.replace(/^(www|m)\./, '');
 		return VIDEO_HOSTS.some((h) => host === h || host.endsWith(`.${h}`)) ? 'video' : 'article';
@@ -32,6 +36,12 @@ export function hostOf(url: string) {
 }
 
 /** `?kind=` from a URL's query, if it's one we know. */
+/** Lists' date order, newest first unless chosen otherwise (and remembered in a cookie per list). */
+export const ORDERS = ['newest', 'oldest'] as const;
+export type Order = (typeof ORDERS)[number];
+
+export const orderOf = (raw: string | undefined): Order => (raw === 'oldest' ? 'oldest' : 'newest');
+
 export const kindParam = (params: URLSearchParams): Kind | null => {
 	const k = params.get('kind');
 	return KINDS.includes(k as Kind) ? (k as Kind) : null;

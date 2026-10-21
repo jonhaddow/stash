@@ -5,6 +5,7 @@
 	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
+	import OrderPicker from '#lib/components/OrderPicker.svelte';
 	import UndoBar from '#lib/components/UndoBar.svelte';
 	import type { PageProps } from './$types';
 
@@ -29,7 +30,7 @@
 	/** This page's URL with one filter changed (and paging reset). */
 	function withParam(name: string, value: string | null) {
 		const url = new URL(page.url.href);
-		url.searchParams.delete('before');
+		url.searchParams.delete('from');
 		if (value) url.searchParams.set(name, value);
 		else url.searchParams.delete(name);
 		return url.pathname + url.search;
@@ -47,21 +48,24 @@
 <main class="page">
 	<header>
 		<h1>Feeds</h1>
-		{#if data.unread}
-			<form
-				method="POST"
-				action={actionHere('readAll')}
-				use:enhance={() =>
-					async ({ update }) => {
-						// Swiped-unread ones are read now too.
-						readNow.clear();
-						await update();
-					}}
-			>
-				<input type="hidden" name="upTo" value={data.loadedAt} />
-				<button class="btn quiet small">Mark all read</button>
-			</form>
-		{/if}
+		<div class="end">
+			{#if data.unread}
+				<form
+					method="POST"
+					action={actionHere('readAll')}
+					use:enhance={() =>
+						async ({ update }) => {
+							// Swiped-unread ones are read now too.
+							readNow.clear();
+							await update();
+						}}
+				>
+					<input type="hidden" name="upTo" value={data.loadedAt} />
+					<button class="btn quiet small">Mark all read</button>
+				</form>
+			{/if}
+			<OrderPicker list="feeds" order={data.order} />
+		</div>
 	</header>
 
 	<div class="filters">
@@ -105,10 +109,12 @@
 			{/each}
 		</ul>
 		{#if data.more}
-			<a class="btn quiet more" href={withParam('before', data.more)}>Older</a>
+			<a class="btn quiet more" href={withParam('from', data.more)}
+				>{data.order === 'oldest' ? 'Newer' : 'Older'}</a
+			>
 		{/if}
 	{:else if data.paged}
-		<p class="empty muted">No older entries.</p>
+		<p class="empty muted">No more entries.</p>
 	{:else if data.hasFeeds}
 		<p class="empty muted">{data.unreadOnly ? 'All caught up.' : 'Nothing here.'}</p>
 	{:else}
@@ -134,6 +140,11 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 12px;
+	}
+	.end {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 	.small {
 		min-height: 36px;
