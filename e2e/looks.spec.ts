@@ -9,5 +9,5 @@ test('an experimental look is chosen in Settings, and Classic turns it off', asy
 	await expect(page.locator('body[data-look="magazine"]')).toHaveCount(1);
 	await open(page, '/settings');
 	await page.getByText('Classic', { exact: true }).click();
-	await expect(page.locator('body[data-look]')).toHaveCount(0);
+	await expect(page.locator('body[data-look="classic"]')).toHaveCount(1);
 });

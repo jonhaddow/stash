@@ -56,10 +56,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// An experimental look (Settings), for looks.css. Choosing one reloads the page.
 	const look = toLook(event.cookies.get('look'));
 	const response = await resolve(event, {
-		transformPageChunk:
-			look === 'classic'
-				? undefined
-				: ({ html }) => html.replace('<body', `<body data-look="${look}"`)
+		transformPageChunk: ({ html }) => html.replace('%stash.look%', look)
 	});
 	for (const [name, value] of Object.entries(SECURITY_HEADERS)) response.headers.set(name, value);
 	return response;
