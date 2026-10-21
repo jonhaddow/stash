@@ -11,7 +11,7 @@ for i in $(seq 120); do
 	[ "$live" = "$want" ] && echo "live: ${want:0:7}" && exit 0
 	if [ "$i" = 12 ]; then
 		CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN:-op://Claude/Cloudflare/credential} \
-			op-claude run -- node scripts/start-build.ts "$want" || true
+			op-claude run -- node scripts/start-build.ts "$want" || echo "start-build failed" >&2
 	fi
 	sleep 5
 done
