@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { open } from './helpers.ts';
+import { open, swipe } from './helpers.ts';
 
 test('lists saved links, filtered by articles and videos', async ({ page }) => {
 	await open(page, '/');
@@ -14,9 +14,9 @@ test('lists saved links, filtered by articles and videos', async ({ page }) => {
 	await expect(page.getByRole('link', { name: /^A long read/ })).toBeHidden();
 });
 
-test('Done archives a link, and Undo brings it back', async ({ page }) => {
+test('swiping right archives a link, and Undo brings it back', async ({ page }) => {
 	await open(page, '/');
-	await page.getByRole('button', { name: 'Done: A news story' }).click();
+	await swipe(page, page.getByRole('listitem').filter({ hasText: 'A news story' }), 150);
 	await expect(page.getByRole('status')).toContainText('Done: A news story');
 	await expect(page.getByRole('link', { name: /^A news story/ })).toBeHidden();
 	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();

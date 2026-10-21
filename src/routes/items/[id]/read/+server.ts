@@ -2,10 +2,15 @@ import { error } from '@sveltejs/kit';
 import { setRead } from '#lib/server/feeds.ts';
 import type { RequestHandler } from './$types';
 
-/** Opening a feed entry marks it read (sent as the link opens, so it can't wait for a reply). */
-export const POST: RequestHandler = async ({ params, locals }) => {
-	const id = Number(params.id);
+/** Opening or swiping a feed entry marks it read (sent as the link opens, so it can't wait for a reply). */
+export const POST: RequestHandler = ({ params, locals }) => mark(locals.db, params.id, true);
+
+/** Swiping a read entry marks it unread again. */
+export const DELETE: RequestHandler = ({ params, locals }) => mark(locals.db, params.id, false);
+
+async function mark(db: App.Locals['db'], param: string, read: boolean) {
+	const id = Number(param);
 	if (!Number.isInteger(id)) error(404);
-	await setRead(locals.db, id, true);
+	await setRead(db, id, read);
 	return new Response(null, { status: 204 });
-};
+}

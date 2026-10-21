@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { open } from './helpers.ts';
+import { open, swipe } from './helpers.ts';
 
 test('feed entries by folder, unread in bold, and saving one for later', async ({ page }) => {
 	await open(page, '/feeds');
@@ -11,19 +11,34 @@ test('feed entries by folder, unread in bold, and saving one for later', async (
 	await page.getByRole('link', { name: 'Unread', exact: true }).click();
 	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeHidden();
 
-	await page.getByRole('button', { name: 'Save for later: Sourdough in a day' }).click();
-	await expect(
-		page.getByRole('button', { name: 'Remove from Later: Sourdough in a day' })
-	).toBeVisible();
+	// Swiping left saves it; swiping again takes it back out (leaving Later as later.spec.ts expects).
+	const row = () => page.getByRole('listitem').filter({ hasText: 'Sourdough in a day' });
+	await swipe(page, row(), -150);
+	await expect(row()).toContainText('In Later');
 	await open(page, '/?kind=video');
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 
-	// Tapping it again takes it back out (and leaves Later as later.spec.ts expects).
 	await open(page, '/feeds?folder=1');
-	await page.getByRole('button', { name: 'Remove from Later: Sourdough in a day' }).click();
-	await expect(
-		page.getByRole('button', { name: 'Save for later: Sourdough in a day' })
-	).toBeVisible();
+	await swipe(page, row(), -150);
+	await expect(row()).not.toContainText('In Later');
+});
+
+test('swiping right marks an entry read, and again unread', async ({ page }) => {
+	await open(page, '/feeds');
+	const row = page.getByRole('listitem').filter({ hasText: 'Green tea, cold' });
+	await expect(row.getByLabel('Unread')).toBeVisible();
+	// A short swipe does nothing, and opens nothing.
+	await swipe(page, row, 40);
+	await expect(row.getByLabel('Unread')).toBeVisible();
+	const read = page.waitForResponse((r) => r.url().includes('/read'));
+	await swipe(page, row, 150);
+	await read;
+	await expect(row.getByLabel('Unread')).toBeHidden();
+	const unread = page.waitForResponse((r) => r.url().includes('/read'));
+	await swipe(page, row, 150);
+	await unread;
+	await open(page, '/feeds');
+	await expect(row.getByLabel('Unread')).toBeVisible();
 });
 
 test('opening an entry marks it read', async ({ page, context }) => {

@@ -1,21 +1,22 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import { SvelteSet } from 'svelte/reactivity';
-	import IconButton from '#lib/components/IconButton.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
+	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	// Opened here: shown read straight away, before the next load says so.
-	const opened = new SvelteSet<number>();
+	// Read or unread here (opened or swiped): shown straight away, before the next load says so.
+	const readNow = new SvelteMap<number, boolean>();
+	const isUnread = (it: (typeof data.items)[number]) => !(readNow.get(it.id) ?? !!it.readAt);
 
-	function open(id: number) {
-		opened.add(id);
+	function setRead(id: number, read: boolean) {
+		readNow.set(id, read);
 		// keepalive: the request outlives the page if the link replaces it.
-		void fetch(`/items/${id}/read`, { method: 'POST', keepalive: true });
+		void fetch(`/items/${id}/read`, { method: read ? 'POST' : 'DELETE', keepalive: true });
 	}
 
 	/** This page's URL with one filter changed (and paging reset). */
@@ -88,27 +89,17 @@
 					title={it.title}
 					source={it.feedTitle}
 					at={it.publishedAt}
-					unread={!it.readAt && !opened.has(it.id)}
-					onopen={() => open(it.id)}
-				>
-					{#snippet actions()}
-						<form method="POST" use:enhance>
-							{#if it.savedId}
-								<input type="hidden" name="savedId" value={it.savedId} />
-								<IconButton
-									icon="saved"
-									on
-									label="Remove from Later: {it.title}"
-									formaction="?/unsave"
-								/>
-							{:else}
-								<input type="hidden" name="url" value={it.url} />
-								<input type="hidden" name="title" value={it.title} />
-								<IconButton icon="save" label="Save for later: {it.title}" formaction="?/save" />
-							{/if}
-						</form>
-					{/snippet}
-				</LinkRow>
+					unread={isUnread(it)}
+					saved={!!it.savedId}
+					onopen={() => setRead(it.id, true)}
+					right={{
+						label: isUnread(it) ? 'Read' : 'Unread',
+						run: () => setRead(it.id, isUnread(it))
+					}}
+					left={it.savedId
+						? { label: 'Out of Later', run: () => act('?/unsave', { savedId: it.savedId! }) }
+						: { label: 'Later', run: () => act('?/save', { url: it.url, title: it.title }) }}
+				/>
 			{/each}
 		</ul>
 		{#if data.more}
