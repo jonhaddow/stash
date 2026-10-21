@@ -35,7 +35,7 @@
 		margin: auto;
 		padding: 0;
 		border: 0;
-		background: var(--card);
+		background: var(--bg);
 		color: var(--ink);
 		overflow: hidden;
 	}

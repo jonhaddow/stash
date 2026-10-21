@@ -50,6 +50,12 @@
 		font-weight: 800;
 		cursor: pointer;
 	}
+	/* On a laptop the tabs are along the top. */
+	@media (min-width: 960px) {
+		.undo {
+			bottom: calc(24px + env(safe-area-inset-bottom));
+		}
+	}
 	@keyframes rise {
 		from {
 			opacity: 0;

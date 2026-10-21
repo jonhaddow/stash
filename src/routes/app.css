@@ -2,7 +2,6 @@
 	/* Each colour is light-dark(light, dark), following the device. Newsprint
 	   and ink, with a deep amber for actions and what's unread. */
 	--bg: light-dark(#fbf8f1, #141311);
-	--card: var(--bg);
 	--ink: light-dark(#1f1b16, #f1ece4);
 	--accent: light-dark(#b4530d, #f2a25c);
 	/* Text on an --accent background (primary buttons, chosen options). */
@@ -20,15 +19,7 @@
 	--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
 	/* The tab bar's height, above the safe area. */
 	--tabs: 56px;
-	--shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 20px rgb(0 0 0 / 0.05);
 	color-scheme: light dark;
-}
-
-/* Shadows don't show on dark backgrounds; a faint edge separates cards instead. */
-@media (prefers-color-scheme: dark) {
-	:root {
-		--shadow: 0 0 0 1px rgb(255 255 255 / 0.05);
-	}
 }
 
 * {
@@ -72,7 +63,7 @@ a {
 	border-bottom: 3px double var(--ink);
 }
 
-/* Laptops: the tabs are along the top; more width for pages in columns. */
+/* Laptops: the tabs are along the top. */
 @media (min-width: 960px) {
 	body {
 		padding-top: 64px;
@@ -80,12 +71,6 @@ a {
 
 	.page {
 		padding: 40px 32px 48px;
-	}
-
-	.page.wide {
-		max-width: 1040px;
-		padding: 40px 32px 48px;
-		gap: 24px 32px;
 	}
 }
 
@@ -116,11 +101,6 @@ p {
 	color: var(--over);
 }
 
-.card {
-	background: var(--card);
-	box-shadow: var(--shadow);
-}
-
 .list {
 	list-style: none;
 	margin: 0;
@@ -140,7 +120,7 @@ p {
 	min-height: 48px;
 	padding: 0 18px;
 	border: 1.5px solid var(--ink);
-	background: var(--card);
+	background: var(--bg);
 	font-weight: 700;
 	font-size: 15px;
 	text-decoration: none;
@@ -184,7 +164,7 @@ p {
 	min-height: 48px;
 	padding: 10px 14px;
 	border: 1.5px solid var(--field);
-	background: var(--card);
+	background: var(--bg);
 	font-size: 17px;
 	font-weight: 400;
 }

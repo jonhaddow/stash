@@ -96,7 +96,7 @@
 		min-height: 48px;
 		padding: 10px 14px;
 		border: 1.5px solid var(--field);
-		background: var(--card);
+		background: var(--bg);
 		font-size: 16px;
 	}
 	.empty {

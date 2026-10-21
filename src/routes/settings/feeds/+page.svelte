@@ -18,7 +18,7 @@
 	<h1>Feeds</h1>
 
 	<form
-		class="card add"
+		class="add"
 		method="POST"
 		action="?/add"
 		use:enhance={() => {
@@ -74,7 +74,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
-		padding: 16px;
 	}
 	.group {
 		display: flex;
@@ -85,7 +84,7 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		padding: 14px 16px;
+		padding: 14px 0;
 		text-decoration: none;
 	}
 	.name {

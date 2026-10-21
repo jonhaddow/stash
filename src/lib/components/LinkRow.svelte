@@ -188,7 +188,7 @@
 		gap: 16px;
 		padding: 16px 0;
 		text-decoration: none;
-		background: var(--card);
+		background: var(--bg);
 		transition: translate 0.2s ease-out;
 	}
 	.text {
