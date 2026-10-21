@@ -1,11 +1,13 @@
 import { redirect } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 import { apiTokenCreatedAt, createApiToken } from '#lib/server/auth.ts';
 import { toLook } from '#lib/looks.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => ({
 	look: toLook(cookies.get('look')),
-	tokenCreatedAt: await apiTokenCreatedAt(locals.db, locals.user!.id)
+	tokenCreatedAt: await apiTokenCreatedAt(locals.db, locals.user!.id),
+	vapidPublicKey: env.VAPID_PUBLIC_KEY ?? null
 });
 
 export const actions: Actions = {

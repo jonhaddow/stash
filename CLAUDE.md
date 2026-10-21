@@ -9,10 +9,11 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 - `src/lib/server/saved.ts`: saving links (title fetched from the page), Later and the archive
 - `src/lib/server/http.ts`: fetching other sites (User-Agent, timeout, size cap)
 - `src/lib/server/reddit.ts`: subreddit `.rss` requests go to Reddit's signed-in API (Jon's app, `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` secrets, from 1Password's "Reddit API") and come back as Atom
+- `src/lib/server/push.ts`: Web Push (VAPID, RFC 8291 encryption with WebCrypto) sending the unread count after each sync, for the app icon's badge; the service worker shows it. `VAPID_PRIVATE_KEY` secret, public key in `wrangler.jsonc`
 - `src/lib/kind.ts`: article or video, by the link's site; YouTube video IDs for the player (`components/Player.svelte`)
 - `src/routes/sync`: called by the cron (`worker/entry.js`) with `CRON_SECRET`
 - `src/routes/api/save`: the iOS Shortcut, `Authorization: Bearer <token>` (Settings makes the token; only its hash is kept)
-- Routes: `/` Later, `/feeds`, `/settings`, `/settings/feeds` (+ `[id]` with its sync log), `/archive`
+- Routes: `/` Later, `/feeds`, `/settings`, `/settings/feeds` (+ `[id]` with its sync log), `/settings/push` (saves the device's push subscription), `/archive`
 - Schema: `src/lib/server/db/schema.ts`. Product choices: `docs/decisions.md`; what's next: `docs/roadmap.md`.
 
 ## Commands

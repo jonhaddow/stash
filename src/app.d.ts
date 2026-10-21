@@ -34,6 +34,9 @@ declare global {
 			REDDIT_CLIENT_SECRET?: string;
 			/** Authenticates the cron's call to /sync. */
 			CRON_SECRET?: string;
+			/** Web Push (push.ts): the public key (wrangler.jsonc vars) and private scalar (Worker secret). */
+			VAPID_PUBLIC_KEY?: string;
+			VAPID_PRIVATE_KEY?: string;
 			/** e.g. https://stash.app.haddow.me (used by the cron). */
 			APP_ORIGIN?: string;
 		}

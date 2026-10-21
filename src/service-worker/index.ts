@@ -35,3 +35,23 @@ self.addEventListener('fetch', (event) => {
 		})()
 	);
 });
+
+// The unread count, pushed by the cron after each sync (push.ts). iOS needs a
+// notification for every push; one tag means each replaces the last.
+self.addEventListener('push', (event) => {
+	const { unread } = event.data!.json() as { unread: number };
+	event.waitUntil(
+		Promise.all([
+			self.navigator.setAppBadge(unread),
+			self.registration.showNotification(`${unread} unread in Stash`, {
+				tag: 'unread',
+				silent: true
+			})
+		])
+	);
+});
+
+self.addEventListener('notificationclick', (event) => {
+	event.notification.close();
+	event.waitUntil(self.clients.openWindow('/feeds'));
+});
