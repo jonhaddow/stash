@@ -62,7 +62,7 @@ export async function saveLink(
 	return row;
 }
 
-/** Later (or the archive), newest first. */
+/** Later (or the archive), newest first unless `order` is 'oldest'. */
 export function listSaved(
 	db: DB,
 	{

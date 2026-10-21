@@ -35,13 +35,12 @@ export function hostOf(url: string) {
 	}
 }
 
-/** `?kind=` from a URL's query, if it's one we know. */
 /** Lists' date order, newest first unless chosen otherwise (and remembered in a cookie per list). */
-export const ORDERS = ['newest', 'oldest'] as const;
-export type Order = (typeof ORDERS)[number];
+export type Order = 'newest' | 'oldest';
 
 export const orderOf = (raw: string | undefined): Order => (raw === 'oldest' ? 'oldest' : 'newest');
 
+/** `?kind=` from a URL's query, if it's one we know. */
 export const kindParam = (params: URLSearchParams): Kind | null => {
 	const k = params.get('kind');
 	return KINDS.includes(k as Kind) ? (k as Kind) : null;
