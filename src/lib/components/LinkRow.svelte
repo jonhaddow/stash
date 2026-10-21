@@ -5,13 +5,13 @@
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { hostOf, youtubeId } from '#lib/kind.ts';
+	import { hackUrl, hostOf, youtubeId } from '#lib/kind.ts';
 	import { ago } from '#lib/time.ts';
 	import Player from './Player.svelte';
 
 	// A link in a list: title, where it's from and when, and a thumbnail, opening the original
-	// page (YouTube videos play in the app instead). Swiping it right or left
-	// past the threshold does that side's action. Buttons (the archive's) to its right.
+	// page (YouTube videos play in the app instead; Hacker News threads open in Hack on iOS).
+	// Swiping it right or left past the threshold does that side's action. Buttons (the archive's) to its right.
 	let {
 		url,
 		title,
@@ -43,6 +43,7 @@
 	} = $props();
 
 	const video = $derived(youtubeId(url));
+	const hack = $derived(hackUrl(url));
 	let playing = $state(false);
 	const thumb = $derived(image || (video ? `https://i.ytimg.com/vi/${video}/mqdefault.jpg` : null));
 	// Images that fail to load (gone, or hotlinking refused) leave just the title.
@@ -97,6 +98,11 @@
 		dx = 0;
 	}
 
+	// iPads say they're Macs, but Macs have no touch screen.
+	const ios = () =>
+		/iPhone|iPad/.test(navigator.userAgent) ||
+		(/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
 	function onclick(e: MouseEvent) {
 		if (swiped) {
 			e.preventDefault();
@@ -106,6 +112,9 @@
 		if (video) {
 			e.preventDefault();
 			playing = true;
+		} else if (hack && ios()) {
+			e.preventDefault();
+			location.href = hack;
 		}
 	}
 </script>

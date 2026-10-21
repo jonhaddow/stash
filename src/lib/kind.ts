@@ -67,3 +67,16 @@ export function youtubeId(url: string): string | null {
 		return null;
 	}
 }
+
+/** The Hack app's link for a Hacker News thread, so it opens there on the phone. */
+export function hackUrl(url: string): string | null {
+	try {
+		const u = new URL(url);
+		const id = u.searchParams.get('id');
+		return u.hostname === 'news.ycombinator.com' && u.pathname === '/item' && id && /^\d+$/.test(id)
+			? `hack://item?id=${id}`
+			: null;
+	} catch {
+		return null;
+	}
+}
