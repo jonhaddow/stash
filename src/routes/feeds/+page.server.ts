@@ -1,6 +1,6 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { kindParam } from '#lib/kind.ts';
-import { PAGE, hasFeeds, listItems, markAllRead } from '#lib/server/feeds.ts';
+import { PAGE, getItem, hasFeeds, listItems, markAllRead } from '#lib/server/feeds.ts';
 import { saveLink, setArchived } from '#lib/server/saved.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -27,8 +27,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 export const actions: Actions = {
 	save: async ({ request, locals }) => {
-		const form = await request.formData();
-		await saveLink(locals.db, String(form.get('url')), String(form.get('title')));
+		const it = await getItem(locals.db, Number((await request.formData()).get('id')));
+		if (!it) error(404);
+		await saveLink(locals.db, it.url, { title: it.title, image: it.imageUrl });
 		return { saved: true };
 	},
 	unsave: async ({ request, locals }) => {

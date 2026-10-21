@@ -19,7 +19,7 @@
 	{#if data.links.length}
 		<ul class="list">
 			{#each data.links as link (link.id)}
-				<LinkRow url={link.url} title={link.title} at={link.archivedAt!}>
+				<LinkRow url={link.url} title={link.title} image={link.imageUrl} at={link.archivedAt!}>
 					{#snippet actions()}
 						<form method="POST" use:enhance>
 							<input type="hidden" name="id" value={link.id} />

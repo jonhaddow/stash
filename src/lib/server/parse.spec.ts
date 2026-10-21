@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findFeedLink, pageTitle, parseFeed, text } from './parse.ts';
+import { findFeedLink, pageInfo, parseFeed, text } from './parse.ts';
 
 const RSS = `<?xml version="1.0"?>
 <rss version="2.0"><channel>
@@ -10,6 +10,7 @@ const RSS = `<?xml version="1.0"?>
 		<link>https://blog.example/first</link>
 		<guid isPermaLink="false">post-1</guid>
 		<pubDate>Mon, 19 Oct 2026 08:00:00 GMT</pubDate>
+		<description>&lt;img src="https://pixel.example/t.gif" width="1"&gt;&lt;p&gt;Hi &lt;img src=&quot;/img/a.jpg?w=1&amp;amp;h=2&quot;&gt;</description>
 	</item>
 	<item>
 		<title>Relative &#8217;link&#x2019;</title>
@@ -29,7 +30,10 @@ const ATOM = `<?xml version="1.0" encoding="UTF-8"?>
 		<link rel="alternate" href="https://www.youtube.com/watch?v=abc"/>
 		<published>2026-10-18T10:00:00+00:00</published>
 		<updated>2026-10-19T10:00:00+00:00</updated>
-		<media:group><media:title>Not this</media:title></media:group>
+		<media:group>
+			<media:title>Not this</media:title>
+			<media:thumbnail url="https://i1.ytimg.com/vi/abc/hqdefault.jpg" width="480" height="360"/>
+		</media:group>
 	</entry>
 </feed>`;
 
@@ -43,13 +47,15 @@ describe('parseFeed', () => {
 				guid: 'post-1',
 				url: 'https://blog.example/first',
 				title: 'First',
-				publishedAt: '2026-10-19T08:00:00.000Z'
+				publishedAt: '2026-10-19T08:00:00.000Z',
+				image: 'https://blog.example/img/a.jpg?w=1&h=2'
 			},
 			{
 				guid: 'https://blog.example/second',
 				url: 'https://blog.example/second',
 				title: 'Relative ’link’',
-				publishedAt: null
+				publishedAt: null,
+				image: null
 			}
 		]);
 	});
@@ -63,9 +69,28 @@ describe('parseFeed', () => {
 				guid: 'yt:video:abc',
 				url: 'https://www.youtube.com/watch?v=abc',
 				title: 'A video',
-				publishedAt: '2026-10-18T10:00:00.000Z'
+				publishedAt: '2026-10-18T10:00:00.000Z',
+				image: 'https://i1.ytimg.com/vi/abc/hqdefault.jpg'
 			}
 		]);
+	});
+
+	it('takes images from enclosures and CDATA, https only', () => {
+		const rss = (inner: string) =>
+			parseFeed(
+				`<rss><channel><item><link>https://a.example/1</link>${inner}</item></channel></rss>`,
+				'https://a.example/feed'
+			).items[0].image;
+		expect(rss('<enclosure url="https://a.example/p.png" type="image/png"/>')).toBe(
+			'https://a.example/p.png'
+		);
+		expect(rss('<enclosure url="https://a.example/e.mp3" type="audio/mpeg"/>')).toBeNull();
+		expect(
+			rss(
+				'<content:encoded><![CDATA[<p><img src="https://a.example/c.jpg"></p>]]></content:encoded>'
+			)
+		).toBe('https://a.example/c.jpg');
+		expect(rss('<media:content url="http://a.example/m.jpg" medium="image"/>')).toBeNull();
 	});
 
 	it('refuses web pages', () => {
@@ -86,15 +111,23 @@ describe('findFeedLink', () => {
 	});
 });
 
-describe('pageTitle', () => {
-	it('prefers og:title', () => {
+describe('pageInfo', () => {
+	const url = 'https://site.example/post';
+	it('prefers og:title, and takes og:image', () => {
 		expect(
-			pageTitle(`<title>Site | Thing</title><meta property="og:title" content="Thing &amp; more">`)
-		).toBe('Thing & more');
+			pageInfo(
+				`<title>Site | Thing</title><meta property="og:title" content="Thing &amp; more">
+				<meta property="og:image" content="/cover.jpg">`,
+				url
+			)
+		).toEqual({ title: 'Thing & more', image: 'https://site.example/cover.jpg' });
 	});
 	it('falls back to <title>', () => {
-		expect(pageTitle('<title>\n  Hello  world\n</title>')).toBe('Hello world');
-		expect(pageTitle('<p>none</p>')).toBeNull();
+		expect(pageInfo('<title>\n  Hello  world\n</title>', url)).toEqual({
+			title: 'Hello world',
+			image: null
+		});
+		expect(pageInfo('<p>none</p>', url)).toEqual({ title: null, image: null });
 	});
 });
 

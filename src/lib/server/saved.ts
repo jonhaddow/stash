@@ -3,7 +3,7 @@ import { kindOf, type Kind } from '../kind.ts';
 import { saved } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
-import { pageTitle } from './parse.ts';
+import { pageInfo } from './parse.ts';
 
 /** A link someone typed or shared, as a full http(s) URL, or null. */
 export function cleanUrl(raw: unknown) {
@@ -21,33 +21,41 @@ export function cleanUrl(raw: unknown) {
 	}
 }
 
-/** A page's title from its <head>, or null if it can't be had quickly. */
-export async function fetchTitle(fetcher: Fetch, url: string) {
+/** A page's title and image from its <head>, or nulls if they can't be had quickly. */
+export async function fetchPage(fetcher: Fetch, url: string) {
 	try {
 		const res = await get(fetcher, url, { accept: 'text/html' });
-		if (!res.ok) return null;
 		// The <head> comes first; YouTube's pages are a few MB in all.
-		return pageTitle(await readText(res, 300_000));
+		if (res.ok) return pageInfo(await readText(res, 300_000), url);
 	} catch {
-		return null;
+		// Saved without them.
 	}
+	return { title: null, image: null };
 }
 
 /**
- * Saves a link to Later, fetching its title if none is given. Saving one that's
- * already there (or archived) brings it back to the top.
+ * Saves a link to Later, fetching its title and image from the page if no title
+ * is given (a feed entry brings its own). Saving one that's already there (or
+ * archived) brings it back to the top.
  */
 export async function saveLink(
 	db: DB,
 	url: string,
-	title?: string | null,
+	given: { title?: string | null; image?: string | null } = {},
 	{ now = new Date(), fetcher = workersFetch }: { now?: Date; fetcher?: Fetch } = {}
 ) {
-	const name = title?.trim() || (await fetchTitle(fetcher, url)) || new URL(url).hostname;
+	const title = given.title?.trim();
+	const page = title ? { title, image: given.image ?? null } : await fetchPage(fetcher, url);
 	const addedAt = now.toISOString();
 	const [row] = await db
 		.insert(saved)
-		.values({ url, title: name, kind: kindOf(url), addedAt })
+		.values({
+			url,
+			title: page.title || new URL(url).hostname,
+			kind: kindOf(url),
+			imageUrl: page.image,
+			addedAt
+		})
 		.onConflictDoUpdate({ target: saved.url, set: { addedAt, archivedAt: null } })
 		.returning();
 	return row;
