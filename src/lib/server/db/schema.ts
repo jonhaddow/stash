@@ -133,3 +133,13 @@ export const syncLog = sqliteTable(
 );
 
 export type SyncLog = typeof syncLog.$inferSelect;
+
+/** Devices that get the unread count by Web Push (push.ts), for the app icon's badge. */
+export const pushSubscription = sqliteTable('push_subscription', {
+	endpoint: text('endpoint').primaryKey(),
+	/** The device's keys, for encrypting each message. */
+	p256dh: text('p256dh').notNull(),
+	auth: text('auth').notNull(),
+	/** The count last sent, so an unchanged one isn't sent again. */
+	sentUnread: integer('sent_unread')
+});

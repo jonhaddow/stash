@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { fromB64url } from '#lib/base64url.ts';
 	import { looks } from '#lib/looks.ts';
 	import { formatDateTime } from '#lib/time.ts';
 	import type { PageProps } from './$types';
@@ -10,14 +11,37 @@
 	// allowed. Unset until mounted: there's no Notification on the server.
 	let permission = $state<NotificationPermission>();
 	$effect(() => {
-		if ('Notification' in window && 'setAppBadge' in navigator)
+		if ('Notification' in window && 'setAppBadge' in navigator) {
 			permission = Notification.permission;
+			if (permission === 'granted') void subscribe();
+		}
 	});
 
 	async function allow() {
 		permission = await Notification.requestPermission();
+		if (permission !== 'granted') return;
 		// The layout set the badge before it was allowed; set it again now.
-		if (permission === 'granted' && data.unread) void navigator.setAppBadge(data.unread);
+		if (data.unread) void navigator.setAppBadge(data.unread);
+		await subscribe();
+	}
+
+	// So the cron can update the count while the app is closed (Web Push). Sent
+	// each time Settings opens, in case the server has dropped it.
+	async function subscribe() {
+		if (!data.vapidPublicKey || !('PushManager' in window)) return;
+		const key = fromB64url(data.vapidPublicKey);
+		const registration = await navigator.serviceWorker.ready;
+		const sub =
+			(await registration.pushManager.getSubscription()) ??
+			(await registration.pushManager.subscribe({
+				userVisibleOnly: true,
+				applicationServerKey: key
+			}));
+		await fetch('/settings/push', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(sub)
+		});
 	}
 </script>
 
@@ -71,7 +95,11 @@
 		<section class="group">
 			<h2>Icon badge</h2>
 			{#if permission === 'granted'}
-				<p class="muted">The app icon shows how many feed entries are unread.</p>
+				<p class="muted">
+					The app icon shows how many feed entries are unread, kept up to date by a quiet
+					notification after each sync. Turn off its banners and lock screen in iOS Settings →
+					Notifications → Stash.
+				</p>
 			{:else if permission === 'denied'}
 				<p class="muted">
 					Notifications are off for Stash, so the app icon can't show the unread count. Turn them on
@@ -80,7 +108,7 @@
 			{:else}
 				<p class="muted">
 					Show how many feed entries are unread on the app icon. iOS asks to allow notifications
-					first; Stash doesn't send any.
+					first: each update comes as a notification, which you can keep quiet.
 				</p>
 				<button class="btn" onclick={allow}>Show the unread count</button>
 			{/if}

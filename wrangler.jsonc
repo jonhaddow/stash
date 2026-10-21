@@ -21,6 +21,8 @@
 	},
 	"vars": {
 		"APP_ORIGIN": "https://stash.app.haddow.me",
+		// Web Push's public key (push.ts); the private one is a Worker secret (VAPID_PRIVATE_KEY).
+		"VAPID_PUBLIC_KEY": "BGwnkT94q0oSnHt-zfsrOGD6yqwGHYJ0ShXMccymeR3CFQXmr1MS9pcXq8PuFrRDlCrJAoX0jUvl9Ojk_ueF-uQ",
 		// Public OAuth client ID; the secret is a Worker secret (GOOGLE_CLIENT_SECRET).
 		"GOOGLE_CLIENT_ID": "856408914710-dgcs4pkdkahr6jchr0pefodiobhjrmv4.apps.googleusercontent.com"
 	},
