@@ -1,0 +1,395 @@
+/* Experimental looks, chosen in Settings: overrides on top of app.css and the
+   components' own styles, keyed on the layout's data-look. LinkRow's lists are
+   .list:has(.text); others (Settings) keep their usual look. */
+
+.look {
+	display: contents;
+}
+
+/* ---------- Desk: native-feeling rows on a phone, a sidebar on a laptop ---------- */
+
+[data-look='desk'] .list:has(.text) {
+	margin: 0 -16px;
+	border-radius: 0;
+	box-shadow: none;
+	border-block: 1px solid var(--line);
+}
+
+[data-look='desk'] .list:has(.text) a {
+	padding: 12px 16px;
+}
+
+[data-look='desk'] .list:has(.text) img {
+	width: 64px;
+	aspect-ratio: 1;
+}
+
+[data-look='desk'] .page h1 {
+	font-size: 34px;
+}
+
+/* A docked bar, iOS style, rather than the floating pill. */
+[data-look='desk'] nav.tabs {
+	left: 0;
+	bottom: 0;
+	translate: none;
+	width: 100%;
+	height: calc(56px + env(safe-area-inset-bottom));
+	padding: 0 0 env(safe-area-inset-bottom);
+	border-radius: 0;
+	border: 0;
+	border-top: 1px solid var(--line);
+	box-shadow: none;
+}
+
+[data-look='desk'] nav.tabs a.active {
+	background: none;
+}
+
+@media (min-width: 960px) {
+	body:has([data-look='desk']) {
+		padding-left: 232px;
+	}
+
+	[data-look='desk'] .page {
+		max-width: 760px;
+		padding: 40px 32px 48px;
+	}
+
+	[data-look='desk'] .list:has(.text) {
+		margin: 0;
+		border: 0;
+		border-radius: var(--radius);
+		box-shadow: var(--shadow);
+	}
+
+	[data-look='desk'] .list:has(.text) a:hover {
+		background: color-mix(in srgb, var(--accent) 5%, var(--card));
+	}
+
+	[data-look='desk'] .list:has(.text) img {
+		width: 96px;
+		aspect-ratio: 16 / 10;
+	}
+
+	[data-look='desk'] nav.tabs {
+		top: 0;
+		width: 232px;
+		height: auto;
+		padding: 28px 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		background: var(--card);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		border-top: 0;
+		border-right: 1px solid var(--line);
+	}
+
+	[data-look='desk'] nav.tabs::before {
+		content: 'Stash';
+		padding: 0 14px 20px;
+		font-size: 22px;
+		font-weight: 800;
+		letter-spacing: -0.4px;
+		color: var(--ink);
+	}
+
+	[data-look='desk'] nav.tabs a {
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: 12px;
+		padding: 10px 14px;
+		border-radius: 12px;
+		font-size: 15px;
+	}
+
+	[data-look='desk'] nav.tabs a:hover {
+		background: var(--line);
+	}
+
+	[data-look='desk'] nav.tabs a.active {
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
+	}
+
+	/* Settings sits at the bottom of the sidebar. */
+	[data-look='desk'] nav.tabs a:last-child {
+		margin-top: auto;
+	}
+}
+
+/* ---------- Magazine: picture cards, a grid on a laptop ---------- */
+
+[data-look='magazine'] .page h1 {
+	font-size: 38px;
+	letter-spacing: -1px;
+}
+
+[data-look='magazine'] .list:has(.text) {
+	display: grid;
+	gap: 16px;
+	background: none;
+	box-shadow: none;
+	overflow: visible;
+}
+
+[data-look='magazine'] .list:has(.text) > li {
+	flex-direction: column;
+	align-items: stretch;
+	border: 0;
+	border-radius: 20px;
+	overflow: hidden;
+	background: var(--card);
+	box-shadow: var(--shadow);
+}
+
+[data-look='magazine'] .list:has(.text) a {
+	flex-direction: column-reverse;
+	align-items: stretch;
+	gap: 0;
+	padding: 0;
+}
+
+[data-look='magazine'] .list:has(.text) img {
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	border-radius: 0;
+}
+
+[data-look='magazine'] .list:has(.text) .text {
+	padding: 14px 16px 16px;
+	gap: 6px;
+}
+
+[data-look='magazine'] .list:has(.text) .title {
+	font-size: 19px;
+	letter-spacing: -0.2px;
+}
+
+[data-look='magazine'] .list:has(.text) .under {
+	border-radius: 20px;
+}
+
+/* An ink pill instead of a frosted one. */
+[data-look='magazine'] nav.tabs {
+	background: var(--ink);
+	border-color: transparent;
+}
+
+[data-look='magazine'] nav.tabs a {
+	color: color-mix(in srgb, var(--bg) 65%, transparent);
+}
+
+[data-look='magazine'] nav.tabs a.active {
+	color: var(--bg);
+	background: color-mix(in srgb, var(--bg) 14%, transparent);
+}
+
+@media (min-width: 960px) {
+	[data-look='magazine'] .page {
+		max-width: 1120px;
+		padding: 40px 32px calc(var(--tabs) + 44px);
+	}
+
+	/* Filters and forms stay their usual width above the grid. */
+	[data-look='magazine'] .page > :not(.list, header) {
+		max-width: 560px;
+	}
+
+	[data-look='magazine'] .list:has(.text) {
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 24px;
+		align-items: start;
+	}
+
+	[data-look='magazine'] .list:has(.text) > li {
+		transition: translate 0.2s;
+	}
+
+	[data-look='magazine'] .list:has(.text) > li:hover {
+		translate: 0 -3px;
+	}
+}
+
+/* ---------- Paper: a newspaper, serif and rules ---------- */
+
+body:has([data-look='paper']) {
+	--bg: light-dark(#fbf8f1, #141311);
+	--card: var(--bg);
+	--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+}
+
+[data-look='paper'] .page {
+	max-width: 640px;
+}
+
+[data-look='paper'] .page > header {
+	padding-bottom: 10px;
+	border-bottom: 3px double var(--ink);
+}
+
+[data-look='paper'] h1 {
+	font-family: var(--serif);
+	font-size: 40px;
+	font-weight: 700;
+	letter-spacing: -0.5px;
+}
+
+[data-look='paper'] h2 {
+	font-family: var(--serif);
+	font-size: 20px;
+	font-weight: 700;
+}
+
+[data-look='paper'] .list {
+	box-shadow: none;
+	border-radius: 0;
+	background: none;
+}
+
+[data-look='paper'] .list:has(.text) a {
+	padding: 16px 0;
+	gap: 16px;
+}
+
+[data-look='paper'] .list:has(.text) .title {
+	font-family: var(--serif);
+	font-size: 20px;
+	font-weight: 500;
+	line-height: 1.25;
+}
+
+[data-look='paper'] .list:has(.text) .unread .title {
+	font-weight: 700;
+}
+
+[data-look='paper'] .list:has(.text) .meta {
+	order: -1;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+}
+
+[data-look='paper'] .list:has(.text) img {
+	width: 76px;
+	aspect-ratio: 1;
+	border-radius: 2px;
+	filter: saturate(0.6);
+}
+
+/* Filters as underlined words rather than filled pills. */
+[data-look='paper'] .segments {
+	background: none;
+	padding: 0;
+	border-bottom: 1px solid var(--line);
+	border-radius: 0;
+}
+
+/* .chip.chip: Feeds' own rounding is as specific otherwise. */
+[data-look='paper'] .segments > *,
+[data-look='paper'] .chip.chip {
+	border-radius: 0;
+	background: none;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	font-size: 12px;
+}
+
+[data-look='paper'] .segments > [aria-current='page'],
+[data-look='paper'] .segments > :has(input:checked),
+[data-look='paper'] .chip.chip.on {
+	background: none;
+	color: var(--ink);
+	box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+[data-look='paper'] .chip.chip {
+	border-bottom: 1px solid var(--line);
+}
+
+[data-look='paper'] .btn {
+	border-radius: 2px;
+}
+
+[data-look='paper'] nav.tabs {
+	left: 0;
+	bottom: 0;
+	translate: none;
+	width: 100%;
+	height: calc(56px + env(safe-area-inset-bottom));
+	padding: 0 0 env(safe-area-inset-bottom);
+	border-radius: 0;
+	border: 0;
+	border-top: 1px solid var(--ink);
+	background: var(--bg);
+	box-shadow: none;
+}
+
+[data-look='paper'] nav.tabs a {
+	border-radius: 0;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	font-size: 10px;
+}
+
+[data-look='paper'] nav.tabs a.active {
+	background: none;
+	color: var(--ink);
+}
+
+/* On a laptop: a masthead of tabs along the top, words only. */
+@media (min-width: 960px) {
+	body:has([data-look='paper']) {
+		padding-top: 64px;
+	}
+
+	[data-look='paper'] .page {
+		padding: 40px 32px 48px;
+	}
+
+	[data-look='paper'] nav.tabs {
+		top: 0;
+		bottom: auto;
+		height: 64px;
+		padding: 0 max(32px, calc(50% - 288px));
+		display: flex;
+		align-items: center;
+		gap: 28px;
+		border-top: 0;
+		border-bottom: 1px solid var(--ink);
+	}
+
+	[data-look='paper'] nav.tabs::before {
+		content: 'The Stash';
+		margin-right: auto;
+		font-family: var(--serif);
+		font-size: 24px;
+		font-weight: 700;
+		font-style: italic;
+	}
+
+	[data-look='paper'] nav.tabs a {
+		flex-direction: row;
+		height: 100%;
+		font-size: 12px;
+	}
+
+	[data-look='paper'] nav.tabs a.active {
+		box-shadow: inset 0 -3px 0 var(--accent);
+	}
+
+	[data-look='paper'] nav.tabs .icon svg {
+		display: none;
+	}
+
+	[data-look='paper'] nav.tabs .badge {
+		position: static;
+		order: 1;
+	}
+
+	[data-look='paper'] nav.tabs .icon {
+		order: 1;
+	}
+}
