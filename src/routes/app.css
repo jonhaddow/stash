@@ -1,8 +1,8 @@
 :root {
-	/* Each colour is light-dark(light, dark), following the device. Warm paper
+	/* Each colour is light-dark(light, dark), following the device. Newsprint
 	   and ink, with a deep amber for actions and what's unread. */
-	--bg: light-dark(#f6f3ee, #131211);
-	--card: light-dark(#ffffff, #1d1b19);
+	--bg: light-dark(#fbf8f1, #141311);
+	--card: var(--bg);
 	--ink: light-dark(#1f1b16, #f1ece4);
 	--accent: light-dark(#b4530d, #f2a25c);
 	/* Text on an --accent background (primary buttons, chosen options). */
@@ -16,9 +16,10 @@
 	--note-ink: light-dark(#7a3a0a, #f5c896);
 	--alert-bg: light-dark(#fbe9e5, #3a1814);
 	--alert-ink: light-dark(#9f2118, #ffb4a8);
-	--radius: 16px;
-	/* The tab bar's height; it floats 12px up. */
-	--tabs: 64px;
+	/* Headlines and titles; the rest is Manrope. */
+	--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+	/* The tab bar's height, above the safe area. */
+	--tabs: 56px;
 	--shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 20px rgb(0 0 0 / 0.05);
 	color-scheme: light dark;
 }
@@ -57,7 +58,7 @@ a {
 }
 
 .page {
-	max-width: 480px;
+	max-width: 640px;
 	margin: 0 auto;
 	padding: 28px 16px calc(var(--tabs) + 44px + env(safe-area-inset-bottom));
 	display: flex;
@@ -65,8 +66,22 @@ a {
 	gap: 20px;
 }
 
-/* Laptops: more width, for pages laid out in columns. */
+/* A double rule under the page's title, like a newspaper's masthead. */
+.page > header {
+	padding-bottom: 10px;
+	border-bottom: 3px double var(--ink);
+}
+
+/* Laptops: the tabs are along the top; more width for pages in columns. */
 @media (min-width: 960px) {
+	body {
+		padding-top: 64px;
+	}
+
+	.page {
+		padding: 40px 32px 48px;
+	}
+
 	.page.wide {
 		max-width: 1040px;
 		padding: 40px 32px 48px;
@@ -76,15 +91,17 @@ a {
 
 h1 {
 	margin: 0;
-	font-size: 30px;
-	font-weight: 800;
+	font-family: var(--serif);
+	font-size: 40px;
+	font-weight: 700;
 	letter-spacing: -0.5px;
 }
 
 h2 {
 	margin: 0;
-	font-size: 17px;
-	font-weight: 800;
+	font-family: var(--serif);
+	font-size: 20px;
+	font-weight: 700;
 }
 
 p {
@@ -101,7 +118,6 @@ p {
 
 .card {
 	background: var(--card);
-	border-radius: var(--radius);
 	box-shadow: var(--shadow);
 }
 
@@ -109,9 +125,6 @@ p {
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	background: var(--card);
-	border-radius: var(--radius);
-	box-shadow: var(--shadow);
 	overflow: hidden;
 }
 
@@ -126,7 +139,6 @@ p {
 	gap: 8px;
 	min-height: 48px;
 	padding: 0 18px;
-	border-radius: 24px;
 	border: 1.5px solid var(--ink);
 	background: var(--card);
 	font-weight: 700;
@@ -171,7 +183,6 @@ p {
 .field textarea {
 	min-height: 48px;
 	padding: 10px 14px;
-	border-radius: 12px;
 	border: 1.5px solid var(--field);
 	background: var(--card);
 	font-size: 17px;
@@ -186,7 +197,6 @@ p {
 .error {
 	background: var(--alert-bg);
 	color: var(--alert-ink);
-	border-radius: 12px;
 	padding: 12px 14px;
 	font-size: 15px;
 }
@@ -202,15 +212,14 @@ p {
 	align-self: flex-start;
 }
 
-/* A switch between two or three views or settings: links, or radio labels. */
+/* A switch between two or three views or settings: links, or radio labels.
+   Underlined words, like the chips. */
 .segments {
 	display: grid;
 	grid-auto-columns: minmax(0, 1fr);
 	grid-auto-flow: column;
 	gap: 4px;
-	padding: 3px;
-	border-radius: 16px;
-	background: var(--line);
+	border-bottom: 1px solid var(--line);
 }
 
 .segments > * {
@@ -220,10 +229,10 @@ p {
 	justify-content: center;
 	gap: 6px;
 	min-height: 40px;
-	/* Inside the track's padding. */
-	border-radius: 13px;
 	font-weight: 600;
-	font-size: 15px;
+	font-size: 12px;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
 	color: var(--muted);
 	text-decoration: none;
 	cursor: pointer;
@@ -235,11 +244,13 @@ p {
 	pointer-events: none;
 }
 
-/* The chosen one: amber. */
+/* The chosen one: underlined in amber. */
 .segments > [aria-current='page'],
-.segments > :has(input:checked) {
-	background: var(--accent);
-	color: var(--on-accent);
+.segments > :has(input:checked),
+.chip.on,
+.chip:has(input:checked) {
+	color: var(--ink);
+	box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 .segments > :has(input:focus-visible) {
@@ -247,7 +258,7 @@ p {
 	outline-offset: 2px;
 }
 
-/* Tappable pills: folders. .on, or a checked input inside, fills it in. */
+/* Tappable words: folders. .on, or a checked input inside, underlines it. */
 .chips {
 	display: flex;
 	flex-wrap: wrap;
@@ -261,11 +272,13 @@ p {
 	min-height: 44px;
 	padding: 0 16px;
 	border: 0;
-	border-radius: 22px;
-	background: var(--line);
+	border-bottom: 1px solid var(--line);
+	background: none;
 	color: var(--ink);
-	font-size: 15px;
+	font-size: 12px;
 	font-weight: 700;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
 	text-decoration: none;
 	cursor: pointer;
 }
@@ -283,16 +296,9 @@ p {
 	outline-offset: 2px;
 }
 
-.chip.on,
-.chip:has(input:checked) {
-	background: var(--accent);
-	color: var(--on-accent);
-}
-
 .note {
 	background: var(--note-bg);
 	color: var(--note-ink);
-	border-radius: 12px;
 	padding: 12px 14px;
 	font-size: 15px;
 }
