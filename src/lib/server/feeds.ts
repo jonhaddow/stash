@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind } from '../kind.ts';
 import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -11,8 +11,6 @@ const DAY = 24 * 60 * MIN;
 export const FEED_EVERY_MS = 30 * MIN;
 /** Feeds fetched per cron run (every 5 minutes); keeps each run inside the free plan's CPU. */
 export const FEEDS_PER_RUN = 5;
-/** A feed refused with 429 (too many requests; Reddit does this) waits this long before trying again. */
-export const RATE_LIMITED_MS = 2 * 60 * MIN;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 30;
@@ -277,14 +275,10 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 		.where(
 			or(
 				isNull(feed.lastFetchedAt),
-				and(
-					lte(feed.lastFetchedAt, ago(FEED_EVERY_MS)),
-					or(
-						isNull(feed.lastError),
-						ne(feed.lastError, 'HTTP 429'),
-						lte(feed.lastFetchedAt, ago(RATE_LIMITED_MS))
-					)
-				)
+				lte(feed.lastFetchedAt, ago(FEED_EVERY_MS)),
+				// Refused with 429 (too many requests): on Cloudflare's shared addresses that's
+				// other Workers using up the quota, so it's luck, and the next run tries again.
+				eq(feed.lastError, 'HTTP 429')
 			)
 		)
 		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt));

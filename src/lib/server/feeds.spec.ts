@@ -150,15 +150,16 @@ describe('syncDue', () => {
 		]);
 	});
 
-	it('leaves a feed refused with 429 for two hours', async () => {
+	it('tries a feed refused with 429 again on the next run', async () => {
 		const url = 'https://www.reddit.com/r/a/.rss';
 		await db.insert(feedTable).values({ title: 'r/a', url, createdAt: now.toISOString() });
 		expect(await syncDue(db, now, fakeFetch({ [url]: 429 }))).toMatchObject([
 			{ status: 'error', error: 'HTTP 429' }
 		]);
 		const fetcher = fakeFetch({ [url]: rss([]) });
-		expect(await syncDue(db, at(60), fetcher)).toEqual([]);
-		expect(await syncDue(db, at(120), fetcher)).toMatchObject([{ status: 'ok' }]);
+		expect(await syncDue(db, at(5), fetcher)).toMatchObject([{ status: 'ok' }]);
+		// Fetched fine: back to every half hour.
+		expect(await syncDue(db, at(10), fetcher)).toEqual([]);
 	});
 });
 
