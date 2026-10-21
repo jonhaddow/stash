@@ -6,6 +6,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '#lib/server/db/schema.ts';
 import { SESSION_COOKIE, setSessionCookie, validateSession } from '#lib/server/auth.ts';
 import { configureReddit } from '#lib/server/reddit.ts';
+import { toLook } from '#lib/looks.ts';
 
 // The dev server runs on Node, which lacks some of Workers' built-ins.
 if (dev) await import('./node-shims.ts');
@@ -52,7 +53,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		redirect(303, `/login?next=${encodeURIComponent(path + event.url.search)}`);
 	}
 
-	const response = await resolve(event);
+	// An experimental look (Settings), for looks.css. Choosing one reloads the page.
+	const look = toLook(event.cookies.get('look'));
+	const response = await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('%stash.look%', look)
+	});
 	for (const [name, value] of Object.entries(SECURITY_HEADERS)) response.headers.set(name, value);
 	return response;
 };

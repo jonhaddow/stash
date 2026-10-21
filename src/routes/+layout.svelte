@@ -6,6 +6,7 @@
 	import '@fontsource-variable/manrope';
 	import font from '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url';
 	import './app.css';
+	import './looks.css';
 
 	let { data, children }: LayoutProps = $props();
 
