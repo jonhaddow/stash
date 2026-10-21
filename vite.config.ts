@@ -34,6 +34,8 @@ export default defineConfig({
 					'style-src': ['self', 'unsafe-inline'],
 					'font-src': ['self'],
 					'img-src': ['self', 'data:', 'blob:'],
+					// YouTube videos play in the app.
+					'frame-src': ['https://www.youtube-nocookie.com'],
 					'object-src': ['none'],
 					'base-uri': ['self'],
 					'form-action': ['self'],

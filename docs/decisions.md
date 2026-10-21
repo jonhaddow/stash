@@ -4,6 +4,7 @@
 - **Two tabs, Later and Feeds** (October 2026): in Readkit, moving between the Inoreader and Instapaper sides took 4 or 5 taps. Here it's one.
 - **Buttons, not swipes**: Readkit's left and right swipes were hard to remember. Rows have a visible Done (Later) or Save (Feeds) button.
 - **Links open the original page; no article extraction** (October 2026): Jon reads on the site (or, later, in the Reddit/HN apps). Also keeps the Worker well inside the free plan's CPU.
+- **YouTube videos play in the app** (October 2026): tapping one opens YouTube's embedded player (youtube-nocookie.com) over the list, so Jon stays in Stash; closing it stops the video, and a button opens it on YouTube instead. Other video sites still open their page.
 - **Articles and videos are filtered apart**, on both tabs: different reading sessions. Decided by the link's site (`kind.ts`: YouTube, Vimeo and so on).
 - **Feeds have read/unread, but nothing to tick off** (October 2026): opening an entry marks it read; unread ones are bold with a dot. Entries are never removed. "Mark all read" is there if wanted, and stops at when the page loaded. A feed added in the app starts with entries older than a week read, so adding one doesn't flood the list.
 - **Feeds are a separate list, not a river to triage**: Save copies an entry to Later; Later doesn't empty the feed.

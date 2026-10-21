@@ -36,3 +36,16 @@ test('a pasted link that isn’t one is refused', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(page.getByRole('alert')).toHaveText('That doesn’t look like a link');
 });
+
+test('a YouTube video plays in the app', async ({ page }) => {
+	await page.route('https://www.youtube-nocookie.com/**', (route) => route.fulfill({ body: '' }));
+	await open(page, '/');
+	await page.getByRole('link', { name: /^How to make bread/ }).click();
+	const player = page.getByRole('dialog', { name: 'How to make bread' });
+	await expect(player.locator('iframe')).toHaveAttribute(
+		'src',
+		/youtube-nocookie\.com\/embed\/abc\?/
+	);
+	await player.getByRole('button', { name: 'Close' }).click();
+	await expect(player).toBeHidden();
+});
