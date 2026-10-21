@@ -1,3 +1,8 @@
+<script lang="ts" module>
+	/** What a swipe does: its label shows under the row; `away` slides the row off. */
+	export type Swipe = { label: string; run: () => unknown; away?: boolean };
+</script>
+
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { hostOf, youtubeId } from '#lib/kind.ts';
@@ -5,14 +10,18 @@
 	import Player from './Player.svelte';
 
 	// A link in a list: title, where it's from and when, opening the original
-	// page (YouTube videos play in the app instead); buttons to its right.
+	// page (YouTube videos play in the app instead). Swiping it right or left
+	// past the threshold does that side's action. Buttons (the archive's) to its right.
 	let {
 		url,
 		title,
 		source,
 		at,
 		unread,
+		saved,
 		onopen,
+		right,
+		left,
 		actions
 	}: {
 		url: string;
@@ -22,14 +31,71 @@
 		at: string;
 		/** Feed entries only; saved links have no read state. */
 		unread?: boolean;
+		/** A feed entry that's in Later. */
+		saved?: boolean;
 		onopen?: () => void;
+		right?: Swipe;
+		left?: Swipe;
 		actions?: Snippet;
 	} = $props();
 
 	const video = $derived(youtubeId(url));
 	let playing = $state(false);
 
+	const THRESHOLD = 80;
+	let li: HTMLLIElement;
+	let dx = $state(0);
+	let dragging = $state(false);
+	let start: { x: number; y: number } | null = null;
+	// A drag ends with a click on the link, which mustn't open it.
+	let swiped = false;
+	const swipe = $derived(dx > 0 ? right : dx < 0 ? left : undefined);
+
+	function onpointerdown(e: PointerEvent) {
+		swiped = false;
+		if (e.button === 0 && (right || left)) start = { x: e.clientX, y: e.clientY };
+	}
+
+	function onpointermove(e: PointerEvent) {
+		if (!start) return;
+		const x = e.clientX - start.x;
+		if (!dragging) {
+			const y = e.clientY - start.y;
+			if (Math.abs(y) > 10 && Math.abs(y) > Math.abs(x)) start = null; // scrolling
+			if (!start || Math.abs(x) < 10) return;
+			dragging = true;
+			li.setPointerCapture(e.pointerId);
+		}
+		dx = (x > 0 && right) || (x < 0 && left) ? x : 0;
+	}
+
+	function onpointerup() {
+		start = null;
+		if (!dragging) return;
+		dragging = false;
+		swiped = true;
+		if (swipe && Math.abs(dx) >= THRESHOLD) {
+			// If it fails (offline, say), the row comes back.
+			Promise.resolve(swipe.run()).catch(() => (dx = 0));
+			if (swipe.away) {
+				dx = Math.sign(dx) * li.offsetWidth;
+				return;
+			}
+		}
+		dx = 0;
+	}
+
+	function onpointercancel() {
+		start = null;
+		dragging = false;
+		dx = 0;
+	}
+
 	function onclick(e: MouseEvent) {
+		if (swiped) {
+			e.preventDefault();
+			return;
+		}
 		onopen?.();
 		if (video) {
 			e.preventDefault();
@@ -38,13 +104,35 @@
 	}
 </script>
 
-<li class:unread class:read={unread === false}>
-	<a href={url} target="_blank" rel="noopener noreferrer" {onclick}>
+<li
+	bind:this={li}
+	class:unread
+	class:read={unread === false}
+	{onpointerdown}
+	{onpointermove}
+	{onpointerup}
+	{onpointercancel}
+>
+	{#if swipe}
+		<div class="under" class:left={dx < 0} class:armed={Math.abs(dx) >= THRESHOLD}>
+			{swipe.label}
+		</div>
+	{/if}
+	<a
+		href={url}
+		target="_blank"
+		rel="noopener noreferrer"
+		draggable="false"
+		class:dragging
+		style:translate="{dx}px 0"
+		{onclick}
+	>
 		<span class="title">{title}</span>
 		<span class="meta">
 			{#if unread}<span class="dot" aria-label="Unread"></span>{/if}
 			<span class="source">{source ?? hostOf(url)}</span>
 			<span>· {ago(at)}</span>
+			{#if saved}<span class="saved">· In Later</span>{/if}
 		</span>
 	</a>
 	{#if actions}<div class="actions">{@render actions()}</div>{/if}
@@ -55,19 +143,47 @@
 
 <style>
 	li {
+		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding-right: 6px;
+		/* Vertical drags scroll the page; sideways ones are swipes. */
+		touch-action: pan-y;
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-touch-callout: none;
 	}
 	a {
+		position: relative;
 		flex: 1;
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		padding: 14px 10px 14px 16px;
+		padding: 14px 16px;
 		text-decoration: none;
+		background: var(--card);
+		transition: translate 0.2s ease-out;
+	}
+	a.dragging {
+		transition: none;
+	}
+	/* Behind the row as it slides: what letting go will do. */
+	.under {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		padding: 0 20px;
+		background: var(--line);
+		color: var(--muted);
+		font-weight: 800;
+	}
+	.under.left {
+		justify-content: flex-end;
+	}
+	.under.armed {
+		background: var(--accent);
+		color: var(--on-accent);
 	}
 	.title {
 		font-size: 16px;
@@ -101,7 +217,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.meta > span:last-child {
+	.meta > span:not(.source) {
 		flex-shrink: 0;
 	}
 	.dot {
@@ -114,5 +230,10 @@
 	.actions {
 		display: flex;
 		gap: 2px;
+		padding-right: 6px;
+	}
+	.saved {
+		color: var(--accent);
+		font-weight: 700;
 	}
 </style>

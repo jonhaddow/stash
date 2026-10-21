@@ -2,14 +2,14 @@
 
 - **Replaces Readkit, Instapaper and Inoreader** (October 2026): one app, its own D1 database (not much data), for one person.
 - **Two tabs, Later and Feeds** (October 2026): in Readkit, moving between the Inoreader and Instapaper sides took 4 or 5 taps. Here it's one.
-- **Buttons, not swipes**: Readkit's left and right swipes were hard to remember. Rows have a visible Done (Later) or Save (Feeds) button.
+- **Swipes, not buttons** (October 2026, replacing per-row buttons): in Feeds, swipe right marks an entry read (again: unread) and swipe left saves it to Later (again: takes it out; saved ones say "In Later"). In Later, swipe right archives, with Undo. Opening a link never archives it. What a swipe will do shows under the row as it slides, turning amber past the point where letting go does it. First tried buttons, since Readkit's swipes were hard to remember, but the buttons took room and swipes are quicker.
 - **Links open the original page; no article extraction** (October 2026): Jon reads on the site (or, later, in the Reddit/HN apps). Also keeps the Worker well inside the free plan's CPU.
 - **YouTube videos play in the app** (October 2026): tapping one opens YouTube's embedded player (youtube-nocookie.com) over the list, so Jon stays in Stash; closing it stops the video, and a button opens it on YouTube instead. Other video sites still open their page.
 - **Articles and videos are filtered apart**, on both tabs: different reading sessions. Decided by the link's site (`kind.ts`: YouTube, Vimeo and so on).
 - **Feeds have read/unread, but nothing to tick off** (October 2026): opening an entry marks it read; unread ones are bold with a dot. Entries are never removed. "Mark all read" is there if wanted, and stops at when the page loaded. A feed added in the app starts with entries older than a week read, so adding one doesn't flood the list.
 - **Feeds are a separate list, not a river to triage**: Save copies an entry to Later; Later doesn't empty the feed.
 - **Folders one level deep** (YouTube channels, blogs, Reddit), made while adding or editing a feed.
-- **Done goes to a hidden archive** (Settings → Archive), not deleted; it'll also hold the Instapaper history.
+- **Archiving goes to a hidden archive** (Settings → Archive), not deleted; it'll also hold the Instapaper history.
 - **Share sheet through an iOS Shortcut** (October 2026): iOS doesn't let home-screen web apps receive shares (no Web Share Target). The Shortcut posts the URL to `/api/save` with a token made in Settings (only its hash is stored; making a new one replaces it). JSON only, since SvelteKit's CSRF check refuses outside form posts.
 - **Polling on the free plan** (October 2026): a cron every 5 minutes fetches the 5 feeds fetched longest ago, if not fetched in the last 30 minutes. Requests are conditional (ETag/Last-Modified), so unchanged feeds cost almost nothing. Waiting on the network doesn't count towards the ~10 ms CPU limit; parsing does, so feeds are parsed with regexes rather than an XML library. With more than about 25 feeds, each one is fetched less often than every 30 minutes; Workers Paid ($5/month) is the fix if that ever matters.
 - **Sync log per feed**: every fetch (status, HTTP code, entries added, error, time), kept 30 days.

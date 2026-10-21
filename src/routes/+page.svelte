@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import IconButton from '#lib/components/IconButton.svelte';
+	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
 	import UndoBar from '#lib/components/UndoBar.svelte';
@@ -44,15 +44,16 @@
 	{#if data.links.length}
 		<ul class="list">
 			{#each data.links as link (link.id)}
-				<LinkRow url={link.url} title={link.title} at={link.addedAt}>
-					{#snippet actions()}
-						<form method="POST" action="?/done" use:enhance>
-							<input type="hidden" name="id" value={link.id} />
-							<input type="hidden" name="title" value={link.title} />
-							<IconButton icon="done" label="Done: {link.title}" />
-						</form>
-					{/snippet}
-				</LinkRow>
+				<LinkRow
+					url={link.url}
+					title={link.title}
+					at={link.addedAt}
+					right={{
+						label: 'Archive',
+						away: true,
+						run: () => act('?/done', { id: link.id, title: link.title })
+					}}
+				/>
 			{/each}
 		</ul>
 	{:else}
@@ -64,7 +65,7 @@
 
 {#if form?.done}
 	{#key form.done.id}
-		<UndoBar message="Done: {form.done.title}" action="?/undo" fields={{ id: form.done.id }} />
+		<UndoBar message="Archived: {form.done.title}" action="?/undo" fields={{ id: form.done.id }} />
 	{/key}
 {/if}
 
