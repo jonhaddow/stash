@@ -75,6 +75,7 @@
 				<LinkRow
 					url={it.url}
 					title={it.title}
+					image={it.imageUrl}
 					source={it.feedTitle}
 					at={it.publishedAt}
 					{unread}
@@ -91,7 +92,7 @@
 							}
 						: {
 								label: 'Later',
-								run: () => act(actionHere('save'), { url: it.url, title: it.title })
+								run: () => act(actionHere('save'), { id: it.id })
 							}}
 				/>
 			{/each}

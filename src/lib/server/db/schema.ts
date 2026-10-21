@@ -45,6 +45,8 @@ export const saved = sqliteTable(
 		url: text('url').notNull().unique(),
 		title: text('title').notNull(),
 		kind: text('kind', { enum: KINDS }).notNull(),
+		/** The page's og:image, shown beside the title. */
+		imageUrl: text('image_url'),
 		addedAt: text('added_at').notNull(),
 		archivedAt: text('archived_at')
 	},
@@ -97,6 +99,8 @@ export const item = sqliteTable(
 		url: text('url').notNull(),
 		title: text('title').notNull(),
 		kind: text('kind', { enum: KINDS }).notNull(),
+		/** A thumbnail from the feed, shown beside the title. */
+		imageUrl: text('image_url'),
 		publishedAt: text('published_at').notNull(),
 		readAt: text('read_at')
 	},
