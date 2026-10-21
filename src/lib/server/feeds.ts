@@ -310,16 +310,14 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 
 // ---- Reading ----
 
-export type ItemFilter = { kind?: Kind | null };
-
-const itemWhere = ({ kind }: ItemFilter) => (kind ? eq(item.kind, kind) : undefined);
+const ofKind = (kind?: Kind | null) => (kind ? eq(item.kind, kind) : undefined);
 
 export const PAGE = 60;
 
 /** Feed entries, newest first; `before` (a publishedAt) pages back. */
 export function listItems(
 	db: DB,
-	filter: ItemFilter & { unreadOnly?: boolean; before?: string | null }
+	filter: { kind?: Kind | null; unreadOnly?: boolean; before?: string | null }
 ) {
 	return db
 		.select({
@@ -338,7 +336,7 @@ export function listItems(
 		.leftJoin(saved, and(eq(saved.url, item.url), isNull(saved.archivedAt)))
 		.where(
 			and(
-				itemWhere(filter),
+				ofKind(filter.kind),
 				filter.unreadOnly ? isNull(item.readAt) : undefined,
 				filter.before ? lt(item.publishedAt, filter.before) : undefined
 			)
@@ -363,12 +361,12 @@ export async function getItem(db: DB, id: number) {
 	return row ?? null;
 }
 
-/** Marks everything matching the filter read (up to entries published by `upTo`). */
-export async function markAllRead(db: DB, filter: ItemFilter, upTo: string, now = new Date()) {
+/** Marks everything (of a kind, if given) read, up to entries published by `upTo`. */
+export async function markAllRead(db: DB, kind: Kind | null, upTo: string, now = new Date()) {
 	const ids = db
 		.select({ id: item.id })
 		.from(item)
-		.where(and(itemWhere(filter), isNull(item.readAt), lte(item.publishedAt, upTo)));
+		.where(and(ofKind(kind), isNull(item.readAt), lte(item.publishedAt, upTo)));
 	await db.update(item).set({ readAt: now.toISOString() }).where(inArray(item.id, ids));
 }
 

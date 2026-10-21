@@ -39,7 +39,7 @@ export const actions: Actions = {
 	readAll: async ({ request, locals, url }) => {
 		const upTo = String((await request.formData()).get('upTo'));
 		if (Number.isNaN(Date.parse(upTo))) return fail(400);
-		await markAllRead(locals.db, { kind: kindParam(url.searchParams) }, upTo);
+		await markAllRead(locals.db, kindParam(url.searchParams), upTo);
 		return { readAll: true };
 	}
 };

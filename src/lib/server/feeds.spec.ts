@@ -172,7 +172,7 @@ describe('reading', () => {
 			])
 		});
 		await addFeed(db, url, null, { now, fetcher });
-		await markAllRead(db, {}, '2026-10-19T12:00:00.000Z', now);
+		await markAllRead(db, null, '2026-10-19T12:00:00.000Z', now);
 		const items = await listItems(db, { unreadOnly: true });
 		expect(items.map((i) => i.title)).toEqual(['b']);
 	});
