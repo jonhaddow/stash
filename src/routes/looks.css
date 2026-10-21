@@ -1,10 +1,6 @@
 /* Experimental looks, chosen in Settings: overrides on top of app.css and the
-   components' own styles, keyed on the layout's data-look. LinkRow's lists are
+   components' own styles, keyed on <body data-look> (set in hooks.server.ts). LinkRow's lists are
    .list:has(.text); others (Settings) keep their usual look. */
-
-.look {
-	display: contents;
-}
 
 /* ---------- Desk: native-feeling rows on a phone, a sidebar on a laptop ---------- */
 
@@ -47,7 +43,7 @@
 }
 
 @media (min-width: 960px) {
-	body:has([data-look='desk']) {
+	body[data-look='desk'] {
 		padding-left: 232px;
 	}
 
@@ -214,7 +210,7 @@
 
 /* ---------- Paper: a newspaper, serif and rules ---------- */
 
-body:has([data-look='paper']) {
+body[data-look='paper'] {
 	--bg: light-dark(#fbf8f1, #141311);
 	--card: var(--bg);
 	--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
@@ -341,7 +337,7 @@ body:has([data-look='paper']) {
 
 /* On a laptop: a masthead of tabs along the top, words only. */
 @media (min-width: 960px) {
-	body:has([data-look='paper']) {
+	body[data-look='paper'] {
 		padding-top: 64px;
 	}
 

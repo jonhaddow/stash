@@ -1,8 +1,10 @@
+import { redirect } from '@sveltejs/kit';
 import { apiTokenCreatedAt, createApiToken } from '#lib/server/auth.ts';
 import { toLook } from '#lib/looks.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => ({
+export const load: PageServerLoad = async ({ locals, cookies }) => ({
+	look: toLook(cookies.get('look')),
 	tokenCreatedAt: await apiTokenCreatedAt(locals.db, locals.user!.id)
 });
 
@@ -13,5 +15,7 @@ export const actions: Actions = {
 	look: async ({ request, cookies }) => {
 		const look = toLook((await request.formData()).get('look'));
 		cookies.set('look', look, { path: '/', maxAge: 60 * 60 * 24 * 365 });
+		// A fresh page, so the hook puts the new look on <body>.
+		redirect(303, '/settings');
 	}
 };

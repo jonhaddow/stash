@@ -90,7 +90,7 @@
 	<section class="group">
 		<h2>Experimental: look</h2>
 		<p class="muted">Mock-ups of other designs, to try on this device. Classic is the real one.</p>
-		<form method="POST" action="?/look" use:enhance>
+		<form method="POST" action="?/look">
 			<fieldset class="segments">
 				<legend class="sr">Look</legend>
 				{#each looks as l (l.id)}

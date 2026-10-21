@@ -50,52 +50,49 @@
 
 <svelte:document onvisibilitychange={onVisible} />
 
-<!-- An experimental look (Settings), if one's chosen: looks.css keys on this. -->
-<div class="look" data-look={data.look === 'classic' ? undefined : data.look}>
-	{@render children()}
+{@render children()}
 
-	{#if data.user}
-		<!-- Each tab's code loads straight away, so the first tap only waits for data. -->
-		<nav class="tabs" aria-label="Main" data-sveltekit-preload-code="eager">
-			{#each tabs as tab (tab.href)}
-				<a href={tab.href} class:active={tab.active} aria-current={tab.active ? 'page' : undefined}>
-					<span class="icon">
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-						>
-							{#if tab.icon === 'later'}
-								<!-- A bookmark. -->
-								<path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4-6 4V4.5a1 1 0 0 1 1-1Z" />
-							{:else if tab.icon === 'feeds'}
-								<!-- The RSS waves. -->
-								<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8" />
-								<circle cx="6" cy="18" r="1.5" fill="currentColor" stroke="none" />
-							{:else}
-								<circle cx="12" cy="12" r="3" />
-								<path
-									d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4.9a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.5a7 7 0 0 0-2 1.2l-2.4-.9-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-.9a7 7 0 0 0 2 1.2L10 21h4l.5-2.5a7 7 0 0 0 2-1.2l2.4.9 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z"
-								/>
-							{/if}
-						</svg>
-						{#if tab.icon === 'feeds' && data.unread}
-							<span class="badge">{data.unread > 99 ? '99+' : data.unread}</span>
+{#if data.user}
+	<!-- Each tab's code loads straight away, so the first tap only waits for data. -->
+	<nav class="tabs" aria-label="Main" data-sveltekit-preload-code="eager">
+		{#each tabs as tab (tab.href)}
+			<a href={tab.href} class:active={tab.active} aria-current={tab.active ? 'page' : undefined}>
+				<span class="icon">
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						{#if tab.icon === 'later'}
+							<!-- A bookmark. -->
+							<path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4-6 4V4.5a1 1 0 0 1 1-1Z" />
+						{:else if tab.icon === 'feeds'}
+							<!-- The RSS waves. -->
+							<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8" />
+							<circle cx="6" cy="18" r="1.5" fill="currentColor" stroke="none" />
+						{:else}
+							<circle cx="12" cy="12" r="3" />
+							<path
+								d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4.9a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.5a7 7 0 0 0-2 1.2l-2.4-.9-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-.9a7 7 0 0 0 2 1.2L10 21h4l.5-2.5a7 7 0 0 0 2-1.2l2.4.9 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z"
+							/>
 						{/if}
-					</span>
-					<span class="label">{tab.label}</span>
+					</svg>
 					{#if tab.icon === 'feeds' && data.unread}
-						<span class="sr">, {data.unread} unread</span>
+						<span class="badge">{data.unread > 99 ? '99+' : data.unread}</span>
 					{/if}
-				</a>
-			{/each}
-		</nav>
-	{/if}
-</div>
+				</span>
+				<span class="label">{tab.label}</span>
+				{#if tab.icon === 'feeds' && data.unread}
+					<span class="sr">, {data.unread} unread</span>
+				{/if}
+			</a>
+		{/each}
+	</nav>
+{/if}
 
 <style>
 	/* A floating, frosted pill; the page scrolls under it. */
