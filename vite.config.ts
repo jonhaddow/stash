@@ -1,19 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { execSync } from 'node:child_process';
-
-function commit() {
-	try {
-		// A build started by hand with only a branch gets "main" here, not a commit.
-		const sha = process.env.WORKERS_CI_COMMIT_SHA;
-		return sha && /^[0-9a-f]{40}$/.test(sha)
-			? sha
-			: execSync('git rev-parse HEAD').toString().trim();
-	} catch {
-		return undefined; // SvelteKit's default, a timestamp
-	}
-}
 
 export default defineConfig({
 	plugins: [
@@ -23,8 +10,6 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			// The commit as the version, so scripts/wait-deploy.sh can tell when it's live.
-			version: { name: commit() },
 			// End-to-end tests run against their own local database (see e2e/).
 			adapter: adapter(
 				process.env.E2E_DB ? { platformProxy: { persist: { path: process.env.E2E_DB } } } : {}
