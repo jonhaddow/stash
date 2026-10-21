@@ -49,3 +49,14 @@ test('a YouTube video plays in the app', async ({ page }) => {
 	await player.getByRole('button', { name: 'Close' }).click();
 	await expect(player).toBeHidden();
 });
+
+test('oldest first, remembered on the next visit', async ({ page }) => {
+	await open(page, '/');
+	const titles = page.getByRole('listitem').locator('a').first();
+	await expect(titles).toHaveText(/A long read about tea/);
+	await page.getByLabel('Order').selectOption('oldest');
+	await expect(titles).toHaveText(/A news story/);
+	await open(page, '/');
+	await expect(titles).toHaveText(/A news story/);
+	await expect(page.getByLabel('Order')).toHaveValue('oldest');
+});

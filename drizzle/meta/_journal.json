@@ -15,6 +15,13 @@
       "when": 1792570417579,
       "tag": "0001_nappy_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792593640250,
+      "tag": "0002_video_titles",
+      "breakpoints": true
     }
   ]
 }

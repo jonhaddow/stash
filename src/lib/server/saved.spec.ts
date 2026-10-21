@@ -40,6 +40,22 @@ describe('saveLink', () => {
 		expect(await listSaved(db, { kind: 'article' })).toEqual([]);
 	});
 
+	it('takes a [video] title as a video, and lists oldest first when asked', async () => {
+		const hn = 'https://news.ycombinator.com/item?id=1';
+		await saveLink(db, hn, { title: 'A talk [video]' }, { now: new Date('2026-10-01T00:00:00Z') });
+		await saveLink(
+			db,
+			'https://b.example/',
+			{ title: 'B' },
+			{ now: new Date('2026-10-02T00:00:00Z') }
+		);
+		expect((await listSaved(db, { kind: 'video' })).map((s) => s.url)).toEqual([hn]);
+		expect((await listSaved(db, { order: 'oldest' })).map((s) => s.title)).toEqual([
+			'A talk [video]',
+			'B'
+		]);
+	});
+
 	it('brings an archived link back to the top when saved again', async () => {
 		const first = await saveLink(
 			db,

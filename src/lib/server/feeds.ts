@@ -1,5 +1,5 @@
-import { and, asc, desc, eq, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
-import { kindOf, type Kind } from '../kind.ts';
+import { and, asc, desc, eq, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { kindOf, type Kind, type Order } from '../kind.ts';
 import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
@@ -176,7 +176,7 @@ async function storeItems(
 				guid: i.guid,
 				url: i.url,
 				title: i.title,
-				kind: kindOf(i.url),
+				kind: kindOf(i.url, i.title),
 				imageUrl: i.image,
 				publishedAt,
 				readAt: old ? nowIso : null
@@ -311,11 +311,12 @@ const ofKind = (kind?: Kind | null) => (kind ? eq(item.kind, kind) : undefined);
 
 export const PAGE = 60;
 
-/** Feed entries, newest first; `before` (a publishedAt) pages back. */
+/** Feed entries, newest first unless `order` is 'oldest'; `from` (a publishedAt) pages on. */
 export function listItems(
 	db: DB,
-	filter: { kind?: Kind | null; unreadOnly?: boolean; before?: string | null }
+	filter: { kind?: Kind | null; unreadOnly?: boolean; order?: Order; from?: string | null }
 ) {
+	const [by, past] = filter.order === 'oldest' ? [asc, gt] : [desc, lt];
 	return db
 		.select({
 			id: item.id,
@@ -336,10 +337,10 @@ export function listItems(
 			and(
 				ofKind(filter.kind),
 				filter.unreadOnly ? isNull(item.readAt) : undefined,
-				filter.before ? lt(item.publishedAt, filter.before) : undefined
+				filter.from ? past(item.publishedAt, filter.from) : undefined
 			)
 		)
-		.orderBy(desc(item.publishedAt), desc(item.id))
+		.orderBy(by(item.publishedAt), by(item.id))
 		.limit(PAGE);
 }
 

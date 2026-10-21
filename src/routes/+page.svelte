@@ -3,6 +3,7 @@
 	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
+	import OrderPicker from '#lib/components/OrderPicker.svelte';
 	import UndoBar from '#lib/components/UndoBar.svelte';
 	import type { PageProps } from './$types';
 
@@ -20,7 +21,10 @@
 <main class="page">
 	<header>
 		<h1>Later</h1>
-		<p class="muted">{data.links.length} {data.links.length === 1 ? what.slice(0, -1) : what}</p>
+		<div class="end">
+			<p class="muted">{data.links.length} {data.links.length === 1 ? what.slice(0, -1) : what}</p>
+			<OrderPicker list="later" order={data.order} />
+		</div>
 	</header>
 
 	<form class="add" method="POST" action="?/add" use:enhance>
@@ -75,6 +79,11 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
+		gap: 12px;
+	}
+	.end {
+		display: flex;
+		align-items: baseline;
 		gap: 12px;
 	}
 	.add {

@@ -8,6 +8,13 @@ describe('kindOf', () => {
 		expect(kindOf('https://m.youtube.com/watch?v=abc')).toBe('video');
 		expect(kindOf('https://player.vimeo.com/video/1')).toBe('video');
 	});
+	it('takes [video] in the title to mean a video', () => {
+		expect(kindOf('https://news.ycombinator.com/item?id=1', 'A talk [video] | Hacker News')).toBe(
+			'video'
+		);
+		expect(kindOf('https://example.com/a', 'A talk [Video]')).toBe('video');
+		expect(kindOf('https://example.com/a', 'Video games')).toBe('article');
+	});
 	it('treats everything else as an article', () => {
 		expect(kindOf('https://news.ycombinator.com/item?id=1')).toBe('article');
 		expect(kindOf('https://notyoutube.com/x')).toBe('article');

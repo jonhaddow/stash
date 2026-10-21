@@ -1,11 +1,12 @@
 import { fail } from '@sveltejs/kit';
-import { kindParam } from '#lib/kind.ts';
+import { kindParam, orderOf } from '#lib/kind.ts';
 import { cleanUrl, listSaved, saveLink, setArchived } from '#lib/server/saved.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 	const kind = kindParam(url.searchParams);
-	return { kind, links: await listSaved(locals.db, { kind }) };
+	const order = orderOf(cookies.get('order-later'));
+	return { kind, order, links: await listSaved(locals.db, { kind, order }) };
 };
 
 export const actions: Actions = {
