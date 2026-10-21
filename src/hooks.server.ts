@@ -5,6 +5,7 @@ import { env } from 'cloudflare:workers';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '#lib/server/db/schema.ts';
 import { SESSION_COOKIE, setSessionCookie, validateSession } from '#lib/server/auth.ts';
+import { configureReddit } from '#lib/server/reddit.ts';
 
 // The dev server runs on Node, which lacks some of Workers' built-ins.
 if (dev) await import('./node-shims.ts');
@@ -29,6 +30,7 @@ const SECURITY_HEADERS = {
 };
 
 export const handle: Handle = async ({ event, resolve }) => {
+	configureReddit(env.REDDIT_CLIENT_ID, env.REDDIT_CLIENT_SECRET);
 	const db = drizzle(env.DB, { schema });
 	event.locals.db = db;
 	event.locals.user = null;

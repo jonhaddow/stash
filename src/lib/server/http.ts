@@ -6,7 +6,7 @@ export type Fetch = typeof fetch;
 export const workersFetch: Fetch = (input, init) => fetch(input, init);
 
 /** Some sites (Reddit especially) refuse requests without a descriptive User-Agent. */
-const USER_AGENT = 'Stash/1.0 (personal feed reader; +https://stash.app.haddow.me)';
+export const USER_AGENT = 'Stash/1.0 (personal feed reader; +https://stash.app.haddow.me)';
 const TIMEOUT_MS = 10_000;
 /** Big enough for any sensible feed; a page's <head> is well within it. */
 const MAX_BYTES = 3_000_000;
