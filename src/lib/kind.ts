@@ -51,7 +51,7 @@ export function youtubeId(url: string): string | null {
 				: host === 'youtube.com'
 					? u.pathname === '/watch'
 						? u.searchParams.get('v')
-						: u.pathname.match(/^\/(?:shorts|live|embed)\/([^/]+)/)?.[1]
+						: u.pathname.match(/^\/(?:shorts|live)\/([^/]+)/)?.[1]
 					: null;
 		return id && /^[\w-]+$/.test(id) ? id : null;
 	} catch {
