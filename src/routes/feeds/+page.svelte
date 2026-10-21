@@ -31,12 +31,6 @@
 	/** A form action on this page's URL, keeping its filters ("?/name" alone would drop them). */
 	const actionHere = (name: string) =>
 		page.url.search ? `${page.url.search}&/${name}` : `?/${name}`;
-
-	const unreadHere = $derived(
-		data.folderId
-			? (data.folders.find((f) => f.id === data.folderId)?.unread ?? 0)
-			: data.totalUnread
-	);
 </script>
 
 <svelte:head>
@@ -46,7 +40,7 @@
 <main class="page">
 	<header>
 		<h1>Feeds</h1>
-		{#if unreadHere}
+		{#if data.unread}
 			<form
 				method="POST"
 				action={actionHere('readAll')}
@@ -62,26 +56,6 @@
 			</form>
 		{/if}
 	</header>
-
-	{#if data.folders.length}
-		<nav class="chips" aria-label="Folders">
-			<a
-				class="chip"
-				class:on={!data.folderId}
-				href={withParam('folder', null)}
-				data-sveltekit-replacestate>All</a
-			>
-			{#each data.folders as f (f.id)}
-				<a
-					class="chip"
-					class:on={data.folderId === f.id}
-					href={withParam('folder', String(f.id))}
-					data-sveltekit-replacestate
-					>{f.name}{#if f.unread}<span class="count">{f.unread}</span>{/if}</a
-				>
-			{/each}
-		</nav>
-	{/if}
 
 	<div class="filters">
 		<KindFilter kind={data.kind ?? null} />
@@ -127,7 +101,7 @@
 		{/if}
 	{:else if data.paged}
 		<p class="empty muted">No older entries.</p>
-	{:else if data.folders.length || data.totalUnread}
+	{:else if data.hasFeeds}
 		<p class="empty muted">{data.unreadOnly ? 'All caught up.' : 'Nothing here.'}</p>
 	{:else}
 		<p class="empty muted">
@@ -147,23 +121,6 @@
 		min-height: 36px;
 		font-size: 14px;
 		padding: 0 14px;
-	}
-	/* Folders scroll sideways rather than wrapping onto lines. */
-	nav.chips {
-		flex-wrap: nowrap;
-		overflow-x: auto;
-		margin: 0 -16px;
-		padding: 0 16px;
-		scrollbar-width: none;
-	}
-	nav .chip {
-		flex-shrink: 0;
-		gap: 6px;
-	}
-	.count {
-		font-size: 12px;
-		font-weight: 800;
-		opacity: 0.7;
 	}
 	.filters {
 		display: flex;

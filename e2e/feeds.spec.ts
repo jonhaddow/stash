@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { open, swipe } from './helpers.ts';
 
-test('feed entries by folder, unread in bold, and saving one for later', async ({ page }) => {
+test('feed entries, unread only by default, and saving one for later', async ({ page }) => {
 	await open(page, '/feeds');
 	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeVisible();
-	await page.getByRole('link', { name: /^YouTube/ }).click();
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
-	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeHidden();
+	// No folder filters here: folders are for Settings.
+	await expect(page.getByRole('navigation', { name: 'Folders' })).toHaveCount(0);
 
 	// Unread ones only, unless the Unread chip is turned off.
 	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeHidden();
@@ -21,7 +21,7 @@ test('feed entries by folder, unread in bold, and saving one for later', async (
 	await open(page, '/?kind=video');
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 
-	await open(page, '/feeds?folder=1');
+	await open(page, '/feeds');
 	await swipe(page, row(), -150);
 	await expect(row()).not.toContainText('In Later');
 });
@@ -70,12 +70,12 @@ test('a feed’s page shows its sync log', async ({ page }) => {
 });
 
 test('mark all read', async ({ page }) => {
-	await open(page, '/feeds?folder=2');
+	await open(page, '/feeds?kind=article');
 	await page.getByRole('button', { name: 'Mark all read' }).click();
-	await expect(page.getByRole('button', { name: 'Mark all read' })).toBeHidden();
 	await expect(page.getByLabel('Unread', { exact: true })).toHaveCount(0);
 	await expect(page.getByText('All caught up.')).toBeVisible();
-	// Only this folder's: it stays put, and YouTube's entry is still unread.
-	await expect(page).toHaveURL(/folder=2/);
-	await expect(page.getByRole('link', { name: /^YouTube\s*1/ })).toBeVisible();
+	// Only articles: it stays on them, and the video is still unread.
+	await expect(page).toHaveURL(/kind=article/);
+	await open(page, '/feeds');
+	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 });

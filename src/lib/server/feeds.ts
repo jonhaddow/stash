@@ -310,22 +310,14 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = workers
 
 // ---- Reading ----
 
-export type ItemFilter = { folderId?: number | null; feedId?: number | null; kind?: Kind | null };
-
-function itemWhere({ folderId, feedId, kind }: ItemFilter) {
-	return and(
-		feedId ? eq(item.feedId, feedId) : undefined,
-		folderId ? eq(feed.folderId, folderId) : undefined,
-		kind ? eq(item.kind, kind) : undefined
-	);
-}
+const ofKind = (kind?: Kind | null) => (kind ? eq(item.kind, kind) : undefined);
 
 export const PAGE = 60;
 
 /** Feed entries, newest first; `before` (a publishedAt) pages back. */
 export function listItems(
 	db: DB,
-	filter: ItemFilter & { unreadOnly?: boolean; before?: string | null }
+	filter: { kind?: Kind | null; unreadOnly?: boolean; before?: string | null }
 ) {
 	return db
 		.select({
@@ -344,7 +336,7 @@ export function listItems(
 		.leftJoin(saved, and(eq(saved.url, item.url), isNull(saved.archivedAt)))
 		.where(
 			and(
-				itemWhere(filter),
+				ofKind(filter.kind),
 				filter.unreadOnly ? isNull(item.readAt) : undefined,
 				filter.before ? lt(item.publishedAt, filter.before) : undefined
 			)
@@ -353,14 +345,8 @@ export function listItems(
 		.limit(PAGE);
 }
 
-/** Unread entries per folder (null: not in one), for the folder chips. */
-export async function unreadByFolder(db: DB) {
-	return db
-		.select({ folderId: feed.folderId, n: sql<number>`count(*)` })
-		.from(item)
-		.innerJoin(feed, eq(item.feedId, feed.id))
-		.where(isNull(item.readAt))
-		.groupBy(feed.folderId);
+export async function hasFeeds(db: DB) {
+	return (await db.select({ id: feed.id }).from(feed).limit(1)).length > 0;
 }
 
 export async function setRead(db: DB, id: number, read: boolean, now = new Date()) {
@@ -375,13 +361,12 @@ export async function getItem(db: DB, id: number) {
 	return row ?? null;
 }
 
-/** Marks everything matching the filter read (up to entries published by `upTo`). */
-export async function markAllRead(db: DB, filter: ItemFilter, upTo: string, now = new Date()) {
+/** Marks everything (of a kind, if given) read, up to entries published by `upTo`. */
+export async function markAllRead(db: DB, kind: Kind | null, upTo: string, now = new Date()) {
 	const ids = db
 		.select({ id: item.id })
 		.from(item)
-		.innerJoin(feed, eq(item.feedId, feed.id))
-		.where(and(itemWhere(filter), isNull(item.readAt), lte(item.publishedAt, upTo)));
+		.where(and(ofKind(kind), isNull(item.readAt), lte(item.publishedAt, upTo)));
 	await db.update(item).set({ readAt: now.toISOString() }).where(inArray(item.id, ids));
 }
 
