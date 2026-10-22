@@ -238,7 +238,7 @@ p {
 	outline-offset: 2px;
 }
 
-/* Tappable words: folders. .on, or a checked input inside, underlines it. */
+/* Tappable words. .on, or a checked input inside, underlines it. */
 .chips {
 	display: flex;
 	flex-wrap: wrap;

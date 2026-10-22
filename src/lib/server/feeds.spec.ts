@@ -73,13 +73,13 @@ describe('syncing', () => {
 				{ guid: 'old', date: '2026-09-01T00:00:00Z' }
 			])
 		});
-		await addFeed(db, url, null, { now, fetcher });
+		await addFeed(db, url, { now, fetcher });
 		const items = await listItems(db, {});
 		expect(items.map((i) => [i.title, !!i.readAt])).toEqual([
 			['new', false],
 			['old', true]
 		]);
-		await expect(addFeed(db, url, null, { now, fetcher })).rejects.toThrow('already here');
+		await expect(addFeed(db, url, { now, fetcher })).rejects.toThrow('already here');
 	});
 
 	it('adds only new entries, sends the etag back and logs each fetch', async () => {
@@ -88,7 +88,7 @@ describe('syncing', () => {
 		};
 		const seen: Headers[] = [];
 		const fetcher = fakeFetch(pages, seen);
-		const f = await addFeed(db, url, null, { now, fetcher });
+		const f = await addFeed(db, url, { now, fetcher });
 
 		pages[url] = rss([
 			{ guid: 'b', date: '2026-10-20T00:00:00Z' },
@@ -122,7 +122,7 @@ describe('syncing', () => {
 
 	it('syncDue only fetches feeds not fetched in the last half hour, and tidies old logs', async () => {
 		const fetcher = fakeFetch({ [url]: rss([]) });
-		await addFeed(db, url, null, { now: new Date('2026-08-01T00:00:00Z'), fetcher });
+		await addFeed(db, url, { now: new Date('2026-08-01T00:00:00Z'), fetcher });
 		expect(await syncDue(db, new Date('2026-08-01T00:10:00Z'), fetcher)).toEqual([]);
 		expect(await syncDue(db, now, fetcher)).toHaveLength(1);
 		// The August log is gone; today's stays.
@@ -142,14 +142,14 @@ describe('options', () => {
 			[channel]: rss([]),
 			[noShorts]: rss([])
 		});
-		const f = await addFeed(db, page, null, { now, fetcher, shorts: false });
+		const f = await addFeed(db, page, { now, fetcher, shorts: false });
 		expect(f.url).toBe(noShorts);
 	});
 
 	it('changes a feed’s options, fetching it afresh', async () => {
 		const fetcher = fakeFetch({ [channel]: rss([]) });
-		const f = await addFeed(db, channel, null, { now, fetcher });
-		await updateFeed(db, f.id, { title: 'V', folderId: null, url: noShorts });
+		const f = await addFeed(db, channel, { now, fetcher });
+		await updateFeed(db, f.id, { title: 'V', url: noShorts });
 		const after = await getFeed(db, f.id);
 		expect(after).toMatchObject({ url: noShorts, title: 'V', etag: null, lastFetchedAt: null });
 	});
@@ -199,7 +199,7 @@ describe('reading', () => {
 				{ guid: 'b', date: '2026-10-20T00:00:00Z' }
 			])
 		});
-		await addFeed(db, url, null, { now, fetcher });
+		await addFeed(db, url, { now, fetcher });
 		await markAllRead(db, null, '2026-10-19T12:00:00.000Z', now);
 		const items = await listItems(db, { unreadOnly: true });
 		expect(items.map((i) => i.title)).toEqual(['b']);
@@ -214,7 +214,7 @@ describe('reading', () => {
 				{ guid: 'b', date: '2026-10-19T00:00:00Z' }
 			])
 		});
-		await addFeed(db, url, null, { now, fetcher });
+		await addFeed(db, url, { now, fetcher });
 		const all = await listItems(db, { order: 'oldest' });
 		expect(all.map((i) => i.title)).toEqual(['a', 'b', 'c']);
 		const after = await listItems(db, { order: 'oldest', from: all[0].publishedAt });

@@ -1,6 +1,6 @@
 # Stash
 
-A read-it-later list and a feed reader in one. Save links from the iOS share sheet; read RSS, YouTube and Reddit feeds in folders; each feed has a sync log. Links open the original page.
+A read-it-later list and a feed reader in one. Save links from the iOS share sheet; read RSS, YouTube and Reddit feeds; each feed has a sync log. Links open the original page.
 
 Stack: SvelteKit 3 (Svelte 5) on Cloudflare Workers, Drizzle ORM on Cloudflare D1 (SQLite, EU), Vitest and Playwright. Set up like the plants app.
 

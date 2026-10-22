@@ -1,18 +1,18 @@
 import { fail } from '@sveltejs/kit';
 import { env } from 'cloudflare:workers';
-import { addFeed, listFeeds, listFolders } from '#lib/server/feeds.ts';
-import { feedFromForm, folderFromForm } from '#lib/server/feed-form.ts';
+import { sourceOf } from '#lib/feed-url.ts';
+import { addFeed, listFeeds } from '#lib/server/feeds.ts';
+import { feedFromForm } from '#lib/server/feed-form.ts';
 import { workersFetch } from '#lib/server/http.ts';
 import { searchFeeds } from '#lib/server/search.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const [folders, feeds] = await Promise.all([listFolders(locals.db), listFeeds(locals.db)]);
-	// Grouped by folder, in folder order; feeds without one last.
-	const groups = [...folders, { id: null, name: 'No folder' }]
-		.map((f) => ({ ...f, feeds: feeds.filter((x) => x.folderId === f.id) }))
+	const feeds = await listFeeds(locals.db);
+	const groups = (['Reddit', 'YouTube', 'Other'] as const)
+		.map((name) => ({ name, feeds: feeds.filter((f) => sourceOf(f.url, f.siteUrl) === name) }))
 		.filter((g) => g.feeds.length);
-	return { folders, groups, count: feeds.length };
+	return { groups, count: feeds.length };
 };
 
 export const actions: Actions = {
@@ -22,8 +22,7 @@ export const actions: Actions = {
 		const url = feedFromForm(form);
 		if (!url) return fail(400, { error: 'That doesn’t look like a link', url: typed });
 		try {
-			const folderId = await folderFromForm(locals.db, form);
-			const feed = await addFeed(locals.db, url, folderId, {
+			const feed = await addFeed(locals.db, url, {
 				shorts: form.get('shorts') === 'on'
 			});
 			return { added: feed.title };

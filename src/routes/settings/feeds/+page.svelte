@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import FeedOptions from '#lib/components/FeedOptions.svelte';
-	import FolderPicker from '#lib/components/FolderPicker.svelte';
 	import { asChannelFeed, asSubreddit, typedAs } from '#lib/feed-url.ts';
 	import SyncStatus from '#lib/components/SyncStatus.svelte';
 	import { ago } from '#lib/time.ts';
@@ -54,7 +53,6 @@
 			/>
 		</label>
 		{#key reddit?.sub}<FeedOptions {reddit} youtube={showShorts ? { shorts: false } : null} />{/key}
-		<FolderPicker folders={data.folders} />
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		{#if form?.added}<p class="note" role="status">Added {form.added}</p>{/if}
 		{#if typed === 'search'}
@@ -95,7 +93,7 @@
 		{/if}
 	</form>
 
-	{#each data.groups as g (g.id)}
+	{#each data.groups as g (g.name)}
 		<section class="group">
 			<h2>{g.name}</h2>
 			<ul class="list">
