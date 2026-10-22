@@ -1,13 +1,18 @@
-# Lint, types, unit and end-to-end tests on every PR.
+# Lint, types, unit and end-to-end tests on every PR. Not again on main after a
+# merge: the PR already ran them.
 name: Checks
 on:
   pull_request:
-  push:
-    branches: [main]
+
+# A new push to a PR cancels its run that's still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -18,7 +23,8 @@ jobs:
       - run: npm run lint
       - run: npm run check
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      # Headless shell only: the tests never use full Chromium.
+      - run: npx playwright install --with-deps --only-shell chromium
       - run: cp .dev.vars.example .dev.vars
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
