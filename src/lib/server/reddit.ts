@@ -4,6 +4,7 @@
 // (1,000 requests per 10 minutes). Feeds stay stored as their .rss URLs: this
 // wraps fetch so a request for one goes to the API instead, and the listing
 // comes back as the Atom feed parse.ts already reads.
+import { isReddit } from '../feed-url.ts';
 import { USER_AGENT, type Fetch } from './http.ts';
 
 type Credentials = { id: string; secret: string };
@@ -15,7 +16,7 @@ export function configureReddit(id: string | undefined, secret: string | undefin
 	configured = id && secret ? { id, secret } : null;
 }
 
-export const isReddit = (hostname: string) => /(^|\.)reddit\.com$/.test(hostname);
+export { isReddit };
 
 /** The API address for a subreddit's .rss feed, or null for anything else. */
 export function apiUrl(url: string) {

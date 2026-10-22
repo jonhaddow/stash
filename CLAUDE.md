@@ -8,6 +8,7 @@ Stack, workflow, commands and shared gotchas: the `app-stack` skill.
 
 - Feeds are parsed with regexes (`parse.ts`), not an XML library, to stay inside the Workers CPU limit.
 - Subreddit `.rss` links go through Reddit's signed-in API (`reddit.ts`; secrets from 1Password's "Reddit API") and come back as Atom.
+- The add box (Settings → Feeds) searches YouTube (`YOUTUBE_API_KEY`) and Feedly by name; Reddit options and YouTube Shorts are kept in the feed URL (`feed-url.ts`).
 - After each sync, a push sends the unread count for the app icon's badge.
 - `/api/save` is the iOS Shortcut: `Authorization: Bearer <token>`, made in Settings, only its hash kept.
 - `/api/save` takes JSON only: SvelteKit's CSRF check refuses form and plain-text posts from outside the site.

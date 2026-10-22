@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FeedOptions from '#lib/components/FeedOptions.svelte';
 	import FolderPicker from '#lib/components/FolderPicker.svelte';
+	import { asChannelFeed, asSubreddit, typedAs } from '#lib/feed-url.ts';
 	import SyncStatus from '#lib/components/SyncStatus.svelte';
 	import { ago } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
-	let adding = $state(false);
+	let busy = $state('');
+	// svelte-ignore state_referenced_locally
+	let text = $state(form?.url ?? '');
+	const typed = $derived(typedAs(text));
+	const reddit = $derived(asSubreddit(text));
+	// Results for what's in the box now, not for something typed before.
+	const found = $derived(form?.found && form.url === text.trim() ? form.found : null);
+	const showShorts = $derived(typed === 'youtube' || !!found?.some((r) => asChannelFeed(r.url)));
 </script>
 
 <svelte:head>
@@ -21,31 +30,69 @@
 		class="add"
 		method="POST"
 		action="?/add"
-		use:enhance={() => {
-			adding = true;
-			return async ({ update }) => {
-				await update();
-				adding = false;
+		use:enhance={({ action }) => {
+			busy = action.search.includes('search') ? 'Searching…' : 'Finding the feed…';
+			return async ({ result, update }) => {
+				await update({ reset: false });
+				if (result.type === 'success' && result.data?.added) text = '';
+				busy = '';
 			};
 		}}
 	>
-		<h2>Add a feed</h2>
+		<h2 id="add">Add a feed</h2>
 		<label class="field">
-			Site, feed, YouTube channel or subreddit
+			Name, link, r/subreddit or @channel
 			<input
 				name="url"
-				type="url"
-				inputmode="url"
 				autocomplete="off"
-				placeholder="https://"
-				value={form?.url ?? ''}
+				autocapitalize="off"
+				spellcheck="false"
+				enterkeyhint={typed === 'search' ? 'search' : 'go'}
+				placeholder="e.g. veritasium, r/rust"
+				bind:value={text}
 				required
 			/>
 		</label>
+		{#key reddit?.sub}<FeedOptions {reddit} youtube={showShorts ? { shorts: false } : null} />{/key}
 		<FolderPicker folders={data.folders} />
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		{#if form?.added}<p class="note" role="status">Added {form.added}</p>{/if}
-		<button class="btn primary" disabled={adding}>{adding ? 'Finding the feed…' : 'Add'}</button>
+		{#if typed === 'search'}
+			<button class="btn primary" formaction="?/search" disabled={!!busy}>{busy || 'Search'}</button
+			>
+		{:else}
+			<button class="btn primary" disabled={!!busy}>{busy || 'Add'}</button>
+		{/if}
+		{#if found}
+			{#if found.length}
+				<ul class="list found">
+					{#each found as r (r.url)}
+						<li>
+							{#if r.icon}<img
+									src={r.icon}
+									alt=""
+									width="40"
+									height="40"
+									loading="lazy"
+								/>{:else}<span class="icon"></span>{/if}
+							<span class="what">
+								<span class="name">{r.title}</span>
+								<span class="muted detail">{r.detail}</span>
+							</span>
+							<button
+								class="btn quiet small"
+								name="pick"
+								value={r.url}
+								disabled={!!busy}
+								aria-label="Add {r.title}">Add</button
+							>
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="muted">Nothing found. Try a link to the site instead.</p>
+			{/if}
+		{/if}
 	</form>
 
 	{#each data.groups as g (g.id)}
@@ -74,6 +121,34 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
+	}
+	.found li {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 10px 0;
+	}
+	.found img,
+	.found .icon {
+		width: 40px;
+		height: 40px;
+		flex-shrink: 0;
+		object-fit: cover;
+		background: var(--line);
+	}
+	.what {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.detail {
+		font-size: 13px;
+	}
+	.small {
+		min-height: 40px;
+		font-size: 14px;
+		padding: 0 14px;
 	}
 	.group {
 		display: flex;

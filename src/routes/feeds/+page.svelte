@@ -99,6 +99,12 @@
 				</form>
 			{/if}
 			<OrderPicker list="feeds" order={data.order} />
+			<a
+				class="btn quiet small add"
+				href="/settings/feeds#add"
+				aria-label="Add a feed"
+				title="Add a feed">+</a
+			>
 		</div>
 	</header>
 
@@ -170,6 +176,11 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+	}
+	.add {
+		font-size: 20px;
+		padding: 0;
+		width: 36px;
 	}
 	.small {
 		min-height: 36px;
