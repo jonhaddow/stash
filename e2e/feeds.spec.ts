@@ -5,8 +5,10 @@ test('feed entries, unread only by default, and saving one for later', async ({ 
 	await open(page, '/feeds');
 	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
-	// No folder filters here: folders are for Settings.
-	await expect(page.getByRole('navigation', { name: 'Folders' })).toHaveCount(0);
+	await expect(page.getByRole('link', { name: /^Manage feeds/ })).toHaveAttribute(
+		'href',
+		'/settings/feeds'
+	);
 
 	// Unread ones only, unless the Unread chip is turned off.
 	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeHidden();
@@ -106,4 +108,8 @@ test('mark all read', async ({ page }) => {
 	await expect(page).toHaveURL(/kind=article/);
 	await open(page, '/feeds');
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
+	await expect(page.getByRole('link', { name: /^Manage feeds/ })).toHaveAttribute(
+		'href',
+		'/settings/feeds'
+	);
 });

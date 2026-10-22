@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind, type Order } from '../kind.ts';
-import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
+import { feed, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
 import { isReddit, withReddit } from './reddit.ts';
@@ -48,21 +48,6 @@ export async function discoverFeed(
 	return { url: link, parsed: parseFeed(await readText(feedRes), link) };
 }
 
-// ---- Folders ----
-
-export const listFolders = (db: DB) =>
-	db.select().from(folder).orderBy(asc(folder.sortOrder), asc(folder.name));
-
-/** A folder by name, made if it's new. */
-export async function folderNamed(db: DB, name: string) {
-	const [row] = await db
-		.insert(folder)
-		.values({ name })
-		.onConflictDoUpdate({ target: folder.name, set: { name } })
-		.returning();
-	return row.id;
-}
-
 // ---- Feeds ----
 
 /**
@@ -72,7 +57,6 @@ export async function folderNamed(db: DB, name: string) {
 export async function addFeed(
 	db: DB,
 	input: string,
-	folderId: number | null,
 	{
 		now = new Date(),
 		fetcher = feedFetch,
@@ -93,7 +77,6 @@ export async function addFeed(
 			title: parsed.title,
 			url,
 			siteUrl: parsed.siteUrl,
-			folderId,
 			createdAt: now.toISOString()
 		})
 		.returning();
@@ -117,7 +100,7 @@ export async function addFeed(
 export async function updateFeed(
 	db: DB,
 	id: number,
-	{ url, ...values }: { title: string; folderId: number | null; url?: string }
+	{ url, ...values }: { title: string; url?: string }
 ) {
 	const [current] = await db.select({ url: feed.url }).from(feed).where(eq(feed.id, id));
 	const moved = url && url !== current?.url;
@@ -135,14 +118,14 @@ export async function deleteFeed(db: DB, id: number) {
 	await db.delete(feed).where(eq(feed.id, id));
 }
 
-/** Every feed with its folder and unread count, for the manage page. */
+/** Every feed with its unread count, for the manage page. */
 export async function listFeeds(db: DB) {
 	return db
 		.select({
 			id: feed.id,
 			title: feed.title,
 			url: feed.url,
-			folderId: feed.folderId,
+			siteUrl: feed.siteUrl,
 			lastFetchedAt: feed.lastFetchedAt,
 			lastStatus: feed.lastStatus,
 			lastError: feed.lastError,

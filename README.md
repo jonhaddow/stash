@@ -3,7 +3,7 @@
 A read-it-later list and a feed reader in one, built for one person as a phone web app.
 
 - **Later:** links saved from the iOS share sheet. Swipe right to archive.
-- **Feeds:** RSS, Atom, YouTube and Reddit feeds in one list, grouped in folders. Swipe right to mark read, left to save to Later. Each feed has a sync log.
+- **Feeds:** RSS, Atom, YouTube and Reddit feeds in one list; the manage page groups them as Reddit, YouTube and Other. Swipe right to mark read, left to save to Later. Each feed has a sync log.
 - Links open the original page (YouTube plays in an embedded player). There's no article extraction.
 - A push notification keeps the app icon's badge at the unread count.
 

@@ -99,12 +99,6 @@
 				</form>
 			{/if}
 			<OrderPicker list="feeds" order={data.order} />
-			<a
-				class="btn quiet small add"
-				href="/settings/feeds#add"
-				aria-label="Add a feed"
-				title="Add a feed">+</a
-			>
 		</div>
 	</header>
 
@@ -118,6 +112,7 @@
 			data-sveltekit-replacestate>Unread</a
 		>
 	</div>
+	<a class="manage muted" href="/settings/feeds">Manage feeds ›</a>
 
 	{#if items.length}
 		<ul class="list">
@@ -177,15 +172,17 @@
 		align-items: center;
 		gap: 8px;
 	}
-	.add {
-		font-size: 20px;
-		padding: 0;
-		width: 36px;
-	}
 	.small {
 		min-height: 36px;
 		font-size: 14px;
 		padding: 0 14px;
+	}
+	.manage {
+		align-self: flex-end;
+		margin-bottom: -12px;
+		font-size: 14px;
+		font-weight: 600;
+		text-decoration: none;
 	}
 	.filters {
 		display: flex;
