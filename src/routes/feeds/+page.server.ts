@@ -35,20 +35,14 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 };
 
 export const actions: Actions = {
-	// Swipes. Read or saved, an entry is dealt with, so both mark it read; the
-	// answer is for the Undo bar.
-	read: async ({ request, locals }) => {
-		const it = await formItem(locals.db, await request.formData());
-		await setRead(locals.db, it.id, true);
-		return { done: { id: it.id, title: it.title, savedId: null } };
-	},
+	// Swipe left. Saving an entry marks it read too; the answer is for the Undo bar.
 	save: async ({ request, locals }) => {
 		const it = await formItem(locals.db, await request.formData());
 		const row = await saveLink(locals.db, it.url, { title: it.title, image: it.imageUrl });
 		await setRead(locals.db, it.id, true);
 		return { done: { id: it.id, title: it.title, savedId: row.id } };
 	},
-	/** Back to unread, and out of Later if it was saved. */
+	/** Back to unread, and out of Later. */
 	undo: async ({ request, locals }) => {
 		const form = await request.formData();
 		await setRead(locals.db, Number(form.get('id')), false);

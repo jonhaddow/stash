@@ -16,3 +16,16 @@ export async function swipe(page: Page, row: Locator, dx: number) {
 	await page.mouse.move(x + dx, y, { steps: 10 });
 	await page.mouse.up();
 }
+
+/** Pulls down from the top of the page with a finger (touch events, which a mouse doesn't make). */
+export async function pull(page: Page) {
+	const cdp = await page.context().newCDPSession(page);
+	const touch = (type: string, y?: number) =>
+		cdp.send('Input.dispatchTouchEvent', {
+			type,
+			touchPoints: y === undefined ? [] : [{ x: 200, y }]
+		});
+	await touch('touchStart', 100);
+	for (let y = 120; y <= 260; y += 20) await touch('touchMove', y);
+	await touch('touchEnd');
+}
