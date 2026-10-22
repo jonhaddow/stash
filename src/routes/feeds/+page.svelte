@@ -8,6 +8,7 @@
 	import LinkRow from '#lib/components/LinkRow.svelte';
 	import OrderPicker from '#lib/components/OrderPicker.svelte';
 	import UndoBar from '#lib/components/UndoBar.svelte';
+	import { getUnreadChange } from '#lib/unread.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -34,7 +35,10 @@
 	const keep = (it: Item, changes: Partial<Item> = {}) =>
 		kept.set(it.id, { ...it, readAt: it.readAt ?? new Date().toISOString(), ...changes });
 
+	const changeUnread = getUnreadChange();
+
 	function setRead(it: Item, read: boolean) {
+		if (isUnread(it) === read) changeUnread(read ? -1 : 1);
 		readNow.set(it.id, read);
 		if (read) keep(it);
 		// keepalive: the request outlives the page if the link replaces it.
@@ -43,6 +47,7 @@
 
 	/** Saved by a swipe: the server marks it read, so drop any override here (or Undo would bring it back looking read). */
 	async function save(it: Item) {
+		if (isUnread(it)) changeUnread(-1);
 		readNow.delete(it.id);
 		keep(it);
 		const result = await act(actionHere('save'), { id: it.id });

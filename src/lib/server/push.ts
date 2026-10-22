@@ -151,7 +151,8 @@ export async function subscribe(db: DB, sub: Subscription) {
 }
 
 /**
- * The app has just set the badge itself (the layout's count), so the next push
+ * The app has just set the badge itself (the layout's count, or one changed by a
+ * read on the Feeds page), so the next push
  * is only needed once the count changes from this.
  */
 export async function badgeShown(db: DB, unread: number) {

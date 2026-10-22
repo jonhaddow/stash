@@ -3,12 +3,17 @@
 	import { beforeNavigate, invalidate } from '$app/navigation';
 	import { page, updated } from '$app/state';
 	import PullToRefresh from '#lib/components/PullToRefresh.svelte';
+	import { setUnreadChange } from '#lib/unread.ts';
 	// Served with the app (not Google Fonts): no extra connections before text shows.
 	import '@fontsource-variable/manrope';
 	import font from '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url';
 	import './app.css';
 
 	let { data, children }: LayoutProps = $props();
+
+	// The loaded count, changed by reads on the Feeds page until the next load.
+	let unread = $derived(data.unread);
+	setUnreadChange((by) => (unread = Math.max(0, unread + by)));
 
 	const path = $derived(page.url.pathname);
 	const tabs = $derived([
@@ -39,7 +44,7 @@
 	// notifications are allowed (Settings), and it changes only while the app is open.
 	$effect(() => {
 		if (!('setAppBadge' in navigator)) return;
-		const set = data.unread ? navigator.setAppBadge(data.unread) : navigator.clearAppBadge();
+		const set = unread ? navigator.setAppBadge(unread) : navigator.clearAppBadge();
 		set.catch(() => {});
 	});
 </script>
@@ -82,13 +87,13 @@
 							/>
 						{/if}
 					</svg>
-					{#if tab.icon === 'feeds' && data.unread}
-						<span class="badge">{data.unread > 99 ? '99+' : data.unread}</span>
+					{#if tab.icon === 'feeds' && unread}
+						<span class="badge">{unread > 99 ? '99+' : unread}</span>
 					{/if}
 				</span>
 				<span class="label">{tab.label}</span>
-				{#if tab.icon === 'feeds' && data.unread}
-					<span class="sr">, {data.unread} unread</span>
+				{#if tab.icon === 'feeds' && unread}
+					<span class="sr">, {unread} unread</span>
 				{/if}
 			</a>
 		{/each}
