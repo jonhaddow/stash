@@ -10,7 +10,7 @@ describe('subreddits', () => {
 			t: 'week',
 			limit: 100
 		});
-		expect(asSubreddit('https://www.reddit.com/r/rust/comments/abc/x/')).toBeNull();
+		expect(asSubreddit('https://www.reddit.com/r/rust/s/AbC123')).toMatchObject({ sub: 'rust' });
 		expect(asSubreddit('rust')).toBeNull();
 	});
 

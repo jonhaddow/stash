@@ -9,10 +9,15 @@ export type Sort = (typeof SORTS)[number];
 export type Window = (typeof WINDOWS)[number];
 export type Subreddit = { sub: string; sort: Sort; t: Window; limit: number | null };
 
+export const isReddit = (hostname: string) => /(^|\.)reddit\.com$/.test(hostname);
+
+/** A YouTube @handle, typed on its own. */
+export const isHandle = (input: string) => /^@[\w.-]+$/.test(input.trim());
+
 const isOne = <T extends string>(list: readonly T[], v: unknown): v is T => list.includes(v as T);
 
 /** Reddit allows up to 100 posts a request. */
-export const clampLimit = (n: unknown) => {
+const clampLimit = (n: unknown) => {
 	const v = Math.round(Number(n));
 	return v > 0 ? Math.min(v, 100) : null;
 };
@@ -27,9 +32,11 @@ export function asSubreddit(input: string): Subreddit | null {
 	} catch {
 		return null;
 	}
-	if (!/(^|\.)reddit\.com$/.test(url.hostname)) return null;
+	if (!isReddit(url.hostname)) return null;
 	const m = /^\/r\/([\w-]+)(?:\/(hot|new|top|rising))?\/?(?:\.rss\/?)?$/.exec(url.pathname);
-	if (!m) return null;
+	// Posts and share links (/r/name/comments/…, /r/name/s/…): their subreddit.
+	const any = /^\/r\/([\w-]+)/.exec(url.pathname);
+	if (!m) return any && { sub: any[1], sort: 'hot', t: 'day', limit: null };
 	const t = url.searchParams.get('t');
 	return {
 		sub: m[1],
@@ -84,13 +91,11 @@ export function withShorts(url: string, shorts: boolean) {
 
 // ---- What was typed ----
 
-export type Typed = 'reddit' | 'youtube' | 'url' | 'search';
-
 /** How the add box reads its input: a subreddit, a YouTube channel, a link, or words to search. */
-export function typedAs(input: string): Typed {
+export function typedAs(input: string): 'reddit' | 'youtube' | 'url' | 'search' {
 	const s = input.trim();
 	if (asSubreddit(s)) return 'reddit';
-	if (/^@[\w.-]+$/.test(s) || /^(https?:\/\/)?([\w-]+\.)*(youtube\.com|youtu\.be)\b/i.test(s))
+	if (isHandle(s) || /^(https?:\/\/)?([\w-]+\.)*(youtube\.com|youtu\.be)\b/i.test(s))
 		return 'youtube';
 	if (/^https?:\/\//i.test(s) || /^[^\s/]+\.[a-z]{2,}(\/\S*)?$/i.test(s)) return 'url';
 	return 'search';

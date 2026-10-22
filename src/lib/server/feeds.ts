@@ -80,7 +80,9 @@ export async function addFeed(
 	}: { now?: Date; fetcher?: Fetch; shorts?: boolean } = {}
 ) {
 	const started = Date.now();
-	let { url, parsed } = await discoverFeed(input, fetcher);
+	// A channel feed given straight is fetched once; a channel page leads to its feed first.
+	const start = shorts === undefined ? input : withShorts(input, shorts);
+	let { url, parsed } = await discoverFeed(start, fetcher);
 	const wanted = shorts === undefined ? url : withShorts(url, shorts);
 	if (wanted !== url) ({ url, parsed } = await discoverFeed(wanted, fetcher));
 	const [existing] = await db.select({ id: feed.id }).from(feed).where(eq(feed.url, url));

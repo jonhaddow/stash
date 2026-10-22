@@ -1,4 +1,4 @@
-import { asSubreddit, subredditFeed, subredditFrom, withShorts } from '../feed-url.ts';
+import { asSubreddit, isHandle, subredditFeed, subredditFrom, withShorts } from '../feed-url.ts';
 import { folderNamed } from './feeds.ts';
 import { cleanUrl } from './saved.ts';
 import type { DB } from './db/index.ts';
@@ -24,7 +24,7 @@ export function feedFromForm(form: FormData) {
 	const typed = String(form.get('url') ?? '').trim();
 	const sub = asSubreddit(typed);
 	if (sub) return subredditFeed(subredditFrom(sub.sub, form));
-	if (/^@[\w.-]+$/.test(typed)) return `https://www.youtube.com/${typed}`;
+	if (isHandle(typed)) return `https://www.youtube.com/${typed}`;
 	return cleanUrl(typed);
 }
 

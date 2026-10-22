@@ -56,7 +56,6 @@ async function youtube(q: string, key: string, fetcher: Fetch): Promise<Found[]>
 		const subs = c?.statistics?.hiddenSubscriberCount ? null : c?.statistics?.subscriberCount;
 		return {
 			title: s.title,
-			// Without Shorts unless the add box says otherwise (withShorts).
 			url: channelFeed(s.channelId.slice(2), true),
 			detail: ['YouTube', subs && `${count.format(Number(subs))} subscribers`]
 				.filter(Boolean)
