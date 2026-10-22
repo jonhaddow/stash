@@ -13,4 +13,5 @@ export async function act(action: string, fields: Record<string, string | number
 	const result = deserialize(await res.text());
 	if (result.type === 'success') await invalidateAll();
 	await applyAction(result);
+	return result;
 }

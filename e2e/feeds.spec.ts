@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { open, swipe } from './helpers.ts';
+import { open, pull, swipe } from './helpers.ts';
 
 test('feed entries, unread only by default, and saving one for later', async ({ page }) => {
 	await open(page, '/feeds');
@@ -14,11 +14,12 @@ test('feed entries, unread only by default, and saving one for later', async ({ 
 	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeVisible();
 	await page.getByRole('link', { name: 'Unread', exact: true }).click();
 
-	// Swiping left saves it and marks it read, so it leaves the list.
+	// Swiping left saves it and marks it read; it stays put until the list is refreshed.
 	const row = () => page.getByRole('listitem').filter({ hasText: 'Sourdough in a day' });
 	await swipe(page, row(), -150);
 	await expect(page.getByRole('status')).toContainText('In Later: Sourdough in a day');
-	await expect(row()).toHaveCount(0);
+	await expect(row()).toContainText('In Later');
+	await expect(row().getByLabel('Unread')).toBeHidden();
 	await open(page, '/?kind=video');
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 
@@ -36,18 +37,33 @@ test('feed entries, unread only by default, and saving one for later', async ({ 
 	await expect(row().getByLabel('Unread')).toBeVisible();
 });
 
-test('swiping right marks an entry read and clears it, with Undo', async ({ page }) => {
+test('swiping right marks an entry read or unread, in place', async ({ page }) => {
 	await open(page, '/feeds');
 	const row = page.getByRole('listitem').filter({ hasText: 'Green tea, cold' });
 	await expect(row.getByLabel('Unread')).toBeVisible();
 	// A short swipe does nothing, and opens nothing.
 	await swipe(page, row, 40);
 	await expect(row.getByLabel('Unread')).toBeVisible();
+	const read = page.waitForResponse((r) => r.url().includes('/read'));
 	await swipe(page, row, 150);
-	await expect(page.getByRole('status')).toContainText('Read: Green tea, cold');
-	await expect(row).toHaveCount(0);
+	await read;
+	await expect(row.getByLabel('Unread')).toBeHidden();
+	// Saving another reloads the list, and this one stays.
+	await swipe(page, page.getByRole('listitem').filter({ hasText: 'All about oolong' }), -150);
+	await expect(page.getByRole('status')).toContainText('In Later: All about oolong');
+	await expect(row).toBeVisible();
 	await page.getByRole('button', { name: 'Undo' }).click();
-	await expect(row.getByLabel('Unread')).toBeVisible();
+	await expect(row).toBeVisible();
+
+	// Pulling down from the top refreshes the list, and it's gone.
+	await pull(page);
+	await expect(row).toHaveCount(0);
+	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeVisible();
+
+	await open(page, '/feeds?all=1');
+	const unread = page.waitForResponse((r) => r.url().includes('/read'));
+	await swipe(page, row, 150);
+	await unread;
 	await open(page, '/feeds');
 	await expect(row.getByLabel('Unread')).toBeVisible();
 });

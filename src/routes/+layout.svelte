@@ -2,6 +2,7 @@
 	import type { LayoutProps } from './$types';
 	import { beforeNavigate, invalidate } from '$app/navigation';
 	import { page, updated } from '$app/state';
+	import PullToRefresh from '#lib/components/PullToRefresh.svelte';
 	// Served with the app (not Google Fonts): no extra connections before text shows.
 	import '@fontsource-variable/manrope';
 	import font from '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url';
@@ -52,6 +53,7 @@
 {@render children()}
 
 {#if data.user}
+	<PullToRefresh />
 	<!-- Each tab's code loads straight away, so the first tap only waits for data. -->
 	<nav class="tabs" aria-label="Main" data-sveltekit-preload-code="eager">
 		{#each tabs as tab (tab.href)}

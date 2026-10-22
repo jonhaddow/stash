@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { act } from '#lib/act.ts';
@@ -11,20 +12,47 @@
 
 	let { data, form }: PageProps = $props();
 
+	type Item = (typeof data.items)[number];
+
 	// Read or unread here (opened or swiped): shown straight away, before the next load says so.
 	const readNow = new SvelteMap<number, boolean>();
-	const isUnread = (it: (typeof data.items)[number]) => !(readNow.get(it.id) ?? !!it.readAt);
+	const isUnread = (it: Item) => !(readNow.get(it.id) ?? !!it.readAt);
 
-	function setRead(id: number, read: boolean) {
-		readNow.set(id, read);
+	// Entries read here stay in the list (the unread one reloads without them) until it's
+	// refreshed or its filters change.
+	const kept = new SvelteMap<number, Item>();
+	afterNavigate(() => kept.clear());
+	const items = $derived.by(() => {
+		const ids = new Set(data.items.map((it) => it.id));
+		const gone = [...kept.values()].filter((it) => !ids.has(it.id));
+		if (!gone.length) return data.items;
+		const sign = data.order === 'oldest' ? 1 : -1;
+		return [...data.items, ...gone].sort(
+			(a, b) => sign * (a.publishedAt.localeCompare(b.publishedAt) || a.id - b.id)
+		);
+	});
+	const keep = (it: Item, changes: Partial<Item> = {}) =>
+		kept.set(it.id, { ...it, readAt: it.readAt ?? new Date().toISOString(), ...changes });
+
+	function setRead(it: Item, read: boolean) {
+		readNow.set(it.id, read);
+		if (read) keep(it);
 		// keepalive: the request outlives the page if the link replaces it.
-		void fetch(`/items/${id}/read`, { method: read ? 'POST' : 'DELETE', keepalive: true });
+		void fetch(`/items/${it.id}/read`, { method: read ? 'POST' : 'DELETE', keepalive: true });
 	}
 
-	/** Read or saved by a swipe: the server marks it read, so drop any override here (or Undo would bring it back looking read). */
-	function dealWith(action: 'read' | 'save', id: number) {
-		readNow.delete(id);
-		return act(actionHere(action), { id });
+	/** Saved by a swipe: the server marks it read, so drop any override here (or Undo would bring it back looking read). */
+	async function save(it: Item) {
+		readNow.delete(it.id);
+		keep(it);
+		const result = await act(actionHere('save'), { id: it.id });
+		if (result.type === 'success')
+			keep(it, { savedId: (result.data as { done: { savedId: number } }).done.savedId });
+	}
+
+	async function unsave(it: Item) {
+		if (kept.has(it.id)) keep(it, { savedId: null });
+		await act(actionHere('unsave'), { savedId: it.savedId! });
 	}
 
 	/** This page's URL with one filter changed (and paging reset). */
@@ -55,8 +83,9 @@
 					action={actionHere('readAll')}
 					use:enhance={() =>
 						async ({ update }) => {
-							// Swiped-unread ones are read now too.
+							// Swiped-unread ones are read now too, and the list empties.
 							readNow.clear();
+							kept.clear();
 							await update();
 						}}
 				>
@@ -79,9 +108,9 @@
 		>
 	</div>
 
-	{#if data.items.length}
+	{#if items.length}
 		<ul class="list">
-			{#each data.items as it (it.id)}
+			{#each items as it (it.id)}
 				{@const unread = isUnread(it)}
 				<LinkRow
 					url={it.url}
@@ -91,20 +120,11 @@
 					at={it.publishedAt}
 					{unread}
 					saved={!!it.savedId}
-					onopen={() => setRead(it.id, true)}
-					right={data.unreadOnly
-						? { label: 'Read', away: true, run: () => dealWith('read', it.id) }
-						: { label: unread ? 'Read' : 'Unread', run: () => setRead(it.id, unread) }}
+					onopen={() => setRead(it, true)}
+					right={{ label: unread ? 'Read' : 'Unread', run: () => setRead(it, unread) }}
 					left={it.savedId
-						? {
-								label: 'Out of Later',
-								run: () => act(actionHere('unsave'), { savedId: it.savedId! })
-							}
-						: {
-								label: 'Later',
-								away: data.unreadOnly,
-								run: () => dealWith('save', it.id)
-							}}
+						? { label: 'Out of Later', run: () => unsave(it) }
+						: { label: 'Later', run: () => save(it) }}
 				/>
 			{/each}
 		</ul>
@@ -127,9 +147,9 @@
 {#if form?.done}
 	{#key form.done}
 		<UndoBar
-			message="{form.done.savedId ? 'In Later' : 'Read'}: {form.done.title}"
+			message="In Later: {form.done.title}"
 			action={actionHere('undo')}
-			fields={{ id: form.done.id, savedId: form.done.savedId ?? '' }}
+			fields={{ id: form.done.id, savedId: form.done.savedId }}
 		/>
 	{/key}
 {/if}
