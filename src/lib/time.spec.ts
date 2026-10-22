@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ago, formatDateTime } from './time.ts';
+import { ago, clock, formatDateTime } from './time.ts';
 
 describe('ago', () => {
 	const now = new Date('2026-10-20T12:00:00Z');
@@ -18,5 +18,13 @@ describe('ago', () => {
 describe('formatDateTime', () => {
 	it('uses UK time', () => {
 		expect(formatDateTime('2026-10-20T13:05:00Z')).toBe('20 Oct, 14:05');
+	});
+});
+
+describe('clock', () => {
+	it('shows minutes and seconds, and hours past an hour', () => {
+		expect(clock(5)).toBe('0:05');
+		expect(clock(245.9)).toBe('4:05');
+		expect(clock(3723)).toBe('1:02:03');
 	});
 });

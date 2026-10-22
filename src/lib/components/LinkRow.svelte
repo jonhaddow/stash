@@ -6,7 +6,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { hackUrl, hostOf, youtubeId } from '#lib/kind.ts';
-	import { ago } from '#lib/time.ts';
+	import { positionOf } from '#lib/positions.svelte.ts';
+	import { ago, clock } from '#lib/time.ts';
 	import Player from './Player.svelte';
 
 	// A link in a list: title, where it's from and when, and a thumbnail, opening the original
@@ -45,6 +46,7 @@
 	const video = $derived(youtubeId(url));
 	const hack = $derived(hackUrl(url));
 	let playing = $state(false);
+	const resume = $derived(video ? positionOf(video) : null);
 	const thumb = $derived(image || (video ? `https://i.ytimg.com/vi/${video}/mqdefault.jpg` : null));
 	// Images that fail to load (gone, or hotlinking refused) leave just the title.
 	let broken = $state(false);
@@ -149,6 +151,7 @@
 				<span class="source">{source ?? hostOf(url)}</span>
 				<span>· {ago(at)}</span>
 				{#if saved}<span class="saved">· In Later</span>{/if}
+				{#if resume}<span>· {clock(resume)} in</span>{/if}
 			</span>
 		</span>
 		{#if thumb && !broken}

@@ -36,3 +36,11 @@ export function ago(iso: string, now = new Date()) {
 
 /** "20 Oct, 14:05" (UK time), for sync logs. */
 export const formatDateTime = (iso: string) => dateTime.format(new Date(iso));
+
+/** A video position: "4:05", or "1:02:03" past an hour. */
+export function clock(seconds: number) {
+	const s = Math.floor(seconds);
+	const ss = String(s % 60).padStart(2, '0');
+	if (s < 3600) return `${Math.floor(s / 60)}:${ss}`;
+	return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${ss}`;
+}

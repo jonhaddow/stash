@@ -50,6 +50,31 @@ test('a YouTube video plays in the app', async ({ page }) => {
 	await expect(player).toBeHidden();
 });
 
+test('a video resumes where it was left', async ({ page }) => {
+	// A stand-in for YouTube's embed: once the app's listening, it says it's 65 s into a 10-minute video.
+	await page.route('https://www.youtube-nocookie.com/**', (route) =>
+		route.fulfill({
+			contentType: 'text/html',
+			body: `<script>addEventListener('message', () => parent.postMessage(JSON.stringify({ event: 'infoDelivery', info: { currentTime: 65, duration: 600, playerState: 1 } }), '*'))</script>`
+		})
+	);
+	await open(page, '/');
+	const row = page.getByRole('listitem').filter({ hasText: 'How to make bread' });
+	await row.getByRole('link').click();
+	const player = page.getByRole('dialog', { name: 'How to make bread' });
+	await expect(player.locator('iframe')).not.toHaveAttribute('src', /start=/);
+	await player.getByRole('button', { name: 'Close' }).click();
+	await expect(row).toContainText('1:05 in');
+
+	await open(page, '/');
+	await expect(row).toContainText('1:05 in');
+	await row.getByRole('link').click();
+	await expect(player.locator('iframe')).toHaveAttribute('src', /&start=65$/);
+	await player.getByRole('button', { name: 'Close' }).click();
+	// Finished: forgotten again, which also leaves the database as the other tests expect.
+	await page.request.post('/api/position', { data: { video: 'abc', seconds: null } });
+});
+
 test('oldest first, remembered on the next visit', async ({ page }) => {
 	await open(page, '/');
 	const titles = page.getByRole('listitem').locator('a').first();
