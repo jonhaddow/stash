@@ -44,8 +44,12 @@ test('swiping right marks an entry read or unread, in place', async ({ page }) =
 	// A short swipe does nothing, and opens nothing.
 	await swipe(page, row, 40);
 	await expect(row.getByLabel('Unread')).toBeVisible();
+	const tab = page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: /Feeds/ });
+	const before = Number((await tab.textContent())!.match(/(\d+) unread/)![1]);
 	const read = page.waitForResponse((r) => r.url().includes('/read'));
 	await swipe(page, row, 150);
+	// The tab's count drops straight away.
+	await expect(tab).toContainText(`${before - 1} unread`);
 	await read;
 	await expect(row.getByLabel('Unread')).toBeHidden();
 	// Saving another reloads the list, and this one stays.
