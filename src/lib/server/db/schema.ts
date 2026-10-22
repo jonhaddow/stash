@@ -143,3 +143,13 @@ export const pushSubscription = sqliteTable('push_subscription', {
 	/** The count last sent, so an unchanged one isn't sent again. */
 	sentUnread: integer('sent_unread')
 });
+
+/**
+ * Where a YouTube video was left in the player, by video ID, so it resumes there
+ * from Later or Feeds. Removed when the video's watched to the end.
+ */
+export const videoPosition = sqliteTable('video_position', {
+	videoId: text('video_id').primaryKey(),
+	seconds: integer('seconds').notNull(),
+	updatedAt: text('updated_at').notNull()
+});
