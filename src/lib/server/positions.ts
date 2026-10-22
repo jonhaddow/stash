@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { DB } from './db/index.ts';
 import { videoPosition } from './db/schema.ts';
 
-/** Every saved position (a short list: finished videos are removed), by video ID. */
+/** Every saved position by video ID: one per video started and not finished, so a short list. */
 export async function listPositions(db: DB): Promise<Record<string, number>> {
 	const rows = await db.select().from(videoPosition);
 	return Object.fromEntries(rows.map((r) => [r.videoId, r.seconds]));
