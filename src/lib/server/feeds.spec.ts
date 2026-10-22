@@ -10,7 +10,8 @@ import {
 	markAllRead,
 	syncDue,
 	syncFeed,
-	getFeed
+	getFeed,
+	updateFeed
 } from './feeds.ts';
 
 const now = new Date('2026-10-20T12:00:00Z');
@@ -49,10 +50,11 @@ describe('discoverFeed', () => {
 		expect(parsed.title).toBe('Atom blog');
 	});
 
-	it('goes straight to a subreddit’s feed', async () => {
-		const fetcher = fakeFetch({ 'https://www.reddit.com/r/sveltejs/.rss': rss([]) });
-		const { url } = await discoverFeed('https://old.reddit.com/r/sveltejs/top', fetcher);
-		expect(url).toBe('https://www.reddit.com/r/sveltejs/.rss');
+	it('goes straight to a subreddit’s feed, keeping its sort', async () => {
+		const feed = 'https://www.reddit.com/r/sveltejs/top/.rss?t=week';
+		const fetcher = fakeFetch({ [feed]: rss([]) });
+		const { url } = await discoverFeed('https://old.reddit.com/r/sveltejs/top/?t=week', fetcher);
+		expect(url).toBe(feed);
 	});
 
 	it('says when a page has no feed', async () => {
@@ -125,6 +127,31 @@ describe('syncing', () => {
 		expect(await syncDue(db, now, fetcher)).toHaveLength(1);
 		// The August log is gone; today's stays.
 		expect((await db.select().from(syncLog)).map((l) => l.at)).toEqual([now.toISOString()]);
+	});
+});
+
+describe('options', () => {
+	const channel = 'https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA';
+	const noShorts =
+		'https://www.youtube.com/feeds/videos.xml?playlist_id=UULFHnyfMqiRRG1u-2MsSQLbXA';
+	const page = 'https://www.youtube.com/@veritasium';
+
+	it('adds a YouTube channel without Shorts', async () => {
+		const fetcher = fakeFetch({
+			[page]: `<link rel="alternate" type="application/rss+xml" href="${channel}">`,
+			[channel]: rss([]),
+			[noShorts]: rss([])
+		});
+		const f = await addFeed(db, page, null, { now, fetcher, shorts: false });
+		expect(f.url).toBe(noShorts);
+	});
+
+	it('changes a feed’s options, fetching it afresh', async () => {
+		const fetcher = fakeFetch({ [channel]: rss([]) });
+		const f = await addFeed(db, channel, null, { now, fetcher });
+		await updateFeed(db, f.id, { title: 'V', folderId: null, url: noShorts });
+		const after = await getFeed(db, f.id);
+		expect(after).toMatchObject({ url: noShorts, title: 'V', etag: null, lastFetchedAt: null });
 	});
 });
 

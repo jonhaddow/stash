@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import FeedOptions from '#lib/components/FeedOptions.svelte';
 	import FolderPicker from '#lib/components/FolderPicker.svelte';
+	import { asChannelFeed, asSubreddit } from '#lib/feed-url.ts';
 	import SyncStatus from '#lib/components/SyncStatus.svelte';
 	import { formatDateTime } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 	const f = $derived(data.feed);
+	const reddit = $derived(asSubreddit(f.url));
+	const youtube = $derived(asChannelFeed(f.url));
 
 	const STATUS = { ok: 'OK', 'not-modified': 'No change', error: 'Failed' } as const;
 </script>
@@ -27,6 +31,7 @@
 			Name
 			<input name="title" value={f.title} required maxlength="200" />
 		</label>
+		{#key f.url}<FeedOptions {reddit} {youtube} />{/key}
 		{#key f.folderId}<FolderPicker folders={data.folders} selected={f.folderId} />{/key}
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		<button class="btn primary">Save</button>

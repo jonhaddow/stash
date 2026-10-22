@@ -32,6 +32,8 @@ declare global {
 			/** Stash's Reddit app (Worker secrets), for subreddit feeds through the API. */
 			REDDIT_CLIENT_ID?: string;
 			REDDIT_CLIENT_SECRET?: string;
+			/** YouTube Data API key (Worker secret), for finding channels by name. */
+			YOUTUBE_API_KEY?: string;
 			/** Authenticates the cron's call to /sync. */
 			CRON_SECRET?: string;
 			/** Web Push (push.ts): the public key (wrangler.jsonc vars) and private scalar (Worker secret). */

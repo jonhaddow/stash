@@ -1,7 +1,9 @@
 import { fail } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 import { addFeed, listFeeds, listFolders } from '#lib/server/feeds.ts';
-import { folderFromForm } from '#lib/server/feed-form.ts';
-import { cleanUrl } from '#lib/server/saved.ts';
+import { feedFromForm, folderFromForm } from '#lib/server/feed-form.ts';
+import { workersFetch } from '#lib/server/http.ts';
+import { searchFeeds } from '#lib/server/search.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -16,15 +18,30 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	add: async ({ request, locals }) => {
 		const form = await request.formData();
-		const url = cleanUrl(form.get('url'));
-		if (!url)
-			return fail(400, { error: 'That doesn’t look like a link', url: String(form.get('url')) });
+		const typed = String(form.get('url') ?? '');
+		const url = feedFromForm(form);
+		if (!url) return fail(400, { error: 'That doesn’t look like a link', url: typed });
 		try {
 			const folderId = await folderFromForm(locals.db, form);
-			const feed = await addFeed(locals.db, url, folderId);
+			const feed = await addFeed(locals.db, url, folderId, {
+				shorts: form.get('shorts') === 'on'
+			});
 			return { added: feed.title };
 		} catch (e) {
-			return fail(400, { error: e instanceof Error ? e.message : 'Couldn’t add that', url });
+			return fail(400, { error: e instanceof Error ? e.message : 'Couldn’t add that', url: typed });
+		}
+	},
+	search: async ({ request }) => {
+		const q = String((await request.formData()).get('url') ?? '').trim();
+		if (!q) return fail(400, { error: 'Type a name to search for', url: q });
+		try {
+			const found = await searchFeeds(q.slice(0, 100), {
+				youtubeKey: env.YOUTUBE_API_KEY,
+				fetcher: workersFetch
+			});
+			return { found, url: q };
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'Search failed', url: q });
 		}
 	}
 };

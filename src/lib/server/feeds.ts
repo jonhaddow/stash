@@ -4,6 +4,7 @@ import { feed, folder, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
 import { isReddit, withReddit } from './reddit.ts';
+import { asSubreddit, subredditFeed, withShorts } from '../feed-url.ts';
 import { findFeedLink, looksLikeFeed, parseFeed, type ParsedFeed } from './parse.ts';
 
 /** Fetching feeds: subreddits through Reddit's API (reddit.ts), the rest directly. */
@@ -24,10 +25,9 @@ const INSERT_CHUNK = 12;
 // ---- Finding a feed ----
 
 /** Subreddits have feeds at a known address, and Reddit's pages often refuse servers. */
-function knownFeed(url: URL) {
-	const sub = /^\/r\/([\w-]+)/.exec(url.pathname);
-	if (isReddit(url.hostname) && sub) return `https://www.reddit.com/r/${sub[1]}/.rss`;
-	return null;
+function knownFeed(input: string) {
+	const sub = asSubreddit(input);
+	return sub ? subredditFeed(sub) : null;
 }
 
 /** A feed from a feed URL or a page that links to one. Throws a readable message if none. */
@@ -35,7 +35,7 @@ export async function discoverFeed(
 	input: string,
 	fetcher: Fetch = feedFetch
 ): Promise<{ url: string; parsed: ParsedFeed }> {
-	const url = knownFeed(new URL(input)) ?? input;
+	const url = knownFeed(input) ?? input;
 	const res = await get(fetcher, url);
 	if (!res.ok) throw new Error(`${new URL(url).hostname} answered ${res.status}`);
 	const body = await readText(res);
@@ -65,15 +65,24 @@ export async function folderNamed(db: DB, name: string) {
 
 // ---- Feeds ----
 
-/** Adds a feed and stores its current entries. Throws a readable message if it can't. */
+/**
+ * Adds a feed and stores its current entries. Throws a readable message if it can't.
+ * `shorts` picks a YouTube channel's feed with or without them.
+ */
 export async function addFeed(
 	db: DB,
 	input: string,
 	folderId: number | null,
-	{ now = new Date(), fetcher = feedFetch }: { now?: Date; fetcher?: Fetch } = {}
+	{
+		now = new Date(),
+		fetcher = feedFetch,
+		shorts
+	}: { now?: Date; fetcher?: Fetch; shorts?: boolean } = {}
 ) {
 	const started = Date.now();
-	const { url, parsed } = await discoverFeed(input, fetcher);
+	let { url, parsed } = await discoverFeed(input, fetcher);
+	const wanted = shorts === undefined ? url : withShorts(url, shorts);
+	if (wanted !== url) ({ url, parsed } = await discoverFeed(wanted, fetcher));
 	const [existing] = await db.select({ id: feed.id }).from(feed).where(eq(feed.url, url));
 	if (existing) throw new Error('That feed is already here');
 	const [row] = await db
@@ -102,12 +111,22 @@ export async function addFeed(
 	return row;
 }
 
+/** A changed `url` (new options) is fetched afresh next time. Throws if another feed has it. */
 export async function updateFeed(
 	db: DB,
 	id: number,
-	values: { title: string; folderId: number | null }
+	{ url, ...values }: { title: string; folderId: number | null; url?: string }
 ) {
-	await db.update(feed).set(values).where(eq(feed.id, id));
+	const [current] = await db.select({ url: feed.url }).from(feed).where(eq(feed.id, id));
+	const moved = url && url !== current?.url;
+	if (moved) {
+		const [taken] = await db.select({ id: feed.id }).from(feed).where(eq(feed.url, url));
+		if (taken) throw new Error('Another feed already has those options');
+	}
+	await db
+		.update(feed)
+		.set(moved ? { ...values, url, etag: null, lastModified: null, lastFetchedAt: null } : values)
+		.where(eq(feed.id, id));
 }
 
 export async function deleteFeed(db: DB, id: number) {
