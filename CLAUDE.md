@@ -4,25 +4,15 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 
 Stack, workflow, commands and shared gotchas: the `app-stack` skill.
 
-## Where things are
+## Worth knowing
 
-- `src/lib/server/parse.ts`: RSS/Atom parsing with regexes (not an XML library, for CPU), feed discovery from a page, page titles; pure, unit tested
-- `src/lib/server/feeds.ts`: finding and adding feeds, syncing (conditional requests, logs), folders, listing and marking entries read
-- `src/lib/server/saved.ts`: saving links (title fetched from the page), Later and the archive
-- `src/lib/server/http.ts`: fetching other sites (User-Agent, timeout, size cap)
-- `src/lib/server/reddit.ts`: subreddit `.rss` requests go to Reddit's signed-in API (Jon's app, `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` secrets, from 1Password's "Reddit API") and come back as Atom
-- `src/lib/server/push.ts`: Web Push (VAPID, RFC 8291 encryption with WebCrypto) sending the unread count after each sync, for the app icon's badge; the service worker shows it. `VAPID_PRIVATE_KEY` secret, public key in `wrangler.jsonc`
-- `src/lib/kind.ts`: article or video, by the link's site; YouTube video IDs for the player (`components/Player.svelte`)
-- `src/routes/sync`: called by the cron (`worker/entry.js`) with `CRON_SECRET`
-- `src/routes/api/save`: the iOS Shortcut, `Authorization: Bearer <token>` (Settings makes the token; only its hash is kept)
-- Routes: `/` Later, `/feeds`, `/settings`, `/settings/feeds` (+ `[id]` with its sync log), `/settings/push` (saves the device's push subscription), `/archive`
-- Schema: `src/lib/server/db/schema.ts`. Product choices: `docs/decisions.md`; what's next: `docs/roadmap.md`.
+- Feeds are parsed with regexes (`parse.ts`), not an XML library, to stay inside the Workers CPU limit.
+- Subreddit `.rss` links go through Reddit's signed-in API (`reddit.ts`; secrets from 1Password's "Reddit API") and come back as Atom.
+- After each sync, a push sends the unread count for the app icon's badge.
+- `/api/save` is the iOS Shortcut: `Authorization: Bearer <token>`, made in Settings, only its hash kept.
+- `/api/save` takes JSON only: SvelteKit's CSRF check refuses form and plain-text posts from outside the site.
+- Server code that fetches takes a `fetcher` argument, so tests pass a fake one (`feeds.spec.ts`).
 
 ## Review focus
 
 One person uses it. Workers CPU in the cron's feed parsing, feeds that differ from the parser's assumptions. Public routes: only `/login`, `/auth/*`, `/sync` and `/api/save`.
-
-## Notes
-
-- `/api/save` takes JSON only: SvelteKit's CSRF check refuses form and plain-text posts from outside the site.
-- Server code that fetches takes a `fetcher` argument, so tests pass a fake one (`feeds.spec.ts`).
