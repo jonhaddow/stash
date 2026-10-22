@@ -92,8 +92,8 @@ export function withShorts(url: string, shorts: boolean) {
 // ---- Groups ----
 
 /** Feeds are grouped by where they come from, by their address or else their site's. */
-export function sourceOf(...urls: (string | null)[]): 'Reddit' | 'YouTube' | 'Other' {
-	for (const u of urls) {
+export function sourceOf(url: string, siteUrl: string | null): 'Reddit' | 'YouTube' | 'Other' {
+	for (const u of [url, siteUrl]) {
 		const host = URL.parse(u ?? '')?.hostname ?? '';
 		if (isReddit(host)) return 'Reddit';
 		if (/(^|\.)(youtube\.com|youtu\.be)$/.test(host)) return 'YouTube';
