@@ -42,7 +42,12 @@
 	}
 </script>
 
-<svelte:window {ontouchstart} {ontouchmove} {ontouchend} ontouchcancel={ontouchend} />
+<svelte:window
+	{ontouchstart}
+	{ontouchmove}
+	{ontouchend}
+	ontouchcancel={() => ((start = null), (dy = 0))}
+/>
 
 {#if dy > 10 || refreshing}
 	<div

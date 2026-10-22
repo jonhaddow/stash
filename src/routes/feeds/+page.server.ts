@@ -46,7 +46,8 @@ export const actions: Actions = {
 	undo: async ({ request, locals }) => {
 		const form = await request.formData();
 		await setRead(locals.db, Number(form.get('id')), false);
-		await setArchived(locals.db, Number(form.get('savedId')), new Date().toISOString());
+		const savedId = Number(form.get('savedId'));
+		if (savedId) await setArchived(locals.db, savedId, new Date().toISOString());
 		return { undone: true };
 	},
 	unsave: async ({ request, locals }) => {
