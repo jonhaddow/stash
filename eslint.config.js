@@ -16,10 +16,15 @@ export default defineConfig(
 	// Type-aware rules for app code: a missing await, and untyped (any) values
 	// leaking in. Routes type their props (PageProps) so ESLint can see them. The
 	// full recommendedTypeChecked preset was tried and only added noise here.
+	// Named tsconfigs rather than projectService: with Svelte files that took
+	// about 2 minutes, this about 20 seconds.
 	{
 		files: ['src/**/*.ts', 'src/**/*.svelte'],
 		languageOptions: {
-			parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname }
+			parserOptions: {
+				project: ['./tsconfig.json', './src/service-worker/tsconfig.json'],
+				tsconfigRootDir: import.meta.dirname
+			}
 		},
 		rules: {
 			'@typescript-eslint/await-thenable': 'error',
