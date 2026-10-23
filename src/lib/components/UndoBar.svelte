@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	// "Done: Some article. Undo", floating above the tabs after an action.
+	// "Archived: Some article. Undo", floating above the tabs after an action.
 	let {
 		message,
 		action,

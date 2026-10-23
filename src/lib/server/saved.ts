@@ -93,7 +93,7 @@ export async function laterCount(db: DB) {
 	return row.n;
 }
 
-/** Done: to the archive. `archivedAt` null puts it back in Later. */
+/** Archives a link. `archivedAt` null puts it back in Later. */
 export async function setArchived(db: DB, id: number, archivedAt: string | null) {
 	await db.update(saved).set({ archivedAt }).where(eq(saved.id, id));
 }

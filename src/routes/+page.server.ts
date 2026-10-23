@@ -17,11 +17,11 @@ export const actions: Actions = {
 		await saveLink(locals.db, url);
 		return { added: true };
 	},
-	done: async ({ request, locals }) => {
+	archive: async ({ request, locals }) => {
 		const form = await request.formData();
 		const id = Number(form.get('id'));
 		await setArchived(locals.db, id, new Date().toISOString());
-		return { done: { id, title: String(form.get('title') ?? '') } };
+		return { archived: { id, title: String(form.get('title') ?? '') } };
 	},
 	undo: async ({ request, locals }) => {
 		await setArchived(locals.db, Number((await request.formData()).get('id')), null);

@@ -6,6 +6,7 @@ Stack, workflow, commands and shared gotchas: the `app-stack` skill.
 
 ## Worth knowing
 
+- Names in the code: a link in Later is a `saved` row (archived ones have `archivedAt`); a feed entry is an `item`.
 - Feeds are parsed with regexes (`parse.ts`), not an XML library, to stay inside the Workers CPU limit.
 - Subreddit `.rss` links go through Reddit's signed-in API (`reddit.ts`; secrets from 1Password's "Reddit API") and come back as Atom.
 - The add box (Settings → Feeds) searches YouTube (`YOUTUBE_API_KEY`) and Feedly by name; Reddit options and YouTube Shorts are kept in the feed URL (`feed-url.ts`).
