@@ -55,7 +55,11 @@ export const saved = sqliteTable(
 
 export type Saved = typeof saved.$inferSelect;
 
-/** Feed folders, one level deep. */
+/**
+ * Unused since folders went (docs/decisions.md), as is `feed.folderId`. Left in the
+ * database: dropping the column means rebuilding `feed`, and on D1 dropping the old
+ * table would cascade-delete every entry and sync log.
+ */
 export const folder = sqliteTable('folder', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	name: text('name').notNull().unique(),
@@ -64,7 +68,7 @@ export const folder = sqliteTable('folder', {
 
 export type Folder = typeof folder.$inferSelect;
 
-/** An RSS or Atom feed, polled in turn by the cron (sync.ts). */
+/** An RSS or Atom feed, polled in turn by the cron (`syncDue` in feeds.ts). */
 export const feed = sqliteTable(
 	'feed',
 	{
