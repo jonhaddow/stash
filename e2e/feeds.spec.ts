@@ -5,7 +5,7 @@ test('feed entries, unread only by default, and saving one for later', async ({ 
 	await open(page, '/feeds');
 	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
-	await expect(page.getByRole('link', { name: /^Manage feeds/ })).toHaveAttribute(
+	await expect(page.getByRole('link', { name: 'Manage' })).toHaveAttribute(
 		'href',
 		'/settings/feeds'
 	);
@@ -97,12 +97,4 @@ test('a feed’s page shows its sync log', async ({ page }) => {
 	const log = page.getByRole('list').last();
 	await expect(log.getByRole('listitem').first()).toContainText(/Failed\s*· HTTP 503/);
 	await expect(log.getByRole('listitem').last()).toContainText('OK, +2');
-});
-
-test('Manage goes to the feeds settings', async ({ page }) => {
-	await open(page, '/feeds');
-	await expect(page.getByRole('link', { name: 'Manage' })).toHaveAttribute(
-		'href',
-		'/settings/feeds'
-	);
 });
