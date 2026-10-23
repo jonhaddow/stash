@@ -86,3 +86,19 @@ test('oldest first, remembered on the next visit', async ({ page }) => {
 	await expect(titles).toHaveText(/A news story/);
 	await expect(page.getByRole('button', { name: /^Order/ })).toHaveText(/Oldest first/);
 });
+
+test('the Shortcut saves to Later with a key from Settings', async ({ page, request }) => {
+	await open(page, '/settings');
+	await page.getByRole('button', { name: /Make a (new )?key/ }).click();
+	const key = (await page.locator('code').first().textContent())!;
+
+	const res = await request.post('/api/save', {
+		data: { url: 'Look at this https://example.com/from-the-share-sheet', title: 'Shared on iOS' },
+		headers: { authorization: `Bearer ${key}` }
+	});
+	expect(res.status()).toBe(201);
+	expect(await res.text()).toBe('Saved: Shared on iOS');
+
+	await open(page, '/');
+	await expect(page.getByText('Shared on iOS')).toBeVisible();
+});
