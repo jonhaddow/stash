@@ -38,7 +38,7 @@ export const actions: Actions = {
 		const it = await formItem(locals.db, await request.formData());
 		const row = await saveLink(locals.db, it.url, { title: it.title, image: it.imageUrl });
 		await setRead(locals.db, it.id, true);
-		return { done: { id: it.id, title: it.title, savedId: row.id } };
+		return { saved: { id: it.id, title: it.title, savedId: row.id } };
 	},
 	/** Back to unread, and out of Later. */
 	undo: async ({ request, locals }) => {

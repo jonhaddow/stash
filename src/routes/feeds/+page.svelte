@@ -52,7 +52,7 @@
 		keep(it);
 		const result = await act(actionHere('save'), { id: it.id });
 		if (result.type === 'success')
-			keep(it, { savedId: (result.data as { done: { savedId: number } }).done.savedId });
+			keep(it, { savedId: (result.data as { saved: { savedId: number } }).saved.savedId });
 	}
 
 	async function unsave(it: Item) {
@@ -134,12 +134,12 @@
 	{/if}
 </main>
 
-{#if form?.done}
-	{#key form.done}
+{#if form?.saved}
+	{#key form.saved}
 		<UndoBar
-			message="In Later: {form.done.title}"
+			message="In Later: {form.saved.title}"
 			action={actionHere('undo')}
-			fields={{ id: form.done.id, savedId: form.done.savedId }}
+			fields={{ id: form.saved.id, savedId: form.saved.savedId }}
 		/>
 	{/key}
 {/if}

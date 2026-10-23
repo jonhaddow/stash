@@ -37,7 +37,7 @@ export const apiToken = sqliteTable('api_token', {
 	createdAt: text('created_at').notNull()
 });
 
-/** Links to read later. Done ones move to the archive (`archivedAt`). */
+/** Links to read later. Archived ones move to the archive (`archivedAt`). */
 export const saved = sqliteTable(
 	'saved',
 	{
