@@ -18,7 +18,7 @@ export const FEED_EVERY_MS = 30 * MIN;
 export const FEEDS_PER_RUN = 5;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
-const LOG_DAYS = 30;
+const LOG_DAYS = 7;
 /** Rows per insert: D1 allows 100 bound values per query, and an item has 8. */
 const INSERT_CHUNK = 12;
 
@@ -146,7 +146,7 @@ export function feedLog(db: DB, feedId: number) {
 		.from(syncLog)
 		.where(eq(syncLog.feedId, feedId))
 		.orderBy(desc(syncLog.at))
-		.limit(100);
+		.limit(10);
 }
 
 // ---- Syncing ----

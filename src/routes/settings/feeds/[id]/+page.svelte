@@ -60,7 +60,7 @@
 				{/each}
 			</ul>
 		{:else}
-			<p class="muted">Not fetched in the last 30 days.</p>
+			<p class="muted">Not fetched in the last 7 days.</p>
 		{/if}
 	</section>
 

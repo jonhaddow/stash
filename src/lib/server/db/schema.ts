@@ -117,7 +117,7 @@ export const item = sqliteTable(
 
 export type Item = typeof item.$inferSelect;
 
-/** Each time a feed was fetched, kept for 30 days. */
+/** Each time a feed was fetched, kept for 7 days. */
 export const syncLog = sqliteTable(
 	'sync_log',
 	{
