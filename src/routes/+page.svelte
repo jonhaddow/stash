@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
 	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
@@ -39,7 +40,7 @@
 			value={form?.url ?? ''}
 			required
 		/>
-		<button class="btn primary">Save</button>
+		<Button>Save</Button>
 	</form>
 	{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 

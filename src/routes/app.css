@@ -1,292 +1,328 @@
-:root {
-	/* Each colour is light-dark(light, dark), following the device. Newsprint
-	   and ink, with a deep amber for actions and what's unread. */
-	--bg: light-dark(#fbf8f1, #141311);
-	--ink: light-dark(#1f1b16, #f1ece4);
-	--accent: light-dark(#b4530d, #f2a25c);
-	/* Text on an --accent background (primary buttons, chosen options). */
-	--on-accent: light-dark(#ffffff, #2a1505);
-	--muted: light-dark(#6f675d, #a39a8f);
-	--line: light-dark(#ebe5dc, #2c2925);
-	--field: light-dark(#d3cbbf, #45403a);
-	--over: light-dark(#b3261e, #ff998f);
-	--good: light-dark(#2f7d4f, #6cc98f);
-	--note-bg: light-dark(#fbeedd, #2d2012);
-	--note-ink: light-dark(#7a3a0a, #f5c896);
-	--alert-bg: light-dark(#fbe9e5, #3a1814);
-	--alert-ink: light-dark(#9f2118, #ffb4a8);
-	/* Headlines and titles; the rest is Manrope. */
-	--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
-	/* The tab bar's height, above the safe area. */
-	--tabs: 56px;
-	color-scheme: light dark;
+/* Tailwind's theme and utilities for the shadcn-svelte components in
+   lib/components/ui, without its reset: the rules below are the reset. They sit
+   in the base layer, so utility classes win over them. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tw-animate-css';
+@import 'shadcn-svelte/tailwind.css';
+
+/* The components' colour names, mapped onto the app's own. Square corners, like
+   the rest of the app. */
+@theme inline {
+	--color-background: var(--bg);
+	--color-foreground: var(--ink);
+	--color-primary: var(--accent);
+	--color-primary-foreground: var(--on-accent);
+	--color-secondary: var(--line);
+	--color-secondary-foreground: var(--ink);
+	--color-muted: var(--line);
+	--color-muted-foreground: var(--muted);
+	--color-accent: var(--line);
+	--color-accent-foreground: var(--ink);
+	--color-popover: var(--bg);
+	--color-popover-foreground: var(--ink);
+	--color-destructive: var(--over);
+	--color-border: var(--ink);
+	--color-input: var(--field);
+	--color-ring: var(--ink);
+	--radius-sm: 0;
+	--radius-md: 0;
+	--radius-lg: 0;
+	--radius-xl: 0;
+	--font-sans: 'Manrope Variable', system-ui, sans-serif;
 }
 
-* {
-	box-sizing: border-box;
-}
+@layer base {
+	:root {
+		/* Each colour is light-dark(light, dark), following the device. Newsprint
+		   and ink, with a deep amber for actions and what's unread. */
+		--bg: light-dark(#fbf8f1, #141311);
+		--ink: light-dark(#1f1b16, #f1ece4);
+		--accent: light-dark(#b4530d, #f2a25c);
+		/* Text on an --accent background (primary buttons, chosen options). */
+		--on-accent: light-dark(#ffffff, #2a1505);
+		--muted: light-dark(#6f675d, #a39a8f);
+		--line: light-dark(#ebe5dc, #2c2925);
+		--field: light-dark(#d3cbbf, #45403a);
+		--over: light-dark(#b3261e, #ff998f);
+		--good: light-dark(#2f7d4f, #6cc98f);
+		--note-bg: light-dark(#fbeedd, #2d2012);
+		--note-ink: light-dark(#7a3a0a, #f5c896);
+		--alert-bg: light-dark(#fbe9e5, #3a1814);
+		--alert-ink: light-dark(#9f2118, #ffb4a8);
+		/* Headlines and titles; the rest is Manrope. */
+		--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+		/* The tab bar's height, above the safe area. */
+		--tabs: 56px;
+		color-scheme: light dark;
+	}
 
-body {
-	margin: 0;
-	background: var(--bg);
-	color: var(--ink);
-	font-family: 'Manrope Variable', system-ui, sans-serif;
-	font-variant-numeric: tabular-nums;
-	-webkit-font-smoothing: antialiased;
-	-webkit-tap-highlight-color: transparent;
-}
+	* {
+		box-sizing: border-box;
+	}
 
-button,
-input,
-textarea,
-select {
-	font: inherit;
-	color: inherit;
-}
-
-a {
-	color: inherit;
-}
-
-.page {
-	max-width: 640px;
-	margin: 0 auto;
-	padding: 28px 16px calc(var(--tabs) + 44px + env(safe-area-inset-bottom));
-	display: flex;
-	flex-direction: column;
-	gap: 20px;
-}
-
-/* A double rule under the page's title, like a newspaper's masthead. */
-.page > header {
-	padding-bottom: 10px;
-	border-bottom: 3px double var(--ink);
-}
-
-/* Laptops: the tabs are along the top. */
-@media (min-width: 960px) {
 	body {
-		padding-top: 64px;
+		margin: 0;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'Manrope Variable', system-ui, sans-serif;
+		font-variant-numeric: tabular-nums;
+		-webkit-font-smoothing: antialiased;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+		color: inherit;
+	}
+
+	a {
+		color: inherit;
 	}
 
 	.page {
-		padding: 40px 32px 48px;
+		max-width: 640px;
+		margin: 0 auto;
+		padding: 28px 16px calc(var(--tabs) + 44px + env(safe-area-inset-bottom));
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	/* A double rule under the page's title, like a newspaper's masthead. */
+	.page > header {
+		padding-bottom: 10px;
+		border-bottom: 3px double var(--ink);
+	}
+
+	/* Laptops: the tabs are along the top. */
+	@media (min-width: 960px) {
+		body {
+			padding-top: 64px;
+		}
+
+		.page {
+			padding: 40px 32px 48px;
+		}
+	}
+
+	h1 {
+		margin: 0;
+		font-family: var(--serif);
+		font-size: 40px;
+		font-weight: 700;
+		letter-spacing: -0.5px;
+	}
+
+	h2 {
+		margin: 0;
+		font-family: var(--serif);
+		font-size: 20px;
+		font-weight: 700;
+	}
+
+	p {
+		margin: 0;
+	}
+
+	.muted {
+		color: var(--muted);
+	}
+
+	.over {
+		color: var(--over);
+	}
+
+	.list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.list > li + li {
+		border-top: 1px solid var(--line);
+	}
+
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.field input,
+	.field select,
+	.field textarea {
+		min-height: 48px;
+		padding: 10px 14px;
+		border: 1.5px solid var(--field);
+		background: var(--bg);
+		font-size: 17px;
+		font-weight: 400;
+	}
+
+	.field textarea {
+		min-height: 72px;
+		resize: vertical;
+	}
+
+	.error {
+		background: var(--alert-bg);
+		color: var(--alert-ink);
+		padding: 12px 14px;
+		font-size: 15px;
+	}
+
+	.back {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		color: var(--muted);
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 15px;
+		align-self: flex-start;
+	}
+
+	/* A switch between two or three views or settings: links, or radio labels.
+	   Underlined words, like the chips. */
+	.segments {
+		display: grid;
+		grid-auto-columns: minmax(0, 1fr);
+		grid-auto-flow: column;
+		gap: 4px;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.segments > * {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		min-height: 40px;
+		font-weight: 600;
+		font-size: 12px;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
+		color: var(--muted);
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.segments input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* The chosen one: underlined in amber. */
+	.segments > [aria-current='page'],
+	.segments > :has(input:checked),
+	.chip.on,
+	.chip:has(input:checked) {
+		color: var(--ink);
+		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+
+	.segments > :has(input:focus-visible) {
+		outline: 2px solid var(--ink);
+		outline-offset: 2px;
+	}
+
+	/* Tappable words. .on, or a checked input inside, underlines it. */
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.chip {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		padding: 0 16px;
+		border: 0;
+		border-bottom: 1px solid var(--line);
+		background: none;
+		color: var(--ink);
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	/* Pressed: dims for a moment. */
+	.segments > *,
+	.chip {
+		transition: opacity 0.1s;
+	}
+	.segments > :active,
+	.chip:active {
+		opacity: 0.6;
+	}
+
+	.chip input {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		opacity: 0;
+		cursor: pointer;
+	}
+
+	.chip:has(input:focus-visible) {
+		outline: 2px solid var(--ink);
+		outline-offset: 2px;
+	}
+
+	.note {
+		background: var(--note-bg);
+		color: var(--note-ink);
+		padding: 12px 14px;
+		font-size: 15px;
+	}
+
+	.sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
 	}
 }
 
-h1 {
-	margin: 0;
-	font-family: var(--serif);
-	font-size: 40px;
-	font-weight: 700;
-	letter-spacing: -0.5px;
+/* Moving between pages (+layout.svelte): the old page fades out and the new one
+   fades in, rising a little. */
+::view-transition-old(root) {
+	animation: 120ms ease-out both fade-out;
 }
-
-h2 {
-	margin: 0;
-	font-family: var(--serif);
-	font-size: 20px;
-	font-weight: 700;
+::view-transition-new(root) {
+	animation: 220ms ease-out both rise-in;
 }
-
-p {
-	margin: 0;
+@keyframes fade-out {
+	to {
+		opacity: 0;
+	}
 }
-
-.muted {
-	color: var(--muted);
+@keyframes rise-in {
+	from {
+		opacity: 0;
+		translate: 0 8px;
+	}
 }
-
-.over {
-	color: var(--over);
-}
-
-.list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-}
-
-.list > li + li {
-	border-top: 1px solid var(--line);
-}
-
-.btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	min-height: 48px;
-	padding: 0 18px;
-	border: 1.5px solid var(--ink);
-	background: var(--bg);
-	font-weight: 700;
-	font-size: 15px;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.btn.primary {
-	background: var(--accent);
-	border-color: var(--accent);
-	color: var(--on-accent);
-}
-
-.btn.quiet {
-	border-color: transparent;
-	background: var(--line);
-}
-
-/* Remove, archive: quiet red text, so it doesn't outweigh the actions above it. */
-.btn.danger {
-	border-color: transparent;
-	background: none;
-	color: var(--over);
-}
-
-.btn:disabled {
-	opacity: 0.45;
-	cursor: not-allowed;
-}
-
-.field {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	font-size: 14px;
-	font-weight: 600;
-}
-
-.field input,
-.field select,
-.field textarea {
-	min-height: 48px;
-	padding: 10px 14px;
-	border: 1.5px solid var(--field);
-	background: var(--bg);
-	font-size: 17px;
-	font-weight: 400;
-}
-
-.field textarea {
-	min-height: 72px;
-	resize: vertical;
-}
-
-.error {
-	background: var(--alert-bg);
-	color: var(--alert-ink);
-	padding: 12px 14px;
-	font-size: 15px;
-}
-
-.back {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	color: var(--muted);
-	text-decoration: none;
-	font-weight: 600;
-	font-size: 15px;
-	align-self: flex-start;
-}
-
-/* A switch between two or three views or settings: links, or radio labels.
-   Underlined words, like the chips. */
-.segments {
-	display: grid;
-	grid-auto-columns: minmax(0, 1fr);
-	grid-auto-flow: column;
-	gap: 4px;
-	border-bottom: 1px solid var(--line);
-}
-
-.segments > * {
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	min-height: 40px;
-	font-weight: 600;
-	font-size: 12px;
-	letter-spacing: 0.8px;
-	text-transform: uppercase;
-	color: var(--muted);
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.segments input {
-	position: absolute;
-	opacity: 0;
-	pointer-events: none;
-}
-
-/* The chosen one: underlined in amber. */
-.segments > [aria-current='page'],
-.segments > :has(input:checked),
-.chip.on,
-.chip:has(input:checked) {
-	color: var(--ink);
-	box-shadow: inset 0 -2px 0 var(--accent);
-}
-
-.segments > :has(input:focus-visible) {
-	outline: 2px solid var(--ink);
-	outline-offset: 2px;
-}
-
-/* Tappable words. .on, or a checked input inside, underlines it. */
-.chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.chip {
-	position: relative;
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	padding: 0 16px;
-	border: 0;
-	border-bottom: 1px solid var(--line);
-	background: none;
-	color: var(--ink);
-	font-size: 12px;
-	font-weight: 700;
-	letter-spacing: 0.8px;
-	text-transform: uppercase;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.chip input {
-	position: absolute;
-	inset: 0;
-	margin: 0;
-	opacity: 0;
-	cursor: pointer;
-}
-
-.chip:has(input:focus-visible) {
-	outline: 2px solid var(--ink);
-	outline-offset: 2px;
-}
-
-.note {
-	background: var(--note-bg);
-	color: var(--note-ink);
-	padding: 12px 14px;
-	font-size: 15px;
-}
-
-.sr {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip-path: inset(50%);
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none;
+	}
 }

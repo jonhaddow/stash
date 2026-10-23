@@ -193,7 +193,13 @@
 		padding: 16px 0;
 		text-decoration: none;
 		background: var(--bg);
-		transition: translate 0.2s ease-out;
+		transition:
+			translate 0.2s ease-out,
+			background-color 0.15s;
+	}
+	/* Pressed, and not being swiped: shaded a touch. */
+	a:active:not(.dragging) {
+		background: color-mix(in oklab, var(--bg), var(--ink) 5%);
 	}
 	.text {
 		flex: 1;

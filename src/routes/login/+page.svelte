@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import type { PageProps } from './$types';
 	let { data }: PageProps = $props();
 </script>
@@ -13,7 +14,7 @@
 
 	{#if data.error}<p class="error" role="alert">{data.error}</p>{/if}
 
-	<a class="btn primary" href="/auth/google?next={encodeURIComponent(data.next)}">
+	<Button href="/auth/google?next={encodeURIComponent(data.next)}">
 		<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
 			<path
 				fill="currentColor"
@@ -21,14 +22,14 @@
 			/>
 		</svg>
 		Sign in with Google
-	</a>
+	</Button>
 
 	{#if data.devUsers.length}
 		<form method="POST" action="?/dev" class="dev">
 			<input type="hidden" name="next" value={data.next} />
 			<p class="muted">Development only</p>
 			{#each data.devUsers as u (u.email)}
-				<button class="btn" name="email" value={u.email}>Sign in as {u.name}</button>
+				<Button variant="outline" name="email" value={u.email}>Sign in as {u.name}</Button>
 			{/each}
 		</form>
 	{/if}

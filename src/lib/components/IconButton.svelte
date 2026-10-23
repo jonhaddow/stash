@@ -44,9 +44,13 @@
 		background: none;
 		color: var(--muted);
 		cursor: pointer;
+		transition:
+			scale 0.1s ease-out,
+			background-color 0.1s;
 	}
 	button:active {
 		background: var(--line);
+		scale: 0.9;
 	}
 	svg {
 		width: 22px;

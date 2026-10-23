@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.ts';
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import type { Order } from '#lib/kind.ts';
 
 	// Newest or oldest first, remembered per list in a cookie the page's load reads.
 	let { list, order }: { list: 'later' | 'feeds'; order: Order } = $props();
 
-	function choose(e: Event) {
-		const value = (e.currentTarget as HTMLSelectElement).value;
+	const labels: Record<Order, string> = { newest: 'Newest first', oldest: 'Oldest first' };
+
+	function choose(value: string) {
+		// bits-ui reports the starting value too: only a change needs a reload.
+		if (value === order) return;
 		document.cookie = `order-${list}=${value}; path=/; max-age=31536000; samesite=lax`;
 		// From the top again: a page of older entries means nothing in the other order.
 		const url = new URL(page.url.href);
@@ -16,44 +21,28 @@
 	}
 </script>
 
-<label class="sr" for="order-{list}">Order</label>
-<span class="pick">
-	<select id="order-{list}" value={order} onchange={choose}>
-		<option value="newest">Newest first</option>
-		<option value="oldest">Oldest first</option>
-	</select>
-</span>
-
-<style>
-	/* Like the quiet small buttons beside it, with its own chevron (the native one sits cramped against the edge). */
-	.pick {
-		position: relative;
-		display: inline-flex;
-	}
-	.pick::after {
-		content: '';
-		position: absolute;
-		right: 15px;
-		top: 50%;
-		width: 6px;
-		height: 6px;
-		border: solid currentColor;
-		border-width: 0 2px 2px 0;
-		transform: translateY(-70%) rotate(45deg);
-		pointer-events: none;
-	}
-	select {
-		appearance: none;
-		min-height: 36px;
-		padding: 0 34px 0 14px;
-		border: 0;
-		background: var(--line);
-		font-size: 14px;
-		font-weight: 700;
-		cursor: pointer;
-	}
-	select:focus-visible {
-		outline: 2px solid var(--ink);
-		outline-offset: 2px;
-	}
-</style>
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<Button {...props} variant="secondary" size="sm" aria-label="Order: {labels[order]}">
+				{labels[order]}
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.5"
+					aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg
+				>
+			</Button>
+		{/snippet}
+	</DropdownMenu.Trigger>
+	<DropdownMenu.Content align="end" class="w-auto min-w-40">
+		<DropdownMenu.RadioGroup value={order} onValueChange={choose}>
+			{#each Object.entries(labels) as [value, label] (value)}
+				<DropdownMenu.RadioItem {value} closeOnSelect class="min-h-11 text-[15px] font-semibold">
+					{label}
+				</DropdownMenu.RadioItem>
+			{/each}
+		</DropdownMenu.RadioGroup>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>

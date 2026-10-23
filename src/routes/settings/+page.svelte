@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
 	import { fromB64url } from '#lib/base64url.ts';
 	import { formatDateTime } from '#lib/time.ts';
@@ -85,7 +86,9 @@
 				<p class="muted">You made a key on {formatDateTime(data.tokenCreatedAt)}.</p>
 			{/if}
 			<form method="POST" action="?/token" use:enhance>
-				<button class="btn">{data.tokenCreatedAt ? 'Make a new key' : 'Make a key'}</button>
+				<Button variant="outline" class="w-full"
+					>{data.tokenCreatedAt ? 'Make a new key' : 'Make a key'}</Button
+				>
 			</form>
 		{/if}
 	</section>
@@ -109,13 +112,13 @@
 					Show how many feed entries are unread on the app icon. iOS asks to allow notifications
 					first: each update comes as a notification, which you can keep quiet.
 				</p>
-				<button class="btn" onclick={allow}>Show the unread count</button>
+				<Button variant="outline" class="w-full" onclick={allow}>Show the unread count</Button>
 			{/if}
 		</section>
 	{/if}
 
 	<form method="POST" action="/logout">
-		<button class="btn danger">Sign out ({data.user?.name})</button>
+		<Button variant="destructive" class="w-full">Sign out ({data.user?.name})</Button>
 	</form>
 </main>
 
@@ -153,8 +156,5 @@
 		gap: 8px;
 		font-size: 15px;
 		line-height: 1.4;
-	}
-	.btn {
-		width: 100%;
 	}
 </style>

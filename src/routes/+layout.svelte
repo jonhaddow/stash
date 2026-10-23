@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
-	import { beforeNavigate, invalidate } from '$app/navigation';
+	import { beforeNavigate, invalidate, onNavigate } from '$app/navigation';
 	import { page, updated } from '$app/state';
 	import PullToRefresh from '#lib/components/PullToRefresh.svelte';
 	import { setUnreadChange } from '#lib/unread.ts';
@@ -30,6 +30,17 @@
 	// A new version was deployed: load it fully on the next tap.
 	beforeNavigate(({ willUnload, to }) => {
 		if (updated.current && !willUnload && to?.url) location.href = to.url.href;
+	});
+
+	// Pages crossfade into each other (app.css), where the browser can. The tabs stay put.
+	onNavigate((navigation) => {
+		if (!document.startViewTransition || navigation.to?.url.pathname === page.url.pathname) return;
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
 	});
 
 	// Coming back to the app from the background: if a new version was deployed
@@ -113,6 +124,7 @@
 		border-top: 1px solid var(--ink);
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
+		view-transition-name: tabs;
 	}
 	nav a {
 		display: flex;
@@ -135,6 +147,11 @@
 	.icon svg {
 		width: 24px;
 		height: 24px;
+		transition: scale 0.1s ease-out;
+	}
+	/* Pressed: the icon shrinks a little. */
+	nav a:active .icon svg {
+		scale: 0.85;
 	}
 	nav a.active {
 		color: var(--ink);

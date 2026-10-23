@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
 	import FeedOptions from '#lib/components/FeedOptions.svelte';
 	import { asChannelFeed, asSubreddit, typedAs } from '#lib/feed-url.ts';
@@ -56,10 +57,9 @@
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		{#if form?.added}<p class="note" role="status">Added {form.added}</p>{/if}
 		{#if typed === 'search'}
-			<button class="btn primary" formaction="?/search" disabled={!!busy}>{busy || 'Search'}</button
-			>
+			<Button formaction="?/search" disabled={!!busy}>{busy || 'Search'}</Button>
 		{:else}
-			<button class="btn primary" disabled={!!busy}>{busy || 'Add'}</button>
+			<Button disabled={!!busy}>{busy || 'Add'}</Button>
 		{/if}
 		{#if found}
 			{#if found.length}
@@ -77,12 +77,13 @@
 								<span class="name">{r.title}</span>
 								<span class="muted detail">{r.detail}</span>
 							</span>
-							<button
-								class="btn quiet small"
+							<Button
+								variant="secondary"
+								size="sm"
 								name="pick"
 								value={r.url}
 								disabled={!!busy}
-								aria-label="Add {r.title}">Add</button
+								aria-label="Add {r.title}">Add</Button
 							>
 						</li>
 					{/each}
@@ -142,11 +143,6 @@
 	}
 	.detail {
 		font-size: 13px;
-	}
-	.small {
-		min-height: 40px;
-		font-size: 14px;
-		padding: 0 14px;
 	}
 	.group {
 		display: flex;

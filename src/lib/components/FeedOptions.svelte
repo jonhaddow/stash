@@ -1,6 +1,7 @@
 <script lang="ts">
 	// A subreddit's sort, time window and limit, or a YouTube channel's Shorts,
 	// on the add box and a feed's edit form. feed-url.ts turns them into the URL.
+	import { Switch } from '#lib/components/ui/switch/index.ts';
 	import { SORTS, WINDOWS, type Subreddit } from '#lib/feed-url.ts';
 
 	let {
@@ -51,7 +52,7 @@
 	</fieldset>
 {:else if youtube}
 	<label class="check">
-		<input type="checkbox" name="shorts" checked={youtube.shorts} />
+		<Switch name="shorts" checked={youtube.shorts} />
 		Include Shorts
 	</label>
 {/if}
@@ -86,10 +87,5 @@
 		border: 1.5px solid var(--field);
 		background: var(--bg);
 		font-size: 17px;
-	}
-	.check input {
-		width: 22px;
-		height: 22px;
-		accent-color: var(--accent);
 	}
 </style>

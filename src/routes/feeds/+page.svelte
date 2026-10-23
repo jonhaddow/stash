@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { SvelteMap } from 'svelte/reactivity';
@@ -81,7 +82,7 @@
 	<header>
 		<h1>Feeds</h1>
 		<div class="end">
-			<a class="btn quiet small" href="/settings/feeds">Manage</a>
+			<Button variant="secondary" size="sm" href="/settings/feeds">Manage</Button>
 			<OrderPicker list="feeds" order={data.order} />
 		</div>
 	</header>
@@ -118,8 +119,8 @@
 			{/each}
 		</ul>
 		{#if data.more}
-			<a class="btn quiet more" href={withParam('from', data.more)}
-				>{data.order === 'oldest' ? 'Newer' : 'Older'}</a
+			<Button variant="secondary" class="self-center" href={withParam('from', data.more)}
+				>{data.order === 'oldest' ? 'Newer' : 'Older'}</Button
 			>
 		{/if}
 	{:else if data.paged}
@@ -156,11 +157,6 @@
 		align-items: baseline;
 		gap: 8px;
 	}
-	.small {
-		min-height: 36px;
-		font-size: 14px;
-		padding: 0 14px;
-	}
 	.filters {
 		display: flex;
 		gap: 8px;
@@ -170,9 +166,6 @@
 	}
 	.filters .chip {
 		min-height: 46px;
-	}
-	.more {
-		align-self: center;
 	}
 	.empty {
 		text-align: center;
