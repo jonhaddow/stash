@@ -69,5 +69,10 @@
 	"dependencies": {
 		"@fontsource-variable/manrope": "^5.2.0",
 		"arctic": "^3.7.0"
+	},
+	"overrides": {
+		"runed": {
+			"@sveltejs/kit": "$@sveltejs/kit"
+		}
 	}
 }
