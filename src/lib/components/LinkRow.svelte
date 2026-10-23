@@ -141,6 +141,7 @@
 		rel="noopener noreferrer"
 		draggable="false"
 		class:dragging
+		class:swiping={dx !== 0}
 		style:translate="{dx}px 0"
 		{onclick}
 	>
@@ -215,13 +216,19 @@
 	a.dragging {
 		transition: none;
 	}
+	/* A margin between the sliding row and the action under it. */
+	a.swiping {
+		box-shadow:
+			-12px 0 var(--bg),
+			12px 0 var(--bg);
+	}
 	/* Behind the row as it slides: what letting go will do. */
 	.under {
 		position: absolute;
 		inset: 0;
 		display: flex;
 		align-items: center;
-		padding: 0 20px;
+		padding: 0 16px;
 		background: var(--line);
 		color: var(--muted);
 		font-weight: 800;
