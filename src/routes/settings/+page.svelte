@@ -52,7 +52,7 @@
 	<h1>Settings</h1>
 
 	<ul class="list">
-		<li><a href="/settings/feeds">Feeds and sync log <span class="muted">›</span></a></li>
+		<li><a href="/settings/feeds">Feeds <span class="muted">›</span></a></li>
 		<li><a href="/archive">Archive <span class="muted">›</span></a></li>
 	</ul>
 
