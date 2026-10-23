@@ -62,14 +62,5 @@ export default defineConfig(
 			// No base path, so plain hrefs and goto() calls don't need resolve().
 			'svelte/no-navigation-without-resolve': 'off'
 		}
-	},
-	{
-		// shadcn-svelte's components, as its CLI wrote them: bits-ui's snippet types
-		// don't always resolve for the type-aware rules.
-		files: ['src/lib/components/ui/**'],
-		rules: {
-			'@typescript-eslint/no-unsafe-assignment': 'off',
-			'@typescript-eslint/no-unsafe-call': 'off'
-		}
 	}
 );

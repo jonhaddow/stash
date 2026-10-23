@@ -36,6 +36,7 @@
 				>
 			{/if}
 		</span>
+		<!-- eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- bits-ui's snippet type doesn't resolve -->
 		{@render childrenProp?.({ checked })}
 	{/snippet}
 </DropdownMenuPrimitive.RadioItem>
