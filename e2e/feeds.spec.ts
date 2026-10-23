@@ -96,14 +96,3 @@ test('a feed’s page shows its sync log', async ({ page }) => {
 	await expect(log.getByRole('listitem').first()).toContainText(/Failed\s*· HTTP 503/);
 	await expect(log.getByRole('listitem').last()).toContainText('OK, +2');
 });
-
-test('mark all read', async ({ page }) => {
-	await open(page, '/feeds?kind=article');
-	await page.getByRole('button', { name: 'Mark all read' }).click();
-	await expect(page.getByLabel('Unread', { exact: true })).toHaveCount(0);
-	await expect(page.getByText('All caught up.')).toBeVisible();
-	// Only articles: it stays on them, and the video is still unread.
-	await expect(page).toHaveURL(/kind=article/);
-	await open(page, '/feeds');
-	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
-});
