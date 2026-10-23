@@ -7,7 +7,6 @@ import {
 	addFeed,
 	discoverFeed,
 	listItems,
-	markAllRead,
 	syncDue,
 	syncFeed,
 	getFeed,
@@ -191,20 +190,6 @@ describe('syncDue', () => {
 });
 
 describe('reading', () => {
-	it('marks everything read up to a time', async () => {
-		const url = 'https://blog.example/feed.xml';
-		const fetcher = fakeFetch({
-			[url]: rss([
-				{ guid: 'a', date: '2026-10-19T00:00:00Z' },
-				{ guid: 'b', date: '2026-10-20T00:00:00Z' }
-			])
-		});
-		await addFeed(db, url, { now, fetcher });
-		await markAllRead(db, null, '2026-10-19T12:00:00.000Z', now);
-		const items = await listItems(db, { unreadOnly: true });
-		expect(items.map((i) => i.title)).toEqual(['b']);
-	});
-
 	it('lists oldest first, paging on to newer ones', async () => {
 		const url = 'https://blog.example/feed.xml';
 		const fetcher = fakeFetch({

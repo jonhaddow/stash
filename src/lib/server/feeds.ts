@@ -364,15 +364,6 @@ export async function getItem(db: DB, id: number) {
 	return row ?? null;
 }
 
-/** Marks everything (of a kind, if given) read, up to entries published by `upTo`. */
-export async function markAllRead(db: DB, kind: Kind | null, upTo: string, now = new Date()) {
-	const ids = db
-		.select({ id: item.id })
-		.from(item)
-		.where(and(ofKind(kind), isNull(item.readAt), lte(item.publishedAt, upTo)));
-	await db.update(item).set({ readAt: now.toISOString() }).where(inArray(item.id, ids));
-}
-
 /** Unread entries in all feeds, for the Feeds tab's badge. */
 export async function unreadCount(db: DB) {
 	const [row] = await db

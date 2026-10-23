@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { SvelteMap } from 'svelte/reactivity';
@@ -82,22 +81,7 @@
 	<header>
 		<h1>Feeds</h1>
 		<div class="end">
-			{#if data.unread}
-				<form
-					method="POST"
-					action={actionHere('readAll')}
-					use:enhance={() =>
-						async ({ update }) => {
-							// Swiped-unread ones are read now too, and the list empties.
-							readNow.clear();
-							kept.clear();
-							await update();
-						}}
-				>
-					<input type="hidden" name="upTo" value={data.loadedAt} />
-					<button class="btn quiet small">Mark all read</button>
-				</form>
-			{/if}
+			<a class="btn quiet small" href="/settings/feeds">Manage</a>
 			<OrderPicker list="feeds" order={data.order} />
 		</div>
 	</header>
@@ -112,7 +96,6 @@
 			data-sveltekit-replacestate>Unread</a
 		>
 	</div>
-	<a class="manage muted" href="/settings/feeds">Manage feeds ›</a>
 
 	{#if items.length}
 		<ul class="list">
@@ -161,28 +144,22 @@
 {/if}
 
 <style>
+	/* Baseline, like Later's header, so the order picker sits at the same height on both tabs. */
 	header {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		justify-content: space-between;
 		gap: 12px;
 	}
 	.end {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 8px;
 	}
 	.small {
 		min-height: 36px;
 		font-size: 14px;
 		padding: 0 14px;
-	}
-	.manage {
-		align-self: flex-end;
-		margin-bottom: -12px;
-		font-size: 14px;
-		font-weight: 600;
-		text-decoration: none;
 	}
 	.filters {
 		display: flex;

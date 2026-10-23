@@ -1,6 +1,6 @@
-import { error, fail } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { kindParam, orderOf } from '#lib/kind.ts';
-import { PAGE, getItem, hasFeeds, listItems, markAllRead, setRead } from '#lib/server/feeds.ts';
+import { PAGE, getItem, hasFeeds, listItems, setRead } from '#lib/server/feeds.ts';
 import { saveLink, setArchived } from '#lib/server/saved.ts';
 import type { DB } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -28,9 +28,7 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 		paged: !!from,
 		hasFeeds: anyFeeds,
 		items,
-		more: items.length === PAGE ? items.at(-1)!.publishedAt : null,
-		/** "Mark all read" stops here, so entries that arrive meanwhile stay unread. */
-		loadedAt: new Date().toISOString()
+		more: items.length === PAGE ? items.at(-1)!.publishedAt : null
 	};
 };
 
@@ -54,11 +52,5 @@ export const actions: Actions = {
 		const form = await request.formData();
 		await setArchived(locals.db, Number(form.get('savedId')), new Date().toISOString());
 		return { unsaved: true };
-	},
-	readAll: async ({ request, locals, url }) => {
-		const upTo = String((await request.formData()).get('upTo'));
-		if (Number.isNaN(Date.parse(upTo))) return fail(400);
-		await markAllRead(locals.db, kindParam(url.searchParams), upTo);
-		return { readAll: true };
 	}
 };
