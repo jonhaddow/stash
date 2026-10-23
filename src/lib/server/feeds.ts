@@ -146,7 +146,7 @@ export function feedLog(db: DB, feedId: number) {
 		.from(syncLog)
 		.where(eq(syncLog.feedId, feedId))
 		.orderBy(desc(syncLog.at))
-		.limit(100);
+		.limit(10);
 }
 
 // ---- Syncing ----
