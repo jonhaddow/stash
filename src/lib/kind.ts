@@ -1,3 +1,5 @@
+// What kind of link a URL is (article or video), and other things read from links:
+// the site, a YouTube video, a Hacker News thread. Also the lists' filters and order.
 // Articles and videos are different reading sessions, so both lists filter by kind.
 
 export const KINDS = ['article', 'video'] as const;

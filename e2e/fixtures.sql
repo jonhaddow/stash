@@ -3,7 +3,7 @@ INSERT INTO user (email, name) VALUES ('alex@example.com', 'Alex');
 INSERT INTO saved (url, title, kind, added_at) VALUES
 	('https://blog.example/long-read', 'A long read about tea', 'article', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours')),
 	('https://www.youtube.com/watch?v=abc', 'How to make bread', 'video', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 days')),
-	-- Done'd and undone by later.spec.ts.
+	-- Archived and brought back by later.spec.ts.
 	('https://news.example/story', 'A news story', 'article', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 days'));
 INSERT INTO saved (url, title, kind, added_at, archived_at) VALUES
 	('https://old.example/', 'Something finished', 'article', '2026-09-01T00:00:00.000Z', '2026-09-02T00:00:00.000Z');

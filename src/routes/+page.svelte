@@ -57,7 +57,7 @@
 					right={{
 						label: 'Archive',
 						away: true,
-						run: () => act('?/done', { id: link.id, title: link.title })
+						run: () => act('?/archive', { id: link.id, title: link.title })
 					}}
 				/>
 			{/each}
@@ -69,9 +69,13 @@
 	{/if}
 </main>
 
-{#if form?.done}
-	{#key form.done.id}
-		<UndoBar message="Archived: {form.done.title}" action="?/undo" fields={{ id: form.done.id }} />
+{#if form?.archived}
+	{#key form.archived.id}
+		<UndoBar
+			message="Archived: {form.archived.title}"
+			action="?/undo"
+			fields={{ id: form.archived.id }}
+		/>
 	{/key}
 {/if}
 
