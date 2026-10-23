@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { asChannelFeed, asSubreddit, subredditFeed, typedAs, withShorts } from './feed-url.ts';
+import {
+	asChannelFeed,
+	asSubreddit,
+	sourceOf,
+	subredditFeed,
+	typedAs,
+	withShorts
+} from './feed-url.ts';
 
 describe('subreddits', () => {
 	it('reads r/name and links', () => {
@@ -46,4 +53,10 @@ it('tells what was typed', () => {
 	expect(typedAs('https://blog.example/x')).toBe('url');
 	expect(typedAs('daring fireball')).toBe('search');
 	expect(typedAs('veritasium')).toBe('search');
+});
+
+it('groups feeds by where they come from', () => {
+	expect(sourceOf('https://www.reddit.com/r/rust/.rss', null)).toBe('Reddit');
+	expect(sourceOf('https://feeds.invalid/x.xml', 'https://www.youtube.com/@bread')).toBe('YouTube');
+	expect(sourceOf('https://blog.example/feed', 'https://blog.example/')).toBe('Other');
 });

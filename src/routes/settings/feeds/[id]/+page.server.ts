@@ -1,20 +1,12 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import {
-	deleteFeed,
-	feedLog,
-	getFeed,
-	listFolders,
-	syncFeed,
-	updateFeed
-} from '#lib/server/feeds.ts';
-import { folderFromForm, urlWithOptions } from '#lib/server/feed-form.ts';
+import { deleteFeed, feedLog, getFeed, syncFeed, updateFeed } from '#lib/server/feeds.ts';
+import { urlWithOptions } from '#lib/server/feed-form.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const feed = await getFeed(locals.db, Number(params.id));
 	if (!feed) error(404, 'No such feed');
-	const [folders, log] = await Promise.all([listFolders(locals.db), feedLog(locals.db, feed.id)]);
-	return { feed, folders, log };
+	return { feed, log: await feedLog(locals.db, feed.id) };
 };
 
 export const actions: Actions = {
@@ -27,7 +19,6 @@ export const actions: Actions = {
 		try {
 			await updateFeed(locals.db, feed.id, {
 				title,
-				folderId: await folderFromForm(locals.db, form),
 				url: urlWithOptions(feed.url, form)
 			});
 		} catch (e) {

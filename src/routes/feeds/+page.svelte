@@ -83,12 +83,6 @@
 		<div class="end">
 			<a class="btn quiet small" href="/settings/feeds">Manage</a>
 			<OrderPicker list="feeds" order={data.order} />
-			<a
-				class="btn quiet small add"
-				href="/settings/feeds#add"
-				aria-label="Add a feed"
-				title="Add a feed">+</a
-			>
 		</div>
 	</header>
 
@@ -160,17 +154,12 @@
 	.end {
 		display: flex;
 		align-items: baseline;
-		gap: 6px;
-	}
-	.add {
-		font-size: 20px;
-		padding: 0;
-		width: 36px;
+		gap: 8px;
 	}
 	.small {
 		min-height: 36px;
 		font-size: 14px;
-		padding: 0 12px;
+		padding: 0 14px;
 	}
 	.filters {
 		display: flex;

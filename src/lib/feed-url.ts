@@ -89,6 +89,18 @@ export function withShorts(url: string, shorts: boolean) {
 	return c ? channelFeed(c.id, shorts) : url;
 }
 
+// ---- Groups ----
+
+/** Feeds are grouped by where they come from, by their address or else their site's. */
+export function sourceOf(url: string, siteUrl: string | null): 'Reddit' | 'YouTube' | 'Other' {
+	for (const u of [url, siteUrl]) {
+		const host = URL.parse(u ?? '')?.hostname ?? '';
+		if (isReddit(host)) return 'Reddit';
+		if (/(^|\.)(youtube\.com|youtu\.be)$/.test(host)) return 'YouTube';
+	}
+	return 'Other';
+}
+
 // ---- What was typed ----
 
 /** How the add box reads its input: a subreddit, a YouTube channel, a link, or words to search. */

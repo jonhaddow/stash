@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import FeedOptions from '#lib/components/FeedOptions.svelte';
-	import FolderPicker from '#lib/components/FolderPicker.svelte';
 	import { asChannelFeed, asSubreddit } from '#lib/feed-url.ts';
 	import SyncStatus from '#lib/components/SyncStatus.svelte';
 	import { formatDateTime } from '#lib/time.ts';
@@ -32,7 +31,6 @@
 			<input name="title" value={f.title} required maxlength="200" />
 		</label>
 		{#key f.url}<FeedOptions {reddit} {youtube} />{/key}
-		{#key f.folderId}<FolderPicker folders={data.folders} selected={f.folderId} />{/key}
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		<button class="btn primary">Save</button>
 	</form>
