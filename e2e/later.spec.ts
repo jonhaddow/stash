@@ -79,9 +79,10 @@ test('oldest first, remembered on the next visit', async ({ page }) => {
 	await open(page, '/');
 	const titles = page.getByRole('listitem').locator('a').first();
 	await expect(titles).toHaveText(/A long read about tea/);
-	await page.getByLabel('Order').selectOption('oldest');
+	await page.getByRole('button', { name: /^Order/ }).click();
+	await page.getByRole('menuitemradio', { name: 'Oldest first' }).click();
 	await expect(titles).toHaveText(/A news story/);
 	await open(page, '/');
 	await expect(titles).toHaveText(/A news story/);
-	await expect(page.getByLabel('Order')).toHaveValue('oldest');
+	await expect(page.getByRole('button', { name: /^Order/ })).toHaveText(/Oldest first/);
 });

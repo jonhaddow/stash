@@ -24,12 +24,16 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
+		"@internationalized/date": "^3.12.4",
 		"@libsql/client": "^0.18.0",
 		"@playwright/test": "^1.64.0",
 		"@sveltejs/adapter-cloudflare": "^8.0.0",
 		"@sveltejs/kit": "^3.0.1",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@tailwindcss/vite": "^4.3.3",
 		"@types/node": "^26",
+		"bits-ui": "^2.20.2",
+		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
 		"eslint": "^10.4.1",
@@ -38,8 +42,13 @@
 		"globals": "^17.6.0",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^4.1.0",
+		"shadcn-svelte": "^1.7.0",
 		"svelte": "^5.56.7",
 		"svelte-check": "^4.6.0",
+		"tailwind-merge": "^3.7.0",
+		"tailwind-variants": "^3.3.1",
+		"tailwindcss": "^4.3.3",
+		"tw-animate-css": "^1.4.0",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.71.1",
 		"vite": "^8.3.3",
@@ -58,7 +67,7 @@
 		"workerd@1.20261019.1": true
 	},
 	"dependencies": {
-		"arctic": "^3.7.0",
-		"@fontsource-variable/manrope": "^5.2.0"
+		"@fontsource-variable/manrope": "^5.2.0",
+		"arctic": "^3.7.0"
 	}
 }

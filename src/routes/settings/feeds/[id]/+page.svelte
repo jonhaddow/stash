@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
 	import FeedOptions from '#lib/components/FeedOptions.svelte';
 	import { asChannelFeed, asSubreddit } from '#lib/feed-url.ts';
@@ -32,14 +33,14 @@
 		</label>
 		{#key f.url}<FeedOptions {reddit} {youtube} />{/key}
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
-		<button class="btn primary">Save</button>
+		<Button>Save</Button>
 	</form>
 
 	<section class="group">
 		<header>
 			<h2>Sync log</h2>
 			<form method="POST" action="?/fetch" use:enhance>
-				<button class="btn quiet small">Fetch now</button>
+				<Button variant="secondary" size="sm">Fetch now</Button>
 			</form>
 		</header>
 		{#if f.lastError}<p class="error">{f.lastError}</p>{/if}
@@ -70,7 +71,7 @@
 			if (!confirm(`Remove ${f.title} and all its entries?`)) cancel();
 		}}
 	>
-		<button class="btn danger">Remove this feed</button>
+		<Button variant="destructive" class="w-full">Remove this feed</Button>
 	</form>
 </main>
 
@@ -94,11 +95,6 @@
 		align-items: center;
 		justify-content: space-between;
 	}
-	.small {
-		min-height: 36px;
-		font-size: 14px;
-		padding: 0 14px;
-	}
 	.log li {
 		display: flex;
 		align-items: baseline;
@@ -120,8 +116,5 @@
 	}
 	.ms {
 		flex-shrink: 0;
-	}
-	form > .btn.danger {
-		width: 100%;
 	}
 </style>

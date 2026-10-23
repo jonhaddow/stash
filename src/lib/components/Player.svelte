@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { positionOf, savePosition } from '#lib/positions.svelte.ts';
@@ -88,8 +89,9 @@
 	></iframe>
 	<div class="bar">
 		<p>{title}</p>
-		<a class="btn quiet" href={url} target="_blank" rel="noopener noreferrer">YouTube</a>
-		<form method="dialog"><button class="btn primary">Close</button></form>
+		<Button variant="secondary" href={url} target="_blank" rel="noopener noreferrer">YouTube</Button
+		>
+		<form method="dialog"><Button>Close</Button></form>
 	</div>
 </dialog>
 
