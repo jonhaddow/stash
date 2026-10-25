@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { error, text } from '@sveltejs/kit';
 import { userForApiToken } from '#lib/server/auth.ts';
 import { cleanUrl, saveLink } from '#lib/server/saved.ts';
@@ -16,8 +17,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = (await request.json().catch(() => ({}))) as { url?: unknown; title?: unknown };
 	const url = cleanUrl(body.url);
 	if (!url) error(400, 'That doesn’t look like a link');
-	const row = await saveLink(locals.db, url, {
-		title: typeof body.title === 'string' ? body.title : null
-	});
+	const row = await saveLink(
+		locals.db,
+		url,
+		{ title: typeof body.title === 'string' ? body.title : null },
+		{ youtubeKey: env.YOUTUBE_API_KEY }
+	);
 	return text(`Saved: ${row.title}`, { status: 201 });
 };

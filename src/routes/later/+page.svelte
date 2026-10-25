@@ -53,6 +53,7 @@
 					url={link.url}
 					title={link.title}
 					image={link.imageUrl}
+					duration={link.duration}
 					at={link.addedAt}
 					right={{
 						label: 'Archive',

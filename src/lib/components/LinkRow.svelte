@@ -17,6 +17,7 @@
 		url,
 		title,
 		image,
+		duration,
 		source,
 		at,
 		unread,
@@ -30,6 +31,8 @@
 		title: string;
 		/** A thumbnail; YouTube videos without one get the video's own. */
 		image?: string | null;
+		/** A video's length in seconds, shown on its thumbnail. */
+		duration?: number | null;
 		/** Where it's from; the link's site if not given. */
 		source?: string;
 		at: string;
@@ -156,14 +159,17 @@
 			</span>
 		</span>
 		{#if thumb && !broken}
-			<img
-				src={thumb}
-				alt=""
-				loading="lazy"
-				referrerpolicy="no-referrer"
-				draggable="false"
-				onerror={() => (broken = true)}
-			/>
+			<span class="thumb">
+				<img
+					src={thumb}
+					alt=""
+					loading="lazy"
+					referrerpolicy="no-referrer"
+					draggable="false"
+					onerror={() => (broken = true)}
+				/>
+				{#if duration}<span class="length">{clock(duration)}</span>{/if}
+			</span>
 		{/if}
 	</a>
 	{#if actions}<div class="actions">{@render actions()}</div>{/if}
@@ -208,8 +214,25 @@
 		flex-direction: column;
 		gap: 4px;
 	}
-	img {
+	.thumb {
+		position: relative;
 		flex-shrink: 0;
+		display: flex;
+	}
+	/* In the corner, as on YouTube. */
+	.length {
+		position: absolute;
+		right: 3px;
+		bottom: 3px;
+		padding: 1px 4px;
+		border-radius: 3px;
+		background: rgb(0 0 0 / 0.75);
+		color: #fff;
+		font-size: 11px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+	img {
 		width: 76px;
 		aspect-ratio: 1;
 		object-fit: cover;

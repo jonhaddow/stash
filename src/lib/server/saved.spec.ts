@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb } from './test-db.ts';
 import type { DB } from './db/index.ts';
-import { cleanUrl, listSaved, saveLink, setArchived } from './saved.ts';
+import { cleanUrl, isoSeconds, listSaved, saveLink, setArchived } from './saved.ts';
 import type { Fetch } from './http.ts';
 
 let db: DB;
@@ -29,6 +29,16 @@ describe('cleanUrl', () => {
 	});
 });
 
+describe('isoSeconds', () => {
+	it('reads the Data API’s durations', () => {
+		expect(isoSeconds('PT12M34S')).toBe(754);
+		expect(isoSeconds('PT1H')).toBe(3600);
+		expect(isoSeconds('P1DT2S')).toBe(86402);
+		expect(isoSeconds('P0D')).toBeNull();
+		expect(isoSeconds(undefined)).toBeNull();
+	});
+});
+
 describe('saveLink', () => {
 	it('fetches the title and works out the kind', async () => {
 		const row = await saveLink(db, 'https://www.youtube.com/watch?v=1', {}, { fetcher: page });
@@ -38,6 +48,23 @@ describe('saveLink', () => {
 			imageUrl: 'https://img.example/a.jpg'
 		});
 		expect(await listSaved(db, { kind: 'article' })).toEqual([]);
+	});
+
+	it('looks up a YouTube video’s length when there’s a key, even with a title given', async () => {
+		const asked: string[] = [];
+		const api: Fetch = async (input) => {
+			asked.push(String(input));
+			return Response.json({ items: [{ contentDetails: { duration: 'PT4M5S' } }] });
+		};
+		const yt = 'https://youtu.be/xyz';
+		const row = await saveLink(db, yt, { title: 'A video' }, { fetcher: api, youtubeKey: 'k' });
+		expect(row.duration).toBe(245);
+		expect(asked).toEqual([
+			'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=xyz&key=k'
+		]);
+		const other = await saveLink(db, 'https://a.example/', { title: 'A' }, { fetcher: api });
+		expect(other.duration).toBeNull();
+		expect(asked).toHaveLength(1);
 	});
 
 	const redirectsTo =

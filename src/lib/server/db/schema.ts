@@ -47,6 +47,8 @@ export const saved = sqliteTable(
 		kind: text('kind', { enum: KINDS }).notNull(),
 		/** The page's og:image, shown beside the title. */
 		imageUrl: text('image_url'),
+		/** A YouTube video's length in seconds, from the Data API. */
+		duration: integer('duration'),
 		addedAt: text('added_at').notNull(),
 		archivedAt: text('archived_at')
 	},

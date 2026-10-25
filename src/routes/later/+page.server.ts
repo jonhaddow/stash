@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { fail } from '@sveltejs/kit';
 import { kindParam, orderOf } from '#lib/kind.ts';
 import { cleanUrl, listSaved, saveLink, setArchived } from '#lib/server/saved.ts';
@@ -14,7 +15,7 @@ export const actions: Actions = {
 		const raw = (await request.formData()).get('url');
 		const url = cleanUrl(raw);
 		if (!url) return fail(400, { error: 'That doesn’t look like a link', url: String(raw ?? '') });
-		await saveLink(locals.db, url);
+		await saveLink(locals.db, url, {}, { youtubeKey: env.YOUTUBE_API_KEY });
 		return { added: true };
 	},
 	archive: async ({ request, locals }) => {
