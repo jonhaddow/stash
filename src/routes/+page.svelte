@@ -1,85 +1,151 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.ts';
-	import { enhance } from '$app/forms';
+	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { act } from '#lib/act.ts';
 	import KindFilter from '#lib/components/KindFilter.svelte';
 	import LinkRow from '#lib/components/LinkRow.svelte';
 	import OrderPicker from '#lib/components/OrderPicker.svelte';
 	import UndoBar from '#lib/components/UndoBar.svelte';
+	import { getUnreadChange } from '#lib/unread.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 
-	const what = $derived(
-		data.kind === 'video' ? 'videos' : data.kind === 'article' ? 'articles' : 'links'
-	);
+	type Item = (typeof data.items)[number];
+
+	// Read or unread here (opened or swiped): shown straight away, before the next load says so.
+	const readNow = new SvelteMap<number, boolean>();
+	const isUnread = (it: Item) => !(readNow.get(it.id) ?? !!it.readAt);
+
+	// Entries read here stay in the list (the unread one reloads without them) until it's
+	// refreshed or its filters change.
+	const kept = new SvelteMap<number, Item>();
+	afterNavigate(() => kept.clear());
+	const items = $derived.by(() => {
+		const ids = new Set(data.items.map((it) => it.id));
+		const gone = [...kept.values()].filter((it) => !ids.has(it.id));
+		if (!gone.length) return data.items;
+		const sign = data.order === 'oldest' ? 1 : -1;
+		return [...data.items, ...gone].sort(
+			(a, b) => sign * (a.publishedAt.localeCompare(b.publishedAt) || a.id - b.id)
+		);
+	});
+	const keep = (it: Item, changes: Partial<Item> = {}) =>
+		kept.set(it.id, { ...it, readAt: it.readAt ?? new Date().toISOString(), ...changes });
+
+	const changeUnread = getUnreadChange();
+
+	function setRead(it: Item, read: boolean) {
+		if (isUnread(it) === read) changeUnread(read ? -1 : 1);
+		readNow.set(it.id, read);
+		if (read) keep(it);
+		// keepalive: the request outlives the page if the link replaces it.
+		void fetch(`/items/${it.id}/read`, { method: read ? 'POST' : 'DELETE', keepalive: true });
+	}
+
+	/** Saved by a swipe: the server marks it read, so drop any override here (or Undo would bring it back looking read). */
+	async function save(it: Item) {
+		if (isUnread(it)) changeUnread(-1);
+		readNow.delete(it.id);
+		keep(it);
+		const result = await act(actionHere('save'), { id: it.id });
+		if (result.type === 'success')
+			keep(it, { savedId: (result.data as { saved: { savedId: number } }).saved.savedId });
+	}
+
+	async function unsave(it: Item) {
+		if (kept.has(it.id)) keep(it, { savedId: null });
+		await act(actionHere('unsave'), { savedId: it.savedId! });
+	}
+
+	/** This page's URL with one filter changed (and paging reset). */
+	function withParam(name: string, value: string | null) {
+		const url = new URL(page.url.href);
+		url.searchParams.delete('from');
+		if (value) url.searchParams.set(name, value);
+		else url.searchParams.delete(name);
+		return url.pathname + url.search;
+	}
+
+	/** A form action on this page's URL, keeping its filters ("?/name" alone would drop them). */
+	const actionHere = (name: string) =>
+		page.url.search ? `${page.url.search}&/${name}` : `?/${name}`;
 </script>
 
 <svelte:head>
-	<title>Later · Stash</title>
+	<title>Feeds · Stash</title>
 </svelte:head>
 
 <main class="page">
 	<header>
-		<h1>Later</h1>
+		<h1>Feeds</h1>
 		<div class="end">
-			<p class="muted">{data.links.length} {data.links.length === 1 ? what.slice(0, -1) : what}</p>
-			<OrderPicker list="later" order={data.order} />
+			<Button variant="secondary" size="sm" href="/settings/feeds">Manage</Button>
+			<OrderPicker list="feeds" order={data.order} />
 		</div>
 	</header>
 
-	<form class="add" method="POST" action="?/add" use:enhance>
-		<label class="sr" for="add-url">Link to save</label>
-		<input
-			id="add-url"
-			name="url"
-			type="url"
-			inputmode="url"
-			autocomplete="off"
-			placeholder="Paste a link"
-			value={form?.url ?? ''}
-			required
-		/>
-		<Button>Save</Button>
-	</form>
-	{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
+	<div class="filters">
+		<KindFilter kind={data.kind ?? null} />
+		<a
+			class="chip"
+			class:on={data.unreadOnly}
+			href={withParam('all', data.unreadOnly ? '1' : null)}
+			aria-current={data.unreadOnly ? 'true' : undefined}
+			data-sveltekit-replacestate>Unread</a
+		>
+	</div>
 
-	<KindFilter kind={data.kind} />
-
-	{#if data.links.length}
+	{#if items.length}
 		<ul class="list">
-			{#each data.links as link (link.id)}
+			{#each items as it (it.id)}
+				{@const unread = isUnread(it)}
 				<LinkRow
-					url={link.url}
-					title={link.title}
-					image={link.imageUrl}
-					at={link.addedAt}
-					right={{
-						label: 'Archive',
-						away: true,
-						run: () => act('?/archive', { id: link.id, title: link.title })
-					}}
+					url={it.url}
+					title={it.title}
+					image={it.imageUrl}
+					source={it.feedTitle}
+					at={it.publishedAt}
+					{unread}
+					saved={!!it.savedId}
+					onopen={() => setRead(it, true)}
+					right={{ label: unread ? 'Read' : 'Unread', run: () => setRead(it, unread) }}
+					left={it.savedId
+						? { label: 'Out of Later', run: () => unsave(it) }
+						: { label: 'Later', run: () => save(it) }}
 				/>
 			{/each}
 		</ul>
+		{#if data.more}
+			<Button variant="secondary" class="self-center" href={withParam('from', data.more)}
+				>{data.order === 'oldest' ? 'Newer' : 'Older'}</Button
+			>
+		{/if}
+	{:else if data.paged}
+		<p class="empty muted">No more entries.</p>
+	{:else if data.hasFeeds}
+		<p class="empty muted">{data.unreadOnly ? 'All caught up.' : 'Nothing here.'}</p>
 	{:else}
 		<p class="empty muted">
-			Nothing to read. Share a link to Stash from any app, or save one from Feeds.
+			No feeds yet. <a href="/settings/feeds">Add one</a> from a site, YouTube channel or subreddit.
 		</p>
 	{/if}
 </main>
 
-{#if form?.archived}
-	{#key form.archived.id}
+{#if form?.saved}
+	{#key form.saved}
 		<UndoBar
-			message="Archived: {form.archived.title}"
-			action="?/undo"
-			fields={{ id: form.archived.id }}
+			message="In Later: {form.saved.title}"
+			action={actionHere('undo')}
+			fields={{ id: form.saved.id, savedId: form.saved.savedId }}
 		/>
 	{/key}
 {/if}
 
 <style>
+	/* Baseline, like Later's header, so the order picker sits at the same height on both tabs. */
 	header {
 		display: flex;
 		align-items: baseline;
@@ -89,20 +155,17 @@
 	.end {
 		display: flex;
 		align-items: baseline;
-		gap: 12px;
+		gap: 8px;
 	}
-	.add {
+	.filters {
 		display: flex;
 		gap: 8px;
 	}
-	.add input {
+	.filters :global(.segments) {
 		flex: 1;
-		min-width: 0;
-		min-height: 48px;
-		padding: 10px 14px;
-		border: 1.5px solid var(--field);
-		background: var(--bg);
-		font-size: 16px;
+	}
+	.filters .chip {
+		min-height: 46px;
 	}
 	.empty {
 		text-align: center;

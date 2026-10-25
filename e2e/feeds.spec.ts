@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { open, pull, swipe } from './helpers.ts';
 
 test('feed entries, unread only by default, and saving one for later', async ({ page }) => {
-	await open(page, '/feeds');
+	await open(page, '/');
 	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Manage' })).toHaveAttribute(
@@ -22,12 +22,12 @@ test('feed entries, unread only by default, and saving one for later', async ({ 
 	await expect(page.getByRole('status')).toContainText('In Later: Sourdough in a day');
 	await expect(row()).toContainText('In Later');
 	await expect(row().getByLabel('Unread')).toBeHidden();
-	await open(page, '/?kind=video');
+	await open(page, '/later?kind=video');
 	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
 
 	// With read ones shown it's there, read and in Later. Taking it out and
 	// marking it unread leaves things as the other tests expect.
-	await open(page, '/feeds?all=1');
+	await open(page, '/?all=1');
 	await expect(row()).toContainText('In Later');
 	await expect(row().getByLabel('Unread')).toBeHidden();
 	await swipe(page, row(), -150);
@@ -35,12 +35,12 @@ test('feed entries, unread only by default, and saving one for later', async ({ 
 	const unread = page.waitForResponse((r) => r.url().includes('/read'));
 	await swipe(page, row(), 150);
 	await unread;
-	await open(page, '/feeds');
+	await open(page, '/');
 	await expect(row().getByLabel('Unread')).toBeVisible();
 });
 
 test('swiping right marks an entry read or unread, in place', async ({ page }) => {
-	await open(page, '/feeds');
+	await open(page, '/');
 	const row = page.getByRole('listitem').filter({ hasText: 'Green tea, cold' });
 	await expect(row.getByLabel('Unread')).toBeVisible();
 	// A short swipe does nothing, and opens nothing.
@@ -66,16 +66,16 @@ test('swiping right marks an entry read or unread, in place', async ({ page }) =
 	await expect(row).toHaveCount(0);
 	await expect(page.getByRole('link', { name: /^All about oolong/ })).toBeVisible();
 
-	await open(page, '/feeds?all=1');
+	await open(page, '/?all=1');
 	const unread = page.waitForResponse((r) => r.url().includes('/read'));
 	await swipe(page, row, 150);
 	await unread;
-	await open(page, '/feeds');
+	await open(page, '/');
 	await expect(row.getByLabel('Unread')).toBeVisible();
 });
 
 test('opening an entry marks it read', async ({ page, context }) => {
-	await open(page, '/feeds');
+	await open(page, '/');
 	const row = page.getByRole('listitem').filter({ hasText: 'Green tea, cold' });
 	await expect(row.getByLabel('Unread')).toBeVisible();
 	const popup = context.waitForEvent('page');
@@ -84,7 +84,7 @@ test('opening an entry marks it read', async ({ page, context }) => {
 	await (await popup).close();
 	await read;
 	await expect(row.getByLabel('Unread')).toBeHidden();
-	await open(page, '/feeds?all=1');
+	await open(page, '/?all=1');
 	await expect(
 		page.getByRole('listitem').filter({ hasText: 'Green tea, cold' }).getByLabel('Unread')
 	).toBeHidden();
