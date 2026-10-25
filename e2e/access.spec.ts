@@ -10,7 +10,7 @@ test.describe('signed out', () => {
 	});
 
 	test('posts are refused', async ({ request }) => {
-		expect((await request.post('/?/add', { form: { url: 'https://example.com' } })).status()).toBe(
+		expect((await request.post('/later?/add', { form: { url: 'https://example.com' } })).status()).toBe(
 			401
 		);
 		expect((await request.post('/items/1/read')).status()).toBe(401);
