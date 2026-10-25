@@ -1,5 +1,4 @@
-import { and, asc, desc, eq, exists, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/sqlite-core';
+import { and, asc, desc, eq, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind, type Order } from '../kind.ts';
 import { feed, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -265,14 +264,9 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 			};
 		} else {
 			const parsed = parseFeed(await readText(res), f.url);
-			// No entries yet (an imported feed, even if earlier fetches failed): what's
-			// already in it starts read, so only new entries show as unread.
-			const [any] = await db
-				.select({ id: item.id })
-				.from(item)
-				.where(eq(item.feedId, f.id))
-				.limit(1);
-			const itemsAdded = await storeItems(db, f.id, parsed, now, any ? null : now.toISOString());
+			// Entries published before the feed was added start read: an imported feed
+			// (even if earlier fetches failed) shows only what's new since.
+			const itemsAdded = await storeItems(db, f.id, parsed, now, f.createdAt);
 			cache = { etag: res.headers.get('etag'), lastModified: res.headers.get('last-modified') };
 			result = { status: 'ok', httpStatus: res.status, itemsAdded, ms: Date.now() - started };
 		}
@@ -284,26 +278,10 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 	return result;
 }
 
-const newer = alias(item, 'newer');
-
-/**
- * Deletes entries read and published over KEEP_READ_MS ago. Each feed keeps its
- * newest, so `syncFeed` still knows the feed has been fetched before.
- */
+/** Deletes entries read and published over KEEP_READ_MS ago. */
 async function pruneRead(db: DB, now: Date) {
 	const before = new Date(now.getTime() - KEEP_READ_MS).toISOString();
-	await db.delete(item).where(
-		and(
-			lt(item.readAt, before),
-			lt(item.publishedAt, before),
-			exists(
-				db
-					.select({ id: newer.id })
-					.from(newer)
-					.where(and(eq(newer.feedId, item.feedId), gt(newer.id, item.id)))
-			)
-		)
-	);
+	await db.delete(item).where(and(lt(item.readAt, before), lt(item.publishedAt, before)));
 }
 
 /** The cron's job: the feeds fetched longest ago (if due), and tidying old logs and entries. */

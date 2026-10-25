@@ -128,19 +128,23 @@ describe('syncing', () => {
 		expect((await db.select().from(syncLog)).map((l) => l.at)).toEqual([now.toISOString()]);
 	});
 
-	it('deletes entries read over 30 days ago, keeping one per feed, and doesn’t bring them back', async () => {
-		const fetcher = fakeFetch({
+	it('deletes entries read over 30 days ago, and doesn’t bring them back', async () => {
+		const pages: Record<string, string | number> = {
 			[url]: rss([
-				{ guid: 'c', date: '2026-08-10T00:00:00Z' },
-				{ guid: 'b', date: '2026-08-05T00:00:00Z' },
+				{ guid: 'b', date: '2026-08-10T00:00:00Z' },
 				{ guid: 'a', date: '2026-08-01T00:00:00Z' }
 			])
-		});
-		// All three start read: they're over a week old.
-		const f = await addFeed(db, url, { now: new Date('2026-08-25T00:00:00Z'), fetcher });
-		await syncDue(db, now, fetcher);
-		expect((await db.select().from(item)).map((i) => i.guid)).toEqual(['a']);
-		expect(await getFeed(db, f.id)).toMatchObject({ lastStatus: 'ok' });
+		};
+		const fetcher = fakeFetch(pages);
+		// Both start read: they're over a week old.
+		await addFeed(db, url, { now: new Date('2026-08-25T00:00:00Z'), fetcher });
+		expect(await syncDue(db, now, fetcher)).toMatchObject([{ status: 'ok', itemsAdded: 0 }]);
+		expect(await db.select().from(item)).toEqual([]);
+
+		// A new post on the now-empty feed shows as unread.
+		pages[url] = rss([{ guid: 'c', date: now.toISOString() }]);
+		await syncDue(db, new Date(now.getTime() + 60 * 60_000), fetcher);
+		expect((await listItems(db, { unreadOnly: true })).map((i) => i.title)).toEqual(['c']);
 	});
 });
 
