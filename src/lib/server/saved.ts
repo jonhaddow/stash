@@ -21,21 +21,36 @@ export function cleanUrl(raw: unknown) {
 	}
 }
 
-/** A page's title and image from its <head>, or nulls if they can't be had quickly. */
+/** Query params that only say where a click came from. */
+const TRACKING = /^(utm_.*|fbclid|gclid|mc_cid|mc_eid)$/i;
+
+/** The URL without tracking params. */
+export function untracked(url: string) {
+	const u = new URL(url);
+	for (const key of [...u.searchParams.keys()]) if (TRACKING.test(key)) u.searchParams.delete(key);
+	return u.href;
+}
+
+/**
+ * A page's title and image from its <head> (nulls if they can't be had quickly),
+ * and the URL it ended up at, so a newsletter's click-tracker gives the real link.
+ */
 export async function fetchPage(fetcher: Fetch, url: string) {
 	try {
 		const res = await get(fetcher, url, { accept: 'text/html' });
+		const final = res.url ? (cleanUrl(res.url) ?? url) : url;
 		// The <head> comes first; YouTube's pages are a few MB in all.
-		if (res.ok) return pageInfo(await readText(res, 300_000), url);
+		if (res.ok) return { ...pageInfo(await readText(res, 300_000), final), url: final };
 	} catch {
 		// Saved without them.
 	}
-	return { title: null, image: null };
+	return { title: null, image: null, url };
 }
 
 /**
  * Saves a link to Later, fetching its title and image from the page if no title
- * is given (a feed entry brings its own). Saving one that's already there (or
+ * is given (a feed entry brings its own), and keeping the URL that fetch ended up
+ * at, without tracking params. Saving one that's already there (or
  * archived) brings it back to the top.
  */
 export async function saveLink(
@@ -45,15 +60,16 @@ export async function saveLink(
 	{ now = new Date(), fetcher = workersFetch }: { now?: Date; fetcher?: Fetch } = {}
 ) {
 	const title = given.title?.trim();
-	const page = title ? { title, image: given.image ?? null } : await fetchPage(fetcher, url);
+	const page = title ? { title, image: given.image ?? null, url } : await fetchPage(fetcher, url);
+	const finalUrl = untracked(page.url);
 	const addedAt = now.toISOString();
-	const finalTitle = page.title || new URL(url).hostname;
+	const finalTitle = page.title || new URL(finalUrl).hostname;
 	const [row] = await db
 		.insert(saved)
 		.values({
-			url,
+			url: finalUrl,
 			title: finalTitle,
-			kind: kindOf(url, finalTitle),
+			kind: kindOf(finalUrl, finalTitle),
 			imageUrl: page.image,
 			addedAt
 		})

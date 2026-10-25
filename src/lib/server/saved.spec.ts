@@ -40,6 +40,21 @@ describe('saveLink', () => {
 		expect(await listSaved(db, { kind: 'article' })).toEqual([]);
 	});
 
+	it('keeps the link a tracker redirects to, without tracking params', async () => {
+		const tracker = 'https://buttondown.example/c/abc';
+		const redirected: Fetch = async (input) => {
+			expect(String(input)).toBe(tracker);
+			const res = await page(input);
+			Object.defineProperty(res, 'url', {
+				value: 'https://news.ycombinator.com/item?id=1&utm_term=comment'
+			});
+			return res;
+		};
+		const row = await saveLink(db, tracker, {}, { fetcher: redirected });
+		expect(row.url).toBe('https://news.ycombinator.com/item?id=1');
+		expect(row.title).toBe('A page');
+	});
+
 	it('takes a [video] title as a video, and lists oldest first when asked', async () => {
 		const hn = 'https://news.ycombinator.com/item?id=1';
 		await saveLink(db, hn, { title: 'A talk [video]' }, { now: new Date('2026-10-01T00:00:00Z') });
