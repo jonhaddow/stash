@@ -1,4 +1,5 @@
-import { and, asc, desc, eq, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import { kindOf, type Kind, type Order } from '../kind.ts';
 import { feed, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -19,6 +20,11 @@ export const FEEDS_PER_RUN = 5;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 7;
+/**
+ * Read entries go this long after they were read and published. Entries published
+ * before then aren't stored, so a pruned one still in its feed doesn't come back.
+ */
+const KEEP_READ_MS = 30 * DAY;
 /** Rows per insert: D1 allows 100 bound values per query, and an item has 8. */
 const INSERT_CHUNK = 12;
 
@@ -151,7 +157,10 @@ export function feedLog(db: DB, feedId: number) {
 
 // ---- Syncing ----
 
-/** Adds entries not seen before; returns how many. Ones published before `readBefore` start read. */
+/**
+ * Adds entries not seen before, skipping ones too old to keep; returns how many.
+ * Ones published before `readBefore` start read.
+ */
 async function storeItems(
 	db: DB,
 	feedId: number,
@@ -159,7 +168,9 @@ async function storeItems(
 	now: Date,
 	readBefore: string | null = null
 ) {
-	const byGuid = new Map(parsed.items.map((i) => [i.guid, i]));
+	const oldest = new Date(now.getTime() - KEEP_READ_MS).toISOString();
+	const recent = parsed.items.filter((i) => !i.publishedAt || i.publishedAt >= oldest);
+	const byGuid = new Map(recent.map((i) => [i.guid, i]));
 	const guids = [...byGuid.keys()];
 	const seen = new Set<string>();
 	for (let i = 0; i < guids.length; i += 90) {
@@ -273,7 +284,29 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 	return result;
 }
 
-/** The cron's job: the feeds fetched longest ago (if due), and tidying old logs. */
+const newer = alias(item, 'newer');
+
+/**
+ * Deletes entries read and published over KEEP_READ_MS ago. Each feed keeps its
+ * newest, so `syncFeed` still knows the feed has been fetched before.
+ */
+async function pruneRead(db: DB, now: Date) {
+	const before = new Date(now.getTime() - KEEP_READ_MS).toISOString();
+	await db.delete(item).where(
+		and(
+			lt(item.readAt, before),
+			lt(item.publishedAt, before),
+			exists(
+				db
+					.select({ id: newer.id })
+					.from(newer)
+					.where(and(eq(newer.feedId, item.feedId), gt(newer.id, item.id)))
+			)
+		)
+	);
+}
+
+/** The cron's job: the feeds fetched longest ago (if due), and tidying old logs and entries. */
 export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFetch) {
 	const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
 	const waiting = await db
@@ -306,6 +339,7 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFet
 	await db
 		.delete(syncLog)
 		.where(lt(syncLog.at, new Date(now.getTime() - LOG_DAYS * DAY).toISOString()));
+	await pruneRead(db, now);
 	return results;
 }
 

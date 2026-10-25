@@ -69,7 +69,7 @@ describe('syncing', () => {
 		const fetcher = fakeFetch({
 			[url]: rss([
 				{ guid: 'new', date: '2026-10-19T00:00:00Z' },
-				{ guid: 'old', date: '2026-09-01T00:00:00Z' }
+				{ guid: 'old', date: '2026-10-01T00:00:00Z' }
 			])
 		});
 		await addFeed(db, url, { now, fetcher });
@@ -126,6 +126,21 @@ describe('syncing', () => {
 		expect(await syncDue(db, now, fetcher)).toHaveLength(1);
 		// The August log is gone; today's stays.
 		expect((await db.select().from(syncLog)).map((l) => l.at)).toEqual([now.toISOString()]);
+	});
+
+	it('deletes entries read over 30 days ago, keeping one per feed, and doesn’t bring them back', async () => {
+		const fetcher = fakeFetch({
+			[url]: rss([
+				{ guid: 'c', date: '2026-08-10T00:00:00Z' },
+				{ guid: 'b', date: '2026-08-05T00:00:00Z' },
+				{ guid: 'a', date: '2026-08-01T00:00:00Z' }
+			])
+		});
+		// All three start read: they're over a week old.
+		const f = await addFeed(db, url, { now: new Date('2026-08-25T00:00:00Z'), fetcher });
+		await syncDue(db, now, fetcher);
+		expect((await db.select().from(item)).map((i) => i.guid)).toEqual(['a']);
+		expect(await getFeed(db, f.id)).toMatchObject({ lastStatus: 'ok' });
 	});
 });
 
@@ -213,7 +228,7 @@ describe('imported feeds', () => {
 		const fetcher = fakeFetch({
 			[url]: rss([
 				{ guid: 'new', date: '2026-10-19T00:00:00Z' },
-				{ guid: 'old', date: '2026-09-01T00:00:00Z' }
+				{ guid: 'old', date: '2026-10-01T00:00:00Z' }
 			])
 		});
 		const [f] = await db

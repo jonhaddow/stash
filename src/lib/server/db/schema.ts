@@ -91,7 +91,7 @@ export const feed = sqliteTable(
 
 export type Feed = typeof feed.$inferSelect;
 
-/** A feed's entries. Never removed; opened ones are read (`readAt`). */
+/** A feed's entries. Opened ones are read (`readAt`), and deleted 30 days on (`pruneRead`). */
 export const item = sqliteTable(
 	'item',
 	{
