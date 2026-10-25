@@ -17,8 +17,8 @@
 
 	const path = $derived(page.url.pathname);
 	const tabs = $derived([
-		{ href: '/', label: 'Later', icon: 'later', active: path === '/' },
-		{ href: '/feeds', label: 'Feeds', icon: 'feeds', active: path === '/feeds' },
+		{ href: '/', label: 'Feeds', icon: 'feeds', active: path === '/' },
+		{ href: '/later', label: 'Later', icon: 'later', active: path === '/later' },
 		{
 			href: '/settings',
 			label: 'Settings',
