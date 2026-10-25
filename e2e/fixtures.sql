@@ -23,3 +23,5 @@ INSERT INTO sync_log (feed_id, at, status, http_status, items_added, error, ms) 
 -- Thumbnails (rows without one show just the title).
 UPDATE saved SET image_url = '/icon-192.png' WHERE url = 'https://blog.example/long-read';
 UPDATE item SET image_url = '/icon-192.png' WHERE guid = 't1';
+-- A video's length, shown on its thumbnail.
+UPDATE saved SET duration = 754, image_url = '/icon-192.png' WHERE url = 'https://www.youtube.com/watch?v=abc';

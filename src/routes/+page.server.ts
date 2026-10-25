@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
 import { kindParam, orderOf } from '#lib/kind.ts';
 import { PAGE, getItem, hasFeeds, listItems, setRead } from '#lib/server/feeds.ts';
@@ -36,7 +37,12 @@ export const actions: Actions = {
 	// Swipe left. Saving an entry marks it read too; the answer is for the Undo bar.
 	save: async ({ request, locals }) => {
 		const it = await formItem(locals.db, await request.formData());
-		const row = await saveLink(locals.db, it.url, { title: it.title, image: it.imageUrl });
+		const row = await saveLink(
+			locals.db,
+			it.url,
+			{ title: it.title, image: it.imageUrl },
+			{ youtubeKey: env.YOUTUBE_API_KEY }
+		);
 		await setRead(locals.db, it.id, true);
 		return { saved: { id: it.id, title: it.title, savedId: row.id } };
 	},

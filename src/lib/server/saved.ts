@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
-import { kindOf, type Kind, type Order } from '../kind.ts';
+import { kindOf, youtubeId, type Kind, type Order } from '../kind.ts';
 import { saved } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { get, readText, workersFetch, type Fetch } from './http.ts';
@@ -58,23 +58,56 @@ export async function fetchPage(fetcher: Fetch, url: string) {
 	return { title: null, image: null, movedTo: null };
 }
 
+/** "PT1H2M3S" in seconds; null for a live stream's "P0D" or anything else. */
+export function isoSeconds(iso: string | undefined) {
+	const m = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(iso ?? '');
+	if (!m) return null;
+	const [d, h, min, s] = m.slice(1).map((n) => Number(n ?? 0));
+	return ((d * 24 + h) * 60 + min) * 60 + s || null;
+}
+
+/** A YouTube video's length in seconds from the Data API, or null if it can't be had. */
+export async function videoLength(fetcher: Fetch, id: string, key: string) {
+	try {
+		const res = await get(
+			fetcher,
+			`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${id}&key=${key}`,
+			{ accept: 'application/json' }
+		);
+		if (!res.ok) return null;
+		const { items } = (await res.json()) as {
+			items?: { contentDetails: { duration: string } }[];
+		};
+		return isoSeconds(items?.[0]?.contentDetails.duration);
+	} catch {
+		return null;
+	}
+}
+
 /**
  * Saves a link to Later, fetching its title and image from the page if no title
  * is given (a feed entry brings its own), at the link that fetch redirected to
- * if it's a better one (`landedAt`). Saving one that's already there (or
+ * if it's a better one (`landedAt`), and a YouTube video's length if there's
+ * a key for the API. Saving one that's already there (or
  * archived) brings it back to the top.
  */
 export async function saveLink(
 	db: DB,
 	url: string,
 	given: { title?: string | null; image?: string | null } = {},
-	{ now = new Date(), fetcher = workersFetch }: { now?: Date; fetcher?: Fetch } = {}
+	{
+		now = new Date(),
+		fetcher = workersFetch,
+		youtubeKey
+	}: { now?: Date; fetcher?: Fetch; youtubeKey?: string } = {}
 ) {
 	const title = given.title?.trim();
 	const page = title
 		? { title, image: given.image ?? null, movedTo: null }
 		: await fetchPage(fetcher, url);
 	const finalUrl = page.movedTo ?? url;
+	const video = youtubeKey && youtubeId(finalUrl);
+	const duration = video ? await videoLength(fetcher, video, youtubeKey) : null;
 	const addedAt = now.toISOString();
 	const finalTitle = page.title || new URL(finalUrl).hostname;
 	const [row] = await db
@@ -84,9 +117,18 @@ export async function saveLink(
 			title: finalTitle,
 			kind: kindOf(finalUrl, finalTitle),
 			imageUrl: page.image,
+			duration,
 			addedAt
 		})
-		.onConflictDoUpdate({ target: saved.url, set: { addedAt, archivedAt: null } })
+		.onConflictDoUpdate({
+			target: saved.url,
+			set: {
+				addedAt,
+				archivedAt: null,
+				// A video saved before its length could be had gets it now.
+				duration: sql`coalesce(excluded.duration, ${saved.duration})`
+			}
+		})
 		.returning();
 	return row;
 }
