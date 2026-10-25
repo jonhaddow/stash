@@ -19,6 +19,11 @@ export const FEEDS_PER_RUN = 5;
 /** A feed added in the app starts with entries older than this read. */
 const FRESH_MS = 7 * DAY;
 const LOG_DAYS = 7;
+/**
+ * Read entries go this long after they were read and published. Entries published
+ * before then aren't stored, so a pruned one still in its feed doesn't come back.
+ */
+const KEEP_READ_MS = 30 * DAY;
 /** Rows per insert: D1 allows 100 bound values per query, and an item has 8. */
 const INSERT_CHUNK = 12;
 
@@ -151,7 +156,10 @@ export function feedLog(db: DB, feedId: number) {
 
 // ---- Syncing ----
 
-/** Adds entries not seen before; returns how many. Ones published before `readBefore` start read. */
+/**
+ * Adds entries not seen before, skipping ones too old to keep; returns how many.
+ * Ones published before `readBefore` start read.
+ */
 async function storeItems(
 	db: DB,
 	feedId: number,
@@ -159,7 +167,9 @@ async function storeItems(
 	now: Date,
 	readBefore: string | null = null
 ) {
-	const byGuid = new Map(parsed.items.map((i) => [i.guid, i]));
+	const oldest = new Date(now.getTime() - KEEP_READ_MS).toISOString();
+	const recent = parsed.items.filter((i) => !i.publishedAt || i.publishedAt >= oldest);
+	const byGuid = new Map(recent.map((i) => [i.guid, i]));
 	const guids = [...byGuid.keys()];
 	const seen = new Set<string>();
 	for (let i = 0; i < guids.length; i += 90) {
@@ -254,14 +264,9 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 			};
 		} else {
 			const parsed = parseFeed(await readText(res), f.url);
-			// No entries yet (an imported feed, even if earlier fetches failed): what's
-			// already in it starts read, so only new entries show as unread.
-			const [any] = await db
-				.select({ id: item.id })
-				.from(item)
-				.where(eq(item.feedId, f.id))
-				.limit(1);
-			const itemsAdded = await storeItems(db, f.id, parsed, now, any ? null : now.toISOString());
+			// Entries published before the feed was added start read: an imported feed
+			// (even if earlier fetches failed) shows only what's new since.
+			const itemsAdded = await storeItems(db, f.id, parsed, now, f.createdAt);
 			cache = { etag: res.headers.get('etag'), lastModified: res.headers.get('last-modified') };
 			result = { status: 'ok', httpStatus: res.status, itemsAdded, ms: Date.now() - started };
 		}
@@ -273,7 +278,13 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 	return result;
 }
 
-/** The cron's job: the feeds fetched longest ago (if due), and tidying old logs. */
+/** Deletes entries read and published over KEEP_READ_MS ago. */
+async function pruneRead(db: DB, now: Date) {
+	const before = new Date(now.getTime() - KEEP_READ_MS).toISOString();
+	await db.delete(item).where(and(lt(item.readAt, before), lt(item.publishedAt, before)));
+}
+
+/** The cron's job: the feeds fetched longest ago (if due), and tidying old logs and entries. */
 export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFetch) {
 	const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
 	const waiting = await db
@@ -306,6 +317,7 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFet
 	await db
 		.delete(syncLog)
 		.where(lt(syncLog.at, new Date(now.getTime() - LOG_DAYS * DAY).toISOString()));
+	await pruneRead(db, now);
 	return results;
 }
 
