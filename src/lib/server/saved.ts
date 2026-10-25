@@ -21,21 +21,47 @@ export function cleanUrl(raw: unknown) {
 	}
 }
 
-/** A page's title and image from its <head>, or nulls if they can't be had quickly. */
+/** Query params that only say where a click came from. */
+const TRACKING = /^(utm_.*|fbclid|gclid|mc_cid|mc_eid)$/i;
+
+/**
+ * Where a fetch of `url` ended up, if it's a better link to keep: a newsletter's
+ * click-tracker gives the real page. Null if it didn't move, or if it landed on a
+ * login or consent page that carries the original along (`?next=`, `?continue=`).
+ * Tracking params are dropped.
+ */
+function landedAt(url: string, final: string) {
+	const from = new URL(url);
+	const to = new URL(cleanUrl(final) ?? url);
+	const carried = [...to.searchParams.values()].some(
+		(v) => v.includes(from.host) || (from.pathname.length > 1 && v.includes(from.pathname))
+	);
+	if (carried) return null;
+	for (const key of [...to.searchParams.keys()])
+		if (TRACKING.test(key)) to.searchParams.delete(key);
+	return to.href === url ? null : to.href;
+}
+
+/**
+ * A page's title and image from its <head> (nulls if they can't be had quickly),
+ * and the link it redirected to if that's worth keeping (`landedAt`).
+ */
 export async function fetchPage(fetcher: Fetch, url: string) {
 	try {
 		const res = await get(fetcher, url, { accept: 'text/html' });
+		const movedTo = landedAt(url, res.url);
 		// The <head> comes first; YouTube's pages are a few MB in all.
-		if (res.ok) return pageInfo(await readText(res, 300_000), url);
+		if (res.ok) return { ...pageInfo(await readText(res, 300_000), movedTo ?? url), movedTo };
 	} catch {
 		// Saved without them.
 	}
-	return { title: null, image: null };
+	return { title: null, image: null, movedTo: null };
 }
 
 /**
  * Saves a link to Later, fetching its title and image from the page if no title
- * is given (a feed entry brings its own). Saving one that's already there (or
+ * is given (a feed entry brings its own), at the link that fetch redirected to
+ * if it's a better one (`landedAt`). Saving one that's already there (or
  * archived) brings it back to the top.
  */
 export async function saveLink(
@@ -45,15 +71,18 @@ export async function saveLink(
 	{ now = new Date(), fetcher = workersFetch }: { now?: Date; fetcher?: Fetch } = {}
 ) {
 	const title = given.title?.trim();
-	const page = title ? { title, image: given.image ?? null } : await fetchPage(fetcher, url);
+	const page = title
+		? { title, image: given.image ?? null, movedTo: null }
+		: await fetchPage(fetcher, url);
+	const finalUrl = page.movedTo ?? url;
 	const addedAt = now.toISOString();
-	const finalTitle = page.title || new URL(url).hostname;
+	const finalTitle = page.title || new URL(finalUrl).hostname;
 	const [row] = await db
 		.insert(saved)
 		.values({
-			url,
+			url: finalUrl,
 			title: finalTitle,
-			kind: kindOf(url, finalTitle),
+			kind: kindOf(finalUrl, finalTitle),
 			imageUrl: page.image,
 			addedAt
 		})
