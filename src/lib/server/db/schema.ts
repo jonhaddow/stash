@@ -56,7 +56,7 @@ export const saved = sqliteTable(
 export type Saved = typeof saved.$inferSelect;
 
 /**
- * Unused since folders went (docs/decisions.md), as is `feed.folderId`. Left in the
+ * Unused since folders went, as is `feed.folderId`. Left in the
  * database: dropping the column means rebuilding `feed`, and on D1 dropping the old
  * table would cascade-delete every entry and sync log.
  */
