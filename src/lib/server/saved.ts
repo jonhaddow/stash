@@ -62,10 +62,7 @@ export async function fetchPage(fetcher: Fetch, url: string) {
 export function isoSeconds(iso: string | undefined) {
 	const m = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(iso ?? '');
 	if (!m) return null;
-	const [d, h, min, s] = m
-		.slice(1)
-		.map(Number)
-		.map((n) => n || 0);
+	const [d, h, min, s] = m.slice(1).map((n) => Number(n ?? 0));
 	return ((d * 24 + h) * 60 + min) * 60 + s || null;
 }
 
@@ -123,7 +120,15 @@ export async function saveLink(
 			duration,
 			addedAt
 		})
-		.onConflictDoUpdate({ target: saved.url, set: { addedAt, archivedAt: null } })
+		.onConflictDoUpdate({
+			target: saved.url,
+			set: {
+				addedAt,
+				archivedAt: null,
+				// A video saved before its length could be had gets it now.
+				duration: sql`coalesce(excluded.duration, ${saved.duration})`
+			}
+		})
 		.returning();
 	return row;
 }

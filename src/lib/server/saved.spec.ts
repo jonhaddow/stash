@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb } from './test-db.ts';
+import { saved } from './db/schema.ts';
 import type { DB } from './db/index.ts';
 import { cleanUrl, isoSeconds, listSaved, saveLink, setArchived } from './saved.ts';
 import type { Fetch } from './http.ts';
@@ -62,9 +63,12 @@ describe('saveLink', () => {
 		expect(asked).toEqual([
 			'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=xyz&key=k'
 		]);
+		await db.update(saved).set({ duration: null });
+		const again = await saveLink(db, yt, { title: 'A video' }, { fetcher: api, youtubeKey: 'k' });
+		expect(again.duration).toBe(245);
 		const other = await saveLink(db, 'https://a.example/', { title: 'A' }, { fetcher: api });
 		expect(other.duration).toBeNull();
-		expect(asked).toHaveLength(1);
+		expect(asked).toHaveLength(2);
 	});
 
 	const redirectsTo =
