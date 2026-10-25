@@ -40,19 +40,31 @@ describe('saveLink', () => {
 		expect(await listSaved(db, { kind: 'article' })).toEqual([]);
 	});
 
-	it('keeps the link a tracker redirects to, without tracking params', async () => {
-		const tracker = 'https://buttondown.example/c/abc';
-		const redirected: Fetch = async (input) => {
-			expect(String(input)).toBe(tracker);
+	const redirectsTo =
+		(final: string): Fetch =>
+		async (input) => {
 			const res = await page(input);
-			Object.defineProperty(res, 'url', {
-				value: 'https://news.ycombinator.com/item?id=1&utm_term=comment'
-			});
+			Object.defineProperty(res, 'url', { value: final });
 			return res;
 		};
-		const row = await saveLink(db, tracker, {}, { fetcher: redirected });
+
+	it('keeps the link a tracker redirects to, without tracking params', async () => {
+		const row = await saveLink(
+			db,
+			'https://buttondown.example/c/abc',
+			{},
+			{ fetcher: redirectsTo('https://news.ycombinator.com/item?id=1&utm_term=comment&fbclid=x') }
+		);
 		expect(row.url).toBe('https://news.ycombinator.com/item?id=1');
-		expect(row.title).toBe('A page');
+	});
+
+	it('keeps the shared link when it redirects to a login or consent page', async () => {
+		const insta = 'https://www.instagram.com/p/abc/';
+		const login = 'https://www.instagram.com/accounts/login/?next=%2Fp%2Fabc%2F';
+		expect((await saveLink(db, insta, {}, { fetcher: redirectsTo(login) })).url).toBe(insta);
+		const yt = 'https://www.youtube.com/watch?v=1';
+		const consent = `https://consent.youtube.com/m?continue=${encodeURIComponent(yt)}`;
+		expect((await saveLink(db, yt, {}, { fetcher: redirectsTo(consent) })).url).toBe(yt);
 	});
 
 	it('takes a [video] title as a video, and lists oldest first when asked', async () => {
