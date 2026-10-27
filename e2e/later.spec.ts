@@ -90,7 +90,7 @@ test('oldest first, remembered on the next visit', async ({ page }) => {
 test('the Shortcut saves to Later with a key from Settings', async ({ page, request }) => {
 	await open(page, '/settings');
 	await page.getByRole('button', { name: /Make a (new )?key/ }).click();
-	const key = (await page.locator('code').first().textContent())!;
+	const key = (await page.locator('.note code').textContent())!;
 
 	const res = await request.post('/api/save', {
 		data: { url: 'Look at this https://example.com/from-the-share-sheet', title: 'Shared on iOS' },
@@ -101,4 +101,24 @@ test('the Shortcut saves to Later with a key from Settings', async ({ page, requ
 
 	await open(page, '/later');
 	await expect(page.getByText('Shared on iOS')).toBeVisible();
+});
+
+test('the bookmarklet saves the page it’s given', async ({ page }) => {
+	// Clicked on an article, it saves and goes back there: Later stands in for the article.
+	await open(page, '/later');
+	await page.goto('/save?url=' + encodeURIComponent('https://saved.invalid/from-the-mac'));
+	await expect(page.getByRole('status')).toHaveText('saved.invalid');
+	await expect(page).toHaveURL(/\/later$/);
+	await page.reload();
+	await expect(page.getByRole('link', { name: /^saved\.invalid/ })).toHaveAttribute(
+		'href',
+		'https://saved.invalid/from-the-mac'
+	);
+});
+
+test('Settings offers the bookmarklet to copy', async ({ page }) => {
+	await open(page, '/settings');
+	await expect(page.locator('code.pick')).toHaveText(
+		/^javascript:location='http:\/\/[^']+\/save\?url='\+encodeURIComponent\(location\.href\)$/
+	);
 });

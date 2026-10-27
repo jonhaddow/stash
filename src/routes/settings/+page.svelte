@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import { fromB64url } from '#lib/base64url.ts';
 	import { formatDateTime } from '#lib/time.ts';
+	import { page } from '$app/state';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -16,6 +17,17 @@
 			if (permission === 'granted') void subscribe();
 		}
 	});
+
+	// Saves the open page from a computer's browser: see /save.
+	const bookmarklet = $derived(
+		`javascript:location='${page.url.origin}/save?url='+encodeURIComponent(location.href)`
+	);
+	let copied = $state(false);
+
+	async function copy() {
+		await navigator.clipboard.writeText(bookmarklet);
+		copied = true;
+	}
 
 	async function allow() {
 		permission = await Notification.requestPermission();
@@ -93,6 +105,16 @@
 		{/if}
 	</section>
 
+	<section class="group">
+		<h2>Bookmarklet</h2>
+		<p class="muted">
+			Saves the page you’re reading on a computer. Make a bookmark in the bookmarks bar with this as
+			its URL, or drag <a href={bookmarklet} onclick={(e) => e.preventDefault()}>Save to Stash</a> there.
+		</p>
+		<code class="pick">{bookmarklet}</code>
+		<Button variant="outline" class="w-full" onclick={copy}>{copied ? 'Copied' : 'Copy'}</Button>
+	</section>
+
 	{#if permission}
 		<section class="group">
 			<h2>Icon badge</h2>
@@ -144,7 +166,8 @@
 		font-size: 14px;
 		overflow-wrap: anywhere;
 	}
-	.note code {
+	.note code,
+	.pick {
 		user-select: all;
 		font-weight: 700;
 	}
