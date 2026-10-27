@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { fromB64url } from '#lib/base64url.ts';
 	import { formatDateTime } from '#lib/time.ts';
-	import { page } from '$app/state';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -108,10 +108,11 @@
 	<section class="group">
 		<h2>Bookmarklet</h2>
 		<p class="muted">
-			Saves the page you’re reading on a computer. Make a bookmark in the bookmarks bar with this as
-			its URL, or drag <a href={bookmarklet} onclick={(e) => e.preventDefault()}>Save to Stash</a> there.
+			Saves the page you’re reading on a computer. Copy it into a bookmark’s URL, or drag <a
+				href={bookmarklet}
+				onclick={(e) => e.preventDefault()}>Save to Stash</a
+			> there.
 		</p>
-		<code class="pick">{bookmarklet}</code>
 		<Button variant="outline" class="w-full" onclick={copy}>{copied ? 'Copied' : 'Copy'}</Button>
 	</section>
 
@@ -166,8 +167,7 @@
 		font-size: 14px;
 		overflow-wrap: anywhere;
 	}
-	.note code,
-	.pick {
+	.note code {
 		user-select: all;
 		font-weight: 700;
 	}

@@ -9,6 +9,7 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 - Subreddit `.rss` links go through Reddit's signed-in API (`reddit.ts`; secrets from 1Password's "Reddit API") and come back as Atom.
 - The add box (Settings → Feeds) searches YouTube (`YOUTUBE_API_KEY`) and Feedly by name; Reddit options and YouTube Shorts are kept in the feed URL (`feed-url.ts`). Saving a YouTube link to Later uses the same key to look up its length.
 - After each sync, a push sends the unread count for the app icon's badge.
+- `/save?url=` is the bookmarklet in Settings, for a computer's browser: a signed-in GET that saves (so any site could add a link) and goes back.
 - `/api/save` is the iOS Shortcut: `Authorization: Bearer <token>`, made in Settings, only its hash kept.
 - `/api/save` takes JSON only: SvelteKit's CSRF check refuses form and plain-text posts from outside the site.
 - Server code that fetches takes a `fetcher` argument, so tests pass a fake one (`feeds.spec.ts`).

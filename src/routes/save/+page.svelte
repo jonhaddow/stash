@@ -3,9 +3,11 @@
 
 	let { data }: PageProps = $props();
 
-	// Back to the article it came from, once there's been time to read this.
+	// Back to the article it came from, once there's been time to read this. Not
+	// after signing in on the way, when going back would land on Google.
 	$effect(() => {
-		if (history.length < 2) return;
+		const from = document.referrer && new URL(document.referrer).origin;
+		if (from !== new URL(data.url).origin) return;
 		const timer = setTimeout(() => history.back(), 1200);
 		return () => clearTimeout(timer);
 	});
