@@ -40,7 +40,7 @@
 		max-width: 360px;
 		margin: 0 auto;
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: calc(100dvh - env(safe-area-inset-top));
 		padding: 24px 16px;
 		display: flex;
 		flex-direction: column;
