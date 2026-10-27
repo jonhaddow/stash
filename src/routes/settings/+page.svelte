@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { fromB64url } from '#lib/base64url.ts';
 	import { formatDateTime } from '#lib/time.ts';
 	import type { PageProps } from './$types';
@@ -16,6 +17,17 @@
 			if (permission === 'granted') void subscribe();
 		}
 	});
+
+	// Saves the open page from a computer's browser: see /save.
+	const bookmarklet = $derived(
+		`javascript:location='${page.url.origin}/save?url='+encodeURIComponent(location.href)`
+	);
+	let copied = $state(false);
+
+	async function copy() {
+		await navigator.clipboard.writeText(bookmarklet);
+		copied = true;
+	}
 
 	async function allow() {
 		permission = await Notification.requestPermission();
@@ -91,6 +103,17 @@
 				>
 			</form>
 		{/if}
+	</section>
+
+	<section class="group">
+		<h2>Bookmarklet</h2>
+		<p class="muted">
+			Saves the page you’re reading on a computer. Copy it into a bookmark’s URL, or drag <a
+				href={bookmarklet}
+				onclick={(e) => e.preventDefault()}>Save to Stash</a
+			> there.
+		</p>
+		<Button variant="outline" class="w-full" onclick={copy}>{copied ? 'Copied' : 'Copy'}</Button>
 	</section>
 
 	{#if permission}

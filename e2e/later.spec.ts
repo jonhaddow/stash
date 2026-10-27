@@ -102,3 +102,28 @@ test('the Shortcut saves to Later with a key from Settings', async ({ page, requ
 	await open(page, '/later');
 	await expect(page.getByText('Shared on iOS')).toBeVisible();
 });
+
+test('the bookmarklet saves the page it’s given', async ({ page }) => {
+	// Clicked on an article, it saves and goes back there.
+	const article = 'https://saved.invalid/from-the-mac';
+	await page.route(article, (route) =>
+		route.fulfill({ contentType: 'text/html', body: 'An article' })
+	);
+	await page.goto(article);
+	await page.goto('/save?url=' + encodeURIComponent(article), { referer: article });
+	await expect(page.getByRole('status')).toHaveText('saved.invalid');
+	await expect(page).toHaveURL(article);
+	await open(page, '/later');
+	await expect(page.getByRole('link', { name: /^saved\.invalid/ })).toHaveAttribute(
+		'href',
+		'https://saved.invalid/from-the-mac'
+	);
+});
+
+test('Settings offers the bookmarklet to copy', async ({ page }) => {
+	await open(page, '/settings');
+	await expect(page.getByRole('link', { name: 'Save to Stash' })).toHaveAttribute(
+		'href',
+		/^javascript:location='http:\/\/[^']+\/save\?url='\+encodeURIComponent\(location\.href\)$/
+	);
+});
