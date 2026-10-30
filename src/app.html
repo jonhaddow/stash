@@ -10,22 +10,6 @@
 		<meta name="apple-mobile-web-app-title" content="Stash" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="mobile-web-app-capable" content="yes" />
-		<script nonce="%sveltekit.nonce%">
-			// A page from an earlier build whose CSS or JS has since been deleted: load it
-			// afresh (at most every 10s, so a real outage doesn't loop). Before the
-			// page's own links, to catch their errors.
-			addEventListener(
-				'error',
-				(e) => {
-					const src = e.target.href || e.target.src || '';
-					if (!src.includes('/_app/immutable/')) return;
-					if (Date.now() - (sessionStorage.staleReload || 0) < 10000) return;
-					sessionStorage.staleReload = Date.now();
-					location.reload();
-				},
-				true
-			);
-		</script>
 		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f3ee" />
 		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131211" />
 		%sveltekit.head%
