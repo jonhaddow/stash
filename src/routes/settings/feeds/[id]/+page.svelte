@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
+	import ItemList from '#lib/components/ItemList.svelte';
 	import FeedOptions from '#lib/components/FeedOptions.svelte';
 	import { asChannelFeed, asSubreddit } from '#lib/feed-url.ts';
 	import SyncStatus from '#lib/components/SyncStatus.svelte';
@@ -26,7 +27,7 @@
 		<a href={f.url} target="_blank" rel="noopener noreferrer">{f.url}</a>
 	</p>
 
-	<form class="edit" method="POST" action="?/save" use:enhance>
+	<form class="edit" method="POST" action="?/edit" use:enhance>
 		<label class="field">
 			Name
 			<input name="title" value={f.title} required maxlength="200" />
@@ -62,6 +63,13 @@
 		{:else}
 			<p class="muted">Not fetched in the last 7 days.</p>
 		{/if}
+	</section>
+
+	<section class="group">
+		<h2>Entries</h2>
+		<ItemList items={data.items} order={data.order} more={data.more}>
+			{#snippet empty()}<p class="muted">No entries.</p>{/snippet}
+		</ItemList>
 	</section>
 
 	<form
