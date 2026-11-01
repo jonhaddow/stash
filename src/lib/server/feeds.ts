@@ -330,7 +330,13 @@ export const PAGE = 60;
 /** Feed entries, newest first unless `order` is 'oldest'; `from` (a publishedAt) pages on. */
 export function listItems(
 	db: DB,
-	filter: { kind?: Kind | null; unreadOnly?: boolean; order?: Order; from?: string | null }
+	filter: {
+		feedId?: number;
+		kind?: Kind | null;
+		unreadOnly?: boolean;
+		order?: Order;
+		from?: string | null;
+	}
 ) {
 	const [by, past] = filter.order === 'oldest' ? [asc, gt] : [desc, lt];
 	return db
@@ -351,6 +357,7 @@ export function listItems(
 		.leftJoin(saved, and(eq(saved.url, item.url), isNull(saved.archivedAt)))
 		.where(
 			and(
+				filter.feedId ? eq(item.feedId, filter.feedId) : undefined,
 				ofKind(filter.kind),
 				filter.unreadOnly ? isNull(item.readAt) : undefined,
 				filter.from ? past(item.publishedAt, filter.from) : undefined

@@ -145,6 +145,7 @@ describe('syncing', () => {
 		pages[url] = rss([{ guid: 'c', date: now.toISOString() }]);
 		await syncDue(db, new Date(now.getTime() + 60 * 60_000), fetcher);
 		expect((await listItems(db, { unreadOnly: true })).map((i) => i.title)).toEqual(['c']);
+		expect(await listItems(db, { feedId: 999 })).toEqual([]);
 	});
 });
 
