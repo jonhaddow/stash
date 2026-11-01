@@ -98,3 +98,27 @@ test('a feed’s page shows its sync log', async ({ page }) => {
 	await expect(log.getByRole('listitem').first()).toContainText(/Failed\s*· HTTP 503/);
 	await expect(log.getByRole('listitem').last()).toContainText('OK, +2');
 });
+
+test('adding a feed: pick the kind first, and Reddit shows its feed as it’s set up', async ({
+	page
+}) => {
+	await open(page, '/settings/feeds');
+	await expect(page.getByRole('switch', { name: 'Include Shorts' })).toBeChecked();
+	await page.getByRole('textbox').fill('veritasium');
+	await expect(page.getByRole('button', { name: 'Search' })).toBeVisible();
+
+	await page.getByText('Reddit', { exact: true }).click();
+	await page.getByLabel('Subreddit').fill('rust');
+	await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
+	await expect(page.getByText('https://www.reddit.com/r/rust/.rss')).toBeVisible();
+	await page.getByText('top', { exact: true }).click();
+	await page.getByText('this week').click();
+	await page.getByRole('spinbutton').fill('10');
+	await expect(
+		page.getByText('https://www.reddit.com/r/rust/top/.rss?t=week&limit=10')
+	).toBeVisible();
+
+	await page.getByText('RSS', { exact: true }).click();
+	await page.getByRole('textbox').fill('daringfireball.net');
+	await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
+});

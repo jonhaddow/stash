@@ -1,4 +1,11 @@
-import { asSubreddit, isHandle, subredditFeed, subredditFrom, withShorts } from '../feed-url.ts';
+import {
+	asSubreddit,
+	isHandle,
+	subredditFeed,
+	subredditFrom,
+	subredditNamed,
+	withShorts
+} from '../feed-url.ts';
 import { cleanUrl } from './saved.ts';
 
 /**
@@ -9,7 +16,8 @@ export function feedFromForm(form: FormData) {
 	const picked = form.get('pick');
 	if (typeof picked === 'string' && picked) return picked;
 	const typed = String(form.get('url') ?? '').trim();
-	const sub = asSubreddit(typed);
+	const sub = form.get('type') === 'reddit' ? subredditNamed(typed) : asSubreddit(typed);
+	if (form.get('type') === 'reddit' && !sub) return null;
 	if (sub) return subredditFeed(subredditFrom(sub.sub, form));
 	if (isHandle(typed)) return `https://www.youtube.com/${typed}`;
 	return cleanUrl(typed);

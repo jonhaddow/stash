@@ -2,7 +2,7 @@
 	// A subreddit's sort, time window and limit, or a YouTube channel's Shorts,
 	// on the add box and a feed's edit form. feed-url.ts turns them into the URL.
 	import { Switch } from '#lib/components/ui/switch/index.ts';
-	import { SORTS, WINDOWS, type Subreddit } from '#lib/feed-url.ts';
+	import { SORTS, WINDOWS, clampLimit, subredditFeed, type Subreddit } from '#lib/feed-url.ts';
 
 	let {
 		reddit = null,
@@ -12,13 +12,22 @@
 		youtube?: { shorts: boolean } | null;
 	} = $props();
 
+	// The options start as the URL has them; the subreddit's name can change as it's typed.
 	// svelte-ignore state_referenced_locally
 	let sort = $state(reddit?.sort ?? 'hot');
+	// svelte-ignore state_referenced_locally
+	let t = $state(reddit?.t ?? 'day');
+	// svelte-ignore state_referenced_locally
+	let limit = $state<number | null>(reddit?.limit ?? null);
+	const url = $derived(
+		reddit && subredditFeed({ sub: reddit.sub, sort, t, limit: clampLimit(limit) })
+	);
 </script>
 
 {#if reddit}
 	<fieldset>
 		<legend>Posts from r/{reddit.sub}</legend>
+		<p class="muted url">{url}</p>
 		<div class="chips">
 			{#each SORTS as s (s)}
 				<label class="chip"><input type="radio" name="sort" value={s} bind:group={sort} />{s}</label
@@ -29,7 +38,7 @@
 			<div class="chips">
 				{#each WINDOWS as w (w)}
 					<label class="chip"
-						><input type="radio" name="t" value={w} checked={reddit.t === w} />{w === 'all'
+						><input type="radio" name="t" value={w} bind:group={t} />{w === 'all'
 							? 'all time'
 							: `this ${w}`}</label
 					>
@@ -45,7 +54,7 @@
 				min="1"
 				max="100"
 				placeholder="25"
-				value={reddit.limit ?? ''}
+				bind:value={limit}
 			/>
 			posts each time
 		</label>
@@ -71,6 +80,11 @@
 		font-weight: 600;
 		margin-bottom: 6px;
 		padding: 0;
+	}
+	.url {
+		margin: 0;
+		font-size: 13px;
+		overflow-wrap: anywhere;
 	}
 	.limit,
 	.check {

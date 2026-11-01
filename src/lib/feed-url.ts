@@ -17,7 +17,7 @@ export const isHandle = (input: string) => /^@[\w.-]+$/.test(input.trim());
 const isOne = <T extends string>(list: readonly T[], v: unknown): v is T => list.includes(v as T);
 
 /** Reddit allows up to 100 posts a request. */
-const clampLimit = (n: unknown) => {
+export const clampLimit = (n: unknown) => {
 	const v = Math.round(Number(n));
 	return v > 0 ? Math.min(v, 100) : null;
 };
@@ -44,6 +44,13 @@ export function asSubreddit(input: string): Subreddit | null {
 		t: isOne(WINDOWS, t) ? t : 'day',
 		limit: clampLimit(url.searchParams.get('limit'))
 	};
+}
+
+/** A subreddit as the add box takes it: a bare name too. */
+export function subredditNamed(input: string): Subreddit | null {
+	const name = input.trim();
+	if (/^[\w-]+$/.test(name)) return { sub: name, sort: 'hot', t: 'day', limit: null };
+	return asSubreddit(name);
 }
 
 /** The subreddit's .rss address: reddit.ts sends it to the API. */
@@ -103,12 +110,17 @@ export function sourceOf(url: string, siteUrl: string | null): 'Reddit' | 'YouTu
 
 // ---- What was typed ----
 
-/** How the add box reads its input: a subreddit, a YouTube channel, a link, or words to search. */
-export function typedAs(input: string): 'reddit' | 'youtube' | 'url' | 'search' {
+/** What the add box is adding, picked before typing. */
+export const FEED_TYPES = ['youtube', 'reddit', 'rss'] as const;
+export type FeedType = (typeof FEED_TYPES)[number];
+export const feedType = (v: unknown): FeedType => (isOne(FEED_TYPES, v) ? v : 'youtube');
+
+const isLink = (s: string) => /^https?:\/\//i.test(s) || /^[^\s/]+\.[a-z]{2,}(\/\S*)?$/i.test(s);
+
+/** Whether the add box searches by name (else it adds what was typed). */
+export function searches(type: FeedType, input: string) {
 	const s = input.trim();
-	if (asSubreddit(s)) return 'reddit';
-	if (isHandle(s) || /^(https?:\/\/)?([\w-]+\.)*(youtube\.com|youtu\.be)\b/i.test(s))
-		return 'youtube';
-	if (/^https?:\/\//i.test(s) || /^[^\s/]+\.[a-z]{2,}(\/\S*)?$/i.test(s)) return 'url';
-	return 'search';
+	if (type === 'reddit') return false;
+	if (type === 'youtube' && isHandle(s)) return false;
+	return !isLink(s);
 }

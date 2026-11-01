@@ -2,7 +2,7 @@
 	import { Button } from '#lib/components/ui/button/index.ts';
 	import { enhance } from '$app/forms';
 	import FeedOptions from '#lib/components/FeedOptions.svelte';
-	import { asChannelFeed, asSubreddit, typedAs } from '#lib/feed-url.ts';
+	import { feedType, searches, subredditNamed } from '#lib/feed-url.ts';
 	import SyncStatus from '#lib/components/SyncStatus.svelte';
 	import { ago } from '#lib/time.ts';
 	import type { PageProps } from './$types';
@@ -11,11 +11,31 @@
 	let busy = $state('');
 	// svelte-ignore state_referenced_locally
 	let text = $state(form?.url ?? '');
-	const typed = $derived(typedAs(text));
-	const reddit = $derived(asSubreddit(text));
+	// svelte-ignore state_referenced_locally
+	let type = $state(feedType(form?.type));
+	const search = $derived(searches(type, text));
+	const reddit = $derived(type === 'reddit' ? subredditNamed(text) : null);
 	// Results for what's in the box now, not for something typed before.
-	const found = $derived(form?.found && form.url === text.trim() ? form.found : null);
-	const showShorts = $derived(typed === 'youtube' || !!found?.some((r) => asChannelFeed(r.url)));
+	const found = $derived(
+		form?.found && form.url === text.trim() && form.type === type ? form.found : null
+	);
+
+	const TYPES = [
+		{
+			value: 'youtube',
+			label: 'YouTube',
+			field: 'Channel name, @handle or link',
+			placeholder: 'e.g. veritasium'
+		},
+		{ value: 'reddit', label: 'Reddit', field: 'Subreddit', placeholder: 'e.g. rust' },
+		{
+			value: 'rss',
+			label: 'RSS',
+			field: 'Site or feed link, or a name',
+			placeholder: 'e.g. daringfireball.net'
+		}
+	] as const;
+	const current = $derived(TYPES.find((t) => t.value === type)!);
 </script>
 
 <svelte:head>
@@ -40,23 +60,28 @@
 		}}
 	>
 		<h2 id="add">Add a feed</h2>
+		<div class="segments" role="radiogroup" aria-label="Kind of feed">
+			{#each TYPES as t (t.value)}
+				<label><input type="radio" name="type" value={t.value} bind:group={type} />{t.label}</label>
+			{/each}
+		</div>
 		<label class="field">
-			Name, link, r/subreddit or @channel
+			{current.field}
 			<input
 				name="url"
 				autocomplete="off"
 				autocapitalize="off"
 				spellcheck="false"
-				enterkeyhint={typed === 'search' ? 'search' : 'go'}
-				placeholder="e.g. veritasium, r/rust"
+				enterkeyhint={search ? 'search' : 'go'}
+				placeholder={current.placeholder}
 				bind:value={text}
 				required
 			/>
 		</label>
-		{#key reddit?.sub}<FeedOptions {reddit} youtube={showShorts ? { shorts: true } : null} />{/key}
+		<FeedOptions {reddit} youtube={type === 'youtube' ? { shorts: true } : null} />
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		{#if form?.added}<p class="note" role="status">Added {form.added}</p>{/if}
-		{#if typed === 'search'}
+		{#if search}
 			<Button formaction="?/search" disabled={!!busy}>{busy || 'Search'}</Button>
 		{:else}
 			<Button disabled={!!busy}>{busy || 'Add'}</Button>

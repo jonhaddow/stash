@@ -1,5 +1,5 @@
-// Finding feeds by name: YouTube channels through the YouTube Data API (when
-// its key is set), sites and podcasts through Feedly's public feed search.
+// Finding feeds by name: YouTube channels through the YouTube Data API,
+// sites and podcasts through Feedly's public feed search.
 // Feedly knows YouTube too, but mostly by long-dead gdata addresses.
 import { channelFeed } from '../feed-url.ts';
 import { get, type Fetch } from './http.ts';
@@ -94,15 +94,16 @@ async function feedly(q: string, fetcher: Fetch): Promise<Found[]> {
 		});
 }
 
-/** Channels first, then sites. Throws a readable message only if every search failed. */
+/** YouTube channels, or sites (from Feedly). Throws a readable message if the search fails. */
 export async function searchFeeds(
 	q: string,
+	type: 'youtube' | 'rss',
 	{ youtubeKey, fetcher }: { youtubeKey?: string; fetcher: Fetch }
 ): Promise<Found[]> {
-	const searches = [feedly(q, fetcher)];
-	if (youtubeKey) searches.unshift(youtube(q, youtubeKey, fetcher));
-	const settled = await Promise.allSettled(searches);
-	const found = settled.flatMap((s) => (s.status === 'fulfilled' ? s.value : []));
-	if (settled.every((s) => s.status === 'rejected')) throw new Error('Search isn’t answering');
-	return found;
+	if (type === 'youtube' && !youtubeKey) throw new Error('YouTube search isn’t set up');
+	try {
+		return await (type === 'youtube' ? youtube(q, youtubeKey!, fetcher) : feedly(q, fetcher));
+	} catch {
+		throw new Error('Search isn’t answering');
+	}
 }
