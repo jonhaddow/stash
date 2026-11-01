@@ -53,7 +53,7 @@
 				required
 			/>
 		</label>
-		{#key reddit?.sub}<FeedOptions {reddit} youtube={showShorts ? { shorts: false } : null} />{/key}
+		{#key reddit?.sub}<FeedOptions {reddit} youtube={showShorts ? { shorts: true } : null} />{/key}
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		{#if form?.added}<p class="note" role="status">Added {form.added}</p>{/if}
 		{#if typed === 'search'}
