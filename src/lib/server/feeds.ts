@@ -357,7 +357,7 @@ export function listItems(
 		.leftJoin(saved, and(eq(saved.url, item.url), isNull(saved.archivedAt)))
 		.where(
 			and(
-				filter.feedId ? eq(item.feedId, filter.feedId) : undefined,
+				filter.feedId !== undefined ? eq(item.feedId, filter.feedId) : undefined,
 				ofKind(filter.kind),
 				filter.unreadOnly ? isNull(item.readAt) : undefined,
 				filter.from ? past(item.publishedAt, filter.from) : undefined
