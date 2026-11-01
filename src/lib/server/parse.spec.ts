@@ -38,6 +38,18 @@ const ATOM = `<?xml version="1.0" encoding="UTF-8"?>
 </feed>`;
 
 describe('parseFeed', () => {
+	it("names a channel's uploads without Shorts after the channel", () => {
+		const xml = `<feed xmlns="http://www.w3.org/2005/Atom">
+			<link rel="self" href="http://www.youtube.com/feeds/videos.xml?playlist_id=UULF1"/>
+			<yt:playlistId>UULF1</yt:playlistId>
+			<title>Videos</title>
+			<author><name>Hannah Fry</name><uri>https://www.youtube.com/channel/UC1</uri></author>
+		</feed>`;
+		const feed = parseFeed(xml, 'https://www.youtube.com/feeds/videos.xml?playlist_id=UULF1');
+		expect(feed.title).toBe('Hannah Fry');
+		expect(feed.siteUrl).toBe('https://www.youtube.com/channel/UC1');
+	});
+
 	it('reads RSS', () => {
 		const feed = parseFeed(RSS, 'https://blog.example/feed.xml');
 		expect(feed.title).toBe('A & B Blog');

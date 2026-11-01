@@ -125,7 +125,10 @@ export function parseFeed(xml: string, feedUrl: string): ParsedFeed {
 	].map((m) => m[0]);
 	// The feed's own fields come before its first entry.
 	const head = blocks.length ? xml.slice(0, xml.indexOf(blocks[0])) : xml;
-	const rawSite = atom ? atomLink(head) : first(head, 'link');
+	// A YouTube channel's uploads without Shorts (its UULF playlist) is titled
+	// "Videos" with no page link, so it's named and linked after its channel.
+	const author = /<yt:playlistId>UULF/.test(head) ? first(head, 'author') : null;
+	const rawSite = author ? first(author, 'uri') : atom ? atomLink(head) : first(head, 'link');
 	const siteUrl = rawSite ? absolute(text(rawSite), feedUrl) : null;
 
 	const items: ParsedItem[] = [];
@@ -143,7 +146,8 @@ export function parseFeed(xml: string, feedUrl: string): ParsedFeed {
 		const image = imageUrl(entryImage(block), url);
 		items.push({ guid, url, title, publishedAt, image });
 	}
-	return { title: text(first(head, 'title') ?? '') || hostTitle(feedUrl), siteUrl, items };
+	const title = text(first(author ?? head, author ? 'name' : 'title') ?? '');
+	return { title: title || hostTitle(feedUrl), siteUrl, items };
 }
 
 const hostTitle = (url: string) => new URL(url).hostname.replace(/^www\./, '');
