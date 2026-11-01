@@ -78,7 +78,10 @@
 				required
 			/>
 		</label>
-		<FeedOptions {reddit} youtube={type === 'youtube' ? { shorts: true } : null} />
+		<!-- Restarts with a pasted link's options, not as a name is typed. -->
+		{#key reddit && `${reddit.sort} ${reddit.t} ${reddit.limit}`}
+			<FeedOptions {reddit} youtube={type === 'youtube' ? { shorts: true } : null} />
+		{/key}
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 		{#if form?.added}<p class="note" role="status">Added {form.added}</p>{/if}
 		{#if search}

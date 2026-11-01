@@ -7,7 +7,7 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 - Names in the code: a link in Later is a `saved` row (archived ones have `archivedAt`); a feed entry is an `item`.
 - Feeds are parsed with regexes (`parse.ts`), not an XML library, to stay inside the Workers CPU limit.
 - Subreddit `.rss` links go through Reddit's signed-in API (`reddit.ts`; secrets from 1Password's "Reddit API") and come back as Atom.
-- The add box (Settings → Feeds) searches YouTube (`YOUTUBE_API_KEY`) and Feedly by name; Reddit options and YouTube Shorts are kept in the feed URL (`feed-url.ts`). Saving a YouTube link to Later uses the same key to look up its length.
+- The add box (Settings → Feeds) starts with YouTube, Reddit or RSS. A name searches YouTube (`YOUTUBE_API_KEY`) or Feedly; a subreddit can be a bare name. Reddit options and YouTube Shorts are kept in the feed URL (`feed-url.ts`). Saving a YouTube link to Later uses the same key to look up its length.
 - After each sync, a push sends the unread count for the app icon's badge.
 - `/save?url=` is the bookmarklet in Settings, for a computer's browser: a signed-in GET that saves (so any site could add a link) and goes back.
 - `/api/save` is the iOS Shortcut: `Authorization: Bearer <token>`, made in Settings, only its hash kept.

@@ -101,9 +101,9 @@ export async function searchFeeds(
 	{ youtubeKey, fetcher }: { youtubeKey?: string; fetcher: Fetch }
 ): Promise<Found[]> {
 	if (type === 'youtube' && !youtubeKey) throw new Error('YouTube search isn’t set up');
-	try {
-		return await (type === 'youtube' ? youtube(q, youtubeKey!, fetcher) : feedly(q, fetcher));
-	} catch {
+	const search =
+		youtubeKey && type === 'youtube' ? youtube(q, youtubeKey, fetcher) : feedly(q, fetcher);
+	return search.catch(() => {
 		throw new Error('Search isn’t answering');
-	}
+	});
 }
