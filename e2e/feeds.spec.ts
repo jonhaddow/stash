@@ -90,11 +90,18 @@ test('opening an entry marks it read', async ({ page, context }) => {
 	).toBeHidden();
 });
 
-test('a feed’s page shows its sync log', async ({ page }) => {
+test('a feed’s page shows its sync log and entries', async ({ page }) => {
+	await open(page, '/settings/feeds');
+	await page.getByRole('link', { name: /Bread Channel/ }).click();
+	// Read ones too, and just this feed's.
+	await expect(page.getByRole('link', { name: /^Bagels/ })).toBeVisible();
+	await expect(page.getByRole('link', { name: /^Sourdough in a day/ })).toBeVisible();
+	await expect(page.getByRole('link', { name: /^All about oolong/ })).toHaveCount(0);
+
 	await open(page, '/settings/feeds');
 	await page.getByRole('link', { name: /Tea Blog/ }).click();
 	await expect(page.getByRole('heading', { name: 'Sync log' })).toBeVisible();
-	const log = page.getByRole('list').last();
+	const log = page.locator('section').filter({ hasText: 'Sync log' }).getByRole('list');
 	await expect(log.getByRole('listitem').first()).toContainText(/Failed\s*· HTTP 503/);
 	await expect(log.getByRole('listitem').last()).toContainText('OK, +2');
 });
