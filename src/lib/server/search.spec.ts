@@ -36,15 +36,20 @@ const fetcher: Fetch = (input) => {
 };
 
 describe('searchFeeds', () => {
-	it('finds channels first, then sites, leaving out Feedly’s YouTube', async () => {
-		const found = await searchFeeds('veritasium', { youtubeKey: 'k', fetcher });
+	it('finds YouTube channels', async () => {
+		const found = await searchFeeds('veritasium', 'youtube', { youtubeKey: 'k', fetcher });
 		expect(found).toEqual([
 			{
 				title: 'Veritasium',
 				url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA',
 				detail: 'YouTube · 17M subscribers',
 				icon: 'https://yt3.example/a.jpg'
-			},
+			}
+		]);
+	});
+
+	it('finds sites, leaving out Feedly’s YouTube', async () => {
+		expect(await searchFeeds('x', 'rss', { fetcher })).toEqual([
 			{
 				title: 'A blog',
 				url: 'https://blog.example/feed',
@@ -54,13 +59,9 @@ describe('searchFeeds', () => {
 		]);
 	});
 
-	it('searches only sites without a YouTube key', async () => {
-		const found = await searchFeeds('x', { fetcher });
-		expect(found.map((f) => f.title)).toEqual(['A blog']);
-	});
-
-	it('says so when nothing answers', async () => {
+	it('says so when it can’t search', async () => {
+		await expect(searchFeeds('x', 'youtube', { fetcher })).rejects.toThrow('isn’t set up');
 		const down: Fetch = () => Promise.resolve(new Response(null, { status: 503 }));
-		await expect(searchFeeds('x', { fetcher: down })).rejects.toThrow('isn’t answering');
+		await expect(searchFeeds('x', 'rss', { fetcher: down })).rejects.toThrow('isn’t answering');
 	});
 });

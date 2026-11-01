@@ -4,7 +4,8 @@ import {
 	asSubreddit,
 	sourceOf,
 	subredditFeed,
-	typedAs,
+	searches,
+	subredditNamed,
 	withShorts
 } from './feed-url.ts';
 
@@ -45,14 +46,20 @@ describe('YouTube', () => {
 	});
 });
 
-it('tells what was typed', () => {
-	expect(typedAs('r/rust')).toBe('reddit');
-	expect(typedAs('@veritasium')).toBe('youtube');
-	expect(typedAs('youtube.com/@veritasium')).toBe('youtube');
-	expect(typedAs('daringfireball.net')).toBe('url');
-	expect(typedAs('https://blog.example/x')).toBe('url');
-	expect(typedAs('daring fireball')).toBe('search');
-	expect(typedAs('veritasium')).toBe('search');
+it('searches by name, and adds links', () => {
+	expect(searches('youtube', 'veritasium')).toBe(true);
+	expect(searches('youtube', '@veritasium')).toBe(false);
+	expect(searches('youtube', 'youtube.com/@veritasium')).toBe(false);
+	expect(searches('rss', 'daring fireball')).toBe(true);
+	expect(searches('rss', 'daringfireball.net')).toBe(false);
+	expect(searches('rss', 'https://blog.example/x')).toBe(false);
+	expect(searches('reddit', 'rust')).toBe(false);
+});
+
+it('takes a bare subreddit name', () => {
+	expect(subredditNamed(' rust ')).toEqual({ sub: 'rust', sort: 'hot', t: 'day', limit: null });
+	expect(subredditNamed('r/rust')?.sub).toBe('rust');
+	expect(subredditNamed('rust lang')).toBeNull();
 });
 
 it('groups feeds by where they come from', () => {
