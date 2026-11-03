@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
-	import { beforeNavigate, invalidate, onNavigate } from '$app/navigation';
+	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
 	import { page, updated } from '$app/state';
 	import PullToRefresh from '#lib/components/PullToRefresh.svelte';
 	import { setUnreadChange } from '#lib/unread.ts';
@@ -44,11 +44,12 @@
 	});
 
 	// Coming back to the app from the background: if a new version was deployed
-	// meanwhile, load it straight away; otherwise refresh the unread count.
+	// meanwhile, load it straight away; otherwise reload the page's data, so it isn't
+	// left showing what it had when the app was last open.
 	async function onVisible() {
 		if (document.visibilityState !== 'visible') return;
 		if (await updated.check()) location.reload();
-		else if (data.user) void invalidate('app:unread');
+		else if (data.user) void invalidateAll();
 	}
 
 	// The unread count on the home-screen icon too. iOS shows it only once
