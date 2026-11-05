@@ -154,8 +154,13 @@
 	nav a:active .icon svg {
 		scale: 0.85;
 	}
+	/* The open tab: dark, a bolder icon, and an accent bar along the rule. */
 	nav a.active {
 		color: var(--ink);
+		box-shadow: inset 0 3px 0 var(--accent);
+	}
+	nav a.active .icon svg {
+		stroke-width: 2.4;
 	}
 	.badge {
 		position: absolute;
