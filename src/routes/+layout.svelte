@@ -183,6 +183,7 @@
 			top: 0;
 			bottom: auto;
 			height: 64px;
+			/* In line with the page's column: 384px is half of .page's 832px, less its 32px padding. */
 			padding: 0 max(32px, calc(50% - 384px));
 			display: flex;
 			align-items: center;

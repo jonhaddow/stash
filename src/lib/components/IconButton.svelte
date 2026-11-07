@@ -44,10 +44,12 @@
 			<path d="M5 12.5l4.5 4.5L19 7.5" />
 		{:else if icon === 'unread'}
 			<circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" />
-		{:else if icon === 'later'}
-			<path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4-6 4V4.5a1 1 0 0 1 1-1Z" />
-		{:else if icon === 'unlater'}
-			<path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4-6 4V4.5a1 1 0 0 1 1-1Z" fill="currentColor" />
+		{:else if icon === 'later' || icon === 'unlater'}
+			<!-- A bookmark, filled when it's in Later. -->
+			<path
+				d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4-6 4V4.5a1 1 0 0 1 1-1Z"
+				fill={icon === 'unlater' ? 'currentColor' : 'none'}
+			/>
 		{:else}
 			<path d="M3.5 4.5h17v4h-17zM5 8.5V19.5h14V8.5M10 12.5h4" />
 		{/if}

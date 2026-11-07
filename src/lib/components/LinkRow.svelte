@@ -71,7 +71,12 @@
 	let swiped = false;
 	const swipe = $derived(dx > 0 ? right : dx < 0 ? left : undefined);
 
+	// The buttons show only for a mouse: on a touchscreen laptop a tap also hovers.
+	let mouse = $state(false);
+	const onpointerenter = (e: PointerEvent) => (mouse = e.pointerType === 'mouse');
+
 	function onpointerdown(e: PointerEvent) {
+		mouse = e.pointerType === 'mouse';
 		swiped = false;
 		// On a computer, a mouse uses the buttons instead: dragging with one is awkward.
 		const computer = e.pointerType === 'mouse' && matchMedia('(pointer: fine)').matches;
@@ -141,6 +146,8 @@
 	class="link-row"
 	class:unread
 	class:read={unread === false}
+	class:mouse
+	{onpointerenter}
 	{onpointerdown}
 	{onpointermove}
 	{onpointerup}
@@ -358,6 +365,10 @@
 		display: none;
 	}
 	@media (hover: hover) and (pointer: fine) {
+		/* The shade reaches past the column's edge, so the text stays in line with the header. */
+		:global(.list:has(> .link-row)) {
+			margin-inline: -12px;
+		}
 		li {
 			padding: 0 12px;
 			background: var(--bg);
@@ -374,11 +385,13 @@
 			gap: 2px;
 			margin-left: 12px;
 			opacity: 0;
+			pointer-events: none;
 			transition: opacity 0.15s;
 		}
-		li:hover .buttons,
+		li.mouse:hover .buttons,
 		.buttons:focus-within {
 			opacity: 1;
+			pointer-events: auto;
 		}
 	}
 	/* Laptops: bigger pictures. */

@@ -113,14 +113,6 @@
 		}
 	}
 
-	/* With a mouse, a row of links shades when hovered over (LinkRow): reach past the
-	   column's edge so the text stays in line with the header. */
-	@media (hover: hover) and (pointer: fine) {
-		.list:has(> .link-row) {
-			margin-inline: -12px;
-		}
-	}
-
 	h1 {
 		margin: 0;
 		font-family: var(--serif);
