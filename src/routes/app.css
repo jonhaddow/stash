@@ -101,14 +101,23 @@
 		border-bottom: 3px double var(--ink);
 	}
 
-	/* Laptops: the tabs are along the top. */
+	/* Laptops: the tabs are along the top, and the column is wider. */
 	@media (min-width: 960px) {
 		body {
 			padding-top: 64px;
 		}
 
 		.page {
-			padding: 40px 32px 48px;
+			max-width: 832px;
+			padding: 48px 32px 64px;
+		}
+	}
+
+	/* With a mouse, a row of links shades when hovered over (LinkRow): reach past the
+	   column's edge so the text stays in line with the header. */
+	@media (hover: hover) and (pointer: fine) {
+		.list:has(> .link-row) {
+			margin-inline: -12px;
 		}
 	}
 
@@ -216,6 +225,18 @@
 		color: var(--muted);
 		text-decoration: none;
 		cursor: pointer;
+	}
+
+	/* Laptops: tabs as wide as their words, from the left, rather than stretched across. */
+	@media (min-width: 960px) {
+		.segments {
+			grid-auto-columns: max-content;
+			gap: 8px;
+		}
+
+		.segments > * {
+			padding: 0 14px;
+		}
 	}
 
 	.segments input {

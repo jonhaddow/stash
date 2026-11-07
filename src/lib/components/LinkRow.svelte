@@ -1,6 +1,12 @@
 <script lang="ts" module>
-	/** What a swipe does: its label shows under the row; `away` slides the row off. */
-	export type Swipe = { label: string; run: () => unknown; away?: boolean };
+	/** What a swipe does: its label shows under the row; `away` slides the row off.
+	 * On a computer it's a button on the row instead, with this icon. */
+	export type Swipe = {
+		label: string;
+		icon: 'read' | 'unread' | 'later' | 'unlater' | 'archive';
+		run: () => unknown;
+		away?: boolean;
+	};
 </script>
 
 <script lang="ts">
@@ -8,11 +14,13 @@
 	import { hackUrl, hostOf, youtubeId } from '#lib/kind.ts';
 	import { positionOf } from '#lib/positions.svelte.ts';
 	import { ago, clock } from '#lib/time.ts';
+	import IconButton from './IconButton.svelte';
 	import Player from './Player.svelte';
 
 	// A link in a list: title, where it's from and when, and a thumbnail, opening the original
 	// page (YouTube videos play in the app instead; Hacker News threads open in Hack on iOS).
-	// Swiping it right or left past the threshold does that side's action. Buttons (the archive's) to its right.
+	// Swiping it right or left past the threshold does that side's action; with a mouse,
+	// those are buttons that show when hovering over it. Buttons (the archive's) to its right.
 	let {
 		url,
 		title,
@@ -65,7 +73,15 @@
 
 	function onpointerdown(e: PointerEvent) {
 		swiped = false;
-		if (e.button === 0 && (right || left)) start = { x: e.clientX, y: e.clientY };
+		// On a computer, a mouse uses the buttons instead: dragging with one is awkward.
+		const computer = e.pointerType === 'mouse' && matchMedia('(pointer: fine)').matches;
+		if (e.button === 0 && !computer && (right || left)) start = { x: e.clientX, y: e.clientY };
+	}
+
+	/** Does a swipe's action; `away` slides the row off that way. If it fails (offline, say), the row comes back. */
+	function run(s: Swipe, way: number) {
+		Promise.resolve(s.run()).catch(() => (dx = 0));
+		if (s.away) dx = way * li.offsetWidth;
 	}
 
 	function onpointermove(e: PointerEvent) {
@@ -87,12 +103,8 @@
 		dragging = false;
 		swiped = true;
 		if (swipe && Math.abs(dx) >= THRESHOLD) {
-			// If it fails (offline, say), the row comes back.
-			Promise.resolve(swipe.run()).catch(() => (dx = 0));
-			if (swipe.away) {
-				dx = Math.sign(dx) * li.offsetWidth;
-				return;
-			}
+			run(swipe, Math.sign(dx));
+			if (swipe.away) return;
 		}
 		dx = 0;
 	}
@@ -126,6 +138,7 @@
 
 <li
 	bind:this={li}
+	class="link-row"
 	class:unread
 	class:read={unread === false}
 	{onpointerdown}
@@ -172,6 +185,20 @@
 			</span>
 		{/if}
 	</a>
+	{#if left || right}
+		<div class="buttons">
+			{#if left}<IconButton
+					label={left.label}
+					icon={left.icon}
+					onclick={() => run(left, -1)}
+				/>{/if}
+			{#if right}<IconButton
+					label={right.label}
+					icon={right.icon}
+					onclick={() => run(right, 1)}
+				/>{/if}
+		</div>
+	{/if}
 	{#if actions}<div class="actions">{@render actions()}</div>{/if}
 	{#if playing && video}
 		<Player id={video} {title} {url} onclose={() => (playing = false)} />
@@ -325,5 +352,43 @@
 	.saved {
 		color: var(--accent);
 		font-weight: 700;
+	}
+	/* Swipes' buttons, for a mouse: they show while hovering over the row (or tabbing to them). */
+	.buttons {
+		display: none;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		li {
+			padding: 0 12px;
+			background: var(--bg);
+			transition: background-color 0.15s;
+		}
+		li:hover {
+			background: color-mix(in oklab, var(--bg), var(--ink) 4%);
+		}
+		a {
+			background: inherit;
+		}
+		.buttons {
+			display: flex;
+			gap: 2px;
+			margin-left: 12px;
+			opacity: 0;
+			transition: opacity 0.15s;
+		}
+		li:hover .buttons,
+		.buttons:focus-within {
+			opacity: 1;
+		}
+	}
+	/* Laptops: bigger pictures. */
+	@media (min-width: 960px) {
+		img {
+			width: 128px;
+			aspect-ratio: 16 / 10;
+		}
+		.title {
+			font-size: 21px;
+		}
 	}
 </style>

@@ -183,7 +183,7 @@
 			top: 0;
 			bottom: auto;
 			height: 64px;
-			padding: 0 max(32px, calc(50% - 288px));
+			padding: 0 max(32px, calc(50% - 384px));
 			display: flex;
 			align-items: center;
 			gap: 28px;

@@ -57,6 +57,7 @@
 					at={link.addedAt}
 					right={{
 						label: 'Archive',
+						icon: 'archive',
 						away: true,
 						run: () => act('?/archive', { id: link.id, title: link.title })
 					}}

@@ -105,10 +105,12 @@
 				{unread}
 				saved={!!it.savedId}
 				onopen={() => setRead(it, true)}
-				right={{ label: unread ? 'Read' : 'Unread', run: () => setRead(it, unread) }}
+				right={unread
+					? { label: 'Read', icon: 'read', run: () => setRead(it, true) }
+					: { label: 'Unread', icon: 'unread', run: () => setRead(it, false) }}
 				left={it.savedId
-					? { label: 'Out of Later', run: () => unsave(it) }
-					: { label: 'Later', run: () => save(it) }}
+					? { label: 'Out of Later', icon: 'unlater', run: () => unsave(it) }
+					: { label: 'Later', icon: 'later', run: () => save(it) }}
 			/>
 		{/each}
 	</ul>

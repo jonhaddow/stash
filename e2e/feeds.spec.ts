@@ -129,3 +129,21 @@ test('adding a feed: pick the kind first, and Reddit shows its feed as it’s se
 	await page.getByRole('textbox').fill('daringfireball.net');
 	await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
 });
+
+test.describe('on a computer', () => {
+	test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
+
+	test('buttons do what swipes do', async ({ page }) => {
+		await open(page, '/?all=1');
+		const row = page.getByRole('listitem').filter({ hasText: 'Sourdough in a day' });
+		await row.hover();
+		await row.getByRole('button', { name: 'Later' }).click();
+		await expect(page.getByRole('status')).toContainText('In Later: Sourdough in a day');
+		await page.getByRole('button', { name: 'Undo' }).click();
+		await expect(row.getByText('In Later')).toBeHidden();
+		await row.hover();
+		const read = page.waitForResponse((r) => r.url().includes('/read'));
+		await row.getByRole('button', { name: /^(Read|Unread)$/ }).click();
+		await read;
+	});
+});
