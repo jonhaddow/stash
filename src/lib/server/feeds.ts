@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, like, lt, lte, or, sql } from 'drizzle-orm';
 import { kindOf, type Kind, type Order } from '../kind.ts';
 import { feed, item, saved, syncLog, type Feed } from './db/schema.ts';
 import type { DB } from './db/index.ts';
@@ -218,7 +218,8 @@ async function recordFetch(
 	feedId: number,
 	now: Date,
 	r: FetchResult,
-	cache?: { etag: string | null; lastModified: string | null }
+	cache?: { etag: string | null; lastModified: string | null },
+	colo: string | null = null
 ) {
 	const at = now.toISOString();
 	await db.batch([
@@ -238,13 +239,20 @@ async function recordFetch(
 			httpStatus: r.httpStatus ?? null,
 			itemsAdded: r.itemsAdded ?? 0,
 			error: r.error ?? null,
-			ms: r.ms
+			ms: r.ms,
+			colo
 		})
 	]);
 }
 
 /** Fetches one feed (conditionally, so unchanged feeds are cheap) and logs how it went. */
-export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch = feedFetch) {
+export async function syncFeed(
+	db: DB,
+	f: Feed,
+	now = new Date(),
+	fetcher: Fetch = feedFetch,
+	colo: string | null = null
+) {
 	const started = Date.now();
 	const headers: Record<string, string> = {};
 	if (f.etag) headers['if-none-match'] = f.etag;
@@ -274,7 +282,7 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 		const message = e instanceof Error ? e.message : String(e);
 		result = { status: 'error', error: message.slice(0, 500), ms: Date.now() - started };
 	}
-	await recordFetch(db, f.id, now, result, cache);
+	await recordFetch(db, f.id, now, result, cache, colo);
 	return result;
 }
 
@@ -282,6 +290,21 @@ export async function syncFeed(db: DB, f: Feed, now = new Date(), fetcher: Fetch
 async function pruneRead(db: DB, now: Date) {
 	const before = new Date(now.getTime() - KEEP_READ_MS).toISOString();
 	await db.delete(item).where(and(lt(item.readAt, before), lt(item.publishedAt, before)));
+}
+
+/**
+ * The Cloudflare data centre this run is in. Logged because YouTube answers 404 to
+ * every feed overnight (about 22:00-08:00 UTC) but not by day, which looks like it
+ * depends on where Cloudflare runs the cron. Diagnostic only: drop this, its call
+ * and `sync_log.colo` once the cause is known.
+ */
+async function currentColo(fetcher: Fetch) {
+	try {
+		const res = await fetcher('https://www.cloudflare.com/cdn-cgi/trace');
+		return res.ok ? ((await res.text()).match(/^colo=(\w+)/m)?.[1] ?? null) : null;
+	} catch {
+		return null;
+	}
 }
 
 /** The cron's job: the feeds fetched longest ago (if due), and tidying old logs and entries. */
@@ -296,7 +319,9 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFet
 				lte(feed.lastFetchedAt, ago(FEED_EVERY_MS)),
 				// Refused with 429 (too many requests): on Cloudflare's shared addresses that's
 				// other Workers using up the quota, so it's luck, and the next run tries again.
-				eq(feed.lastError, 'HTTP 429')
+				eq(feed.lastError, 'HTTP 429'),
+				// YouTube's 404s come and go by time of day (see currentColo), so the same.
+				and(eq(feed.lastError, 'HTTP 404'), like(feed.url, 'https://www.youtube.com/%'))
 			)
 		)
 		.orderBy(sql`${feed.lastFetchedAt} is not null`, asc(feed.lastFetchedAt));
@@ -311,8 +336,9 @@ export async function syncDue(db: DB, now = new Date(), fetcher: Fetch = feedFet
 		}
 		due.push(f);
 	}
+	const colo = due.length ? await currentColo(fetcher) : null;
 	const results = await Promise.all(
-		due.map(async (f) => ({ feed: f.title, ...(await syncFeed(db, f, now, fetcher)) }))
+		due.map(async (f) => ({ feed: f.title, ...(await syncFeed(db, f, now, fetcher, colo)) }))
 	);
 	await db
 		.delete(syncLog)

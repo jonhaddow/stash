@@ -133,7 +133,9 @@ export const syncLog = sqliteTable(
 		itemsAdded: integer('items_added').notNull().default(0),
 		error: text('error'),
 		/** Wall time of the fetch and parse, in ms. */
-		ms: integer('ms').notNull()
+		ms: integer('ms').notNull(),
+		/** Cloudflare data centre the cron ran in (null for a fetch from the app). */
+		colo: text('colo')
 	},
 	(t) => [index('sync_log_feed_idx').on(t.feedId, t.at), index('sync_log_at_idx').on(t.at)]
 );
