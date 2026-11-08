@@ -206,6 +206,26 @@ describe('syncDue', () => {
 		// Fetched fine: back to every half hour.
 		expect(await syncDue(db, at(10), fetcher)).toEqual([]);
 	});
+
+	it('tries a YouTube feed that got a 404 again on the next run, and logs the data centre', async () => {
+		const url = 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1';
+		const trace = { 'https://www.cloudflare.com/cdn-cgi/trace': 'fl=1\ncolo=LHR\nhttp=http/2\n' };
+		await db.insert(feedTable).values({ title: 'yt', url, createdAt: now.toISOString() });
+		expect(await syncDue(db, now, fakeFetch({ ...trace, [url]: 404 }))).toMatchObject([
+			{ status: 'error', error: 'HTTP 404' }
+		]);
+		const fetcher = fakeFetch({ ...trace, [url]: rss([]) });
+		expect(await syncDue(db, at(5), fetcher)).toMatchObject([{ status: 'ok' }]);
+		expect(await syncDue(db, at(10), fetcher)).toEqual([]);
+		expect((await db.select().from(syncLog)).map((l) => l.colo)).toEqual(['LHR', 'LHR']);
+	});
+
+	it('waits the usual half hour after a 404 from other sites', async () => {
+		const url = 'https://blog.example/feed.xml';
+		await db.insert(feedTable).values({ title: 'blog', url, createdAt: now.toISOString() });
+		expect(await syncDue(db, now, fakeFetch({}))).toMatchObject([{ error: 'HTTP 404' }]);
+		expect(await syncDue(db, at(5), fakeFetch({ [url]: rss([]) }))).toEqual([]);
+	});
 });
 
 describe('reading', () => {
