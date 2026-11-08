@@ -295,7 +295,8 @@ async function pruneRead(db: DB, now: Date) {
 /**
  * The Cloudflare data centre this run is in. Logged because YouTube answers 404 to
  * every feed overnight (about 22:00-08:00 UTC) but not by day, which looks like it
- * depends on where Cloudflare runs the cron.
+ * depends on where Cloudflare runs the cron. Diagnostic only: drop this, its call
+ * and `sync_log.colo` once the cause is known.
  */
 async function currentColo(fetcher: Fetch) {
 	try {
