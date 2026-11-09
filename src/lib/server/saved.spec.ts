@@ -51,17 +51,31 @@ describe('saveLink', () => {
 		expect(await listSaved(db, { kind: 'article' })).toEqual([]);
 	});
 
-	it('looks up a YouTube video’s length when there’s a key, even with a title given', async () => {
+	it('takes a YouTube video’s title, image and length from the API, not its page', async () => {
 		const asked: string[] = [];
 		const api: Fetch = async (input) => {
 			asked.push(String(input));
-			return Response.json({ items: [{ contentDetails: { duration: 'PT4M5S' } }] });
+			return Response.json({
+				items: [
+					{
+						snippet: {
+							title: 'From the API',
+							thumbnails: { high: { url: 'https://i.ytimg.com/hq.jpg' } }
+						},
+						contentDetails: { duration: 'PT4M5S' }
+					}
+				]
+			});
 		};
 		const yt = 'https://youtu.be/xyz';
-		const row = await saveLink(db, yt, { title: 'A video' }, { fetcher: api, youtubeKey: 'k' });
-		expect(row.duration).toBe(245);
+		const row = await saveLink(db, yt, {}, { fetcher: api, youtubeKey: 'k' });
+		expect(row).toMatchObject({
+			title: 'From the API',
+			imageUrl: 'https://i.ytimg.com/hq.jpg',
+			duration: 245
+		});
 		expect(asked).toEqual([
-			'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=xyz&key=k'
+			'https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=xyz&key=k'
 		]);
 		await db.update(saved).set({ duration: null });
 		const again = await saveLink(db, yt, { title: 'A video' }, { fetcher: api, youtubeKey: 'k' });
@@ -69,6 +83,13 @@ describe('saveLink', () => {
 		const other = await saveLink(db, 'https://a.example/', { title: 'A' }, { fetcher: api });
 		expect(other.duration).toBeNull();
 		expect(asked).toHaveLength(2);
+	});
+
+	it('falls back to the page when the API has no such video', async () => {
+		const fetcher: Fetch = async (input) =>
+			String(input).includes('googleapis') ? Response.json({ items: [] }) : page(input);
+		const row = await saveLink(db, 'https://youtu.be/gone', {}, { fetcher, youtubeKey: 'k' });
+		expect(row).toMatchObject({ title: 'A page', duration: null });
 	});
 
 	const redirectsTo =

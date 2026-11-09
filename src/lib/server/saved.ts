@@ -66,30 +66,45 @@ export function isoSeconds(iso: string | undefined) {
 	return ((d * 24 + h) * 60 + min) * 60 + s || null;
 }
 
-/** A YouTube video's length in seconds from the Data API, or null if it can't be had. */
-export async function videoLength(fetcher: Fetch, id: string, key: string) {
+type Thumbs = Partial<Record<'maxres' | 'standard' | 'high' | 'default', { url: string }>>;
+
+/**
+ * A YouTube video's title, thumbnail and length (seconds) from the Data API, or
+ * null if it can't be had. Its page is no use: YouTube often refuses Workers.
+ */
+export async function videoInfo(fetcher: Fetch, id: string, key: string) {
 	try {
 		const res = await get(
 			fetcher,
-			`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${id}&key=${key}`,
+			`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${id}&key=${key}`,
 			{ accept: 'application/json' }
 		);
 		if (!res.ok) return null;
 		const { items } = (await res.json()) as {
-			items?: { contentDetails: { duration: string } }[];
+			items?: {
+				snippet?: { title?: string; thumbnails?: Thumbs };
+				contentDetails: { duration: string };
+			}[];
 		};
-		return isoSeconds(items?.[0]?.contentDetails.duration);
+		const video = items?.[0];
+		if (!video) return null;
+		const t = video.snippet?.thumbnails;
+		return {
+			title: video.snippet?.title?.trim() || null,
+			image: (t?.maxres ?? t?.standard ?? t?.high ?? t?.default)?.url ?? null,
+			duration: isoSeconds(video.contentDetails.duration)
+		};
 	} catch {
 		return null;
 	}
 }
 
 /**
- * Saves a link to Later, fetching its title and image from the page if no title
- * is given (a feed entry brings its own), at the link that fetch redirected to
- * if it's a better one (`landedAt`), and a YouTube video's length if there's
- * a key for the API. Saving one that's already there (or
- * archived) brings it back to the top.
+ * Saves a link to Later. A YouTube video's title, image and length come from
+ * the API if there's a key; otherwise the title and image come from the page
+ * (unless given: a feed entry brings its own), at the link that fetch
+ * redirected to if it's a better one (`landedAt`). Saving one that's already
+ * there (or archived) brings it back to the top.
  */
 export async function saveLink(
 	db: DB,
@@ -101,13 +116,14 @@ export async function saveLink(
 		youtubeKey
 	}: { now?: Date; fetcher?: Fetch; youtubeKey?: string } = {}
 ) {
-	const title = given.title?.trim();
+	const id = youtubeKey && youtubeId(url);
+	const video = id ? await videoInfo(fetcher, id, youtubeKey) : null;
+	const title = given.title?.trim() || video?.title;
 	const page = title
-		? { title, image: given.image ?? null, movedTo: null }
+		? { title, image: given.image ?? video?.image ?? null, movedTo: null }
 		: await fetchPage(fetcher, url);
 	const finalUrl = page.movedTo ?? url;
-	const video = youtubeKey && youtubeId(finalUrl);
-	const duration = video ? await videoLength(fetcher, video, youtubeKey) : null;
+	const duration = video?.duration ?? null;
 	const addedAt = now.toISOString();
 	const finalTitle = page.title || new URL(finalUrl).hostname;
 	const [row] = await db
