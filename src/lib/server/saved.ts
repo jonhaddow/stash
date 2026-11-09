@@ -116,14 +116,18 @@ export async function saveLink(
 		youtubeKey
 	}: { now?: Date; fetcher?: Fetch; youtubeKey?: string } = {}
 ) {
-	const id = youtubeKey && youtubeId(url);
-	const video = id ? await videoInfo(fetcher, id, youtubeKey) : null;
+	const lookUp = (link: string) => {
+		const id = youtubeKey && youtubeId(link);
+		return id ? videoInfo(fetcher, id, youtubeKey) : null;
+	};
+	const video = await lookUp(url);
 	const title = given.title?.trim() || video?.title;
 	const page = title
 		? { title, image: given.image ?? video?.image ?? null, movedTo: null }
 		: await fetchPage(fetcher, url);
 	const finalUrl = page.movedTo ?? url;
-	const duration = video?.duration ?? null;
+	// A link that redirected to a video (a newsletter's tracker) gets its length.
+	const duration = (video ?? (page.movedTo ? await lookUp(page.movedTo) : null))?.duration ?? null;
 	const addedAt = now.toISOString();
 	const finalTitle = page.title || new URL(finalUrl).hostname;
 	const [row] = await db
