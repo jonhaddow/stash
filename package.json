@@ -67,7 +67,7 @@
 	},
 	"dependencies": {
 		"@fontsource-variable/manrope": "^5.2.0",
-		"arctic": "^3.7.0"
+		"auth": "github:jonhaddow/auth"
 	},
 	"overrides": {
 		"runed": {

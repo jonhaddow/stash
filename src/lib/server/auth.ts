@@ -9,12 +9,6 @@ const SESSION_DAYS = 60;
 /** Sessions used within this many days of expiring are extended. */
 const RENEW_WITHIN_DAYS = 30;
 
-/**
- * Google returns every app's sign-in to this one address (~/code/auth), which
- * forwards it to /auth/callback on the subdomain that starts the state.
- */
-export const GOOGLE_REDIRECT_URI = 'https://auth.app.haddow.me/callback';
-
 export type SessionUser = Pick<User, 'id' | 'email' | 'name'>;
 
 async function sha256(text: string) {
