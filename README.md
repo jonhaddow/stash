@@ -8,7 +8,7 @@ Save links from the iOS share sheet to read later, and follow RSS, Atom, YouTube
 
 - [SvelteKit](https://svelte.dev) (Svelte 5) and TypeScript, as an installable PWA
 - [Cloudflare Workers](https://workers.cloudflare.com), with [D1](https://developers.cloudflare.com/d1/) (SQLite) through [Drizzle ORM](https://orm.drizzle.team)
-- Google sign-in ([Arctic](https://arcticjs.dev)) for an allowlist of users
+- Google sign-in (OAuth with PKCE, shared code in [`auth`](https://github.com/jonhaddow/auth)) for an allowlist of users
 - [Tailwind CSS](https://tailwindcss.com) and [shadcn-svelte](https://shadcn-svelte.com)
 - YouTube Data API and Reddit API, with feeds synced by a cron trigger and web push for the badge
 - [Vitest](https://vitest.dev) and [Playwright](https://playwright.dev) for tests
