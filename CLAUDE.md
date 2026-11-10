@@ -13,6 +13,7 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 - `/api/save` is the iOS Shortcut: `Authorization: Bearer <token>`, made in Settings, only its hash kept.
 - `/api/save` takes JSON only: SvelteKit's CSRF check refuses form and plain-text posts from outside the site.
 - Server code that fetches takes a `fetcher` argument, so tests pass a fake one (`feeds.spec.ts`).
+- Secrets: `GOOGLE_CLIENT_SECRET`, `CRON_SECRET` (the cron's call to `/sync`), `VAPID_PRIVATE_KEY`, and optionally `YOUTUBE_API_KEY` (channel search when adding a feed, saved videos' lengths) and `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` (a reddit.com/prefs/apps app; without it Reddit's public `.rss` mostly refuses Cloudflare).
 
 ## Review focus
 
