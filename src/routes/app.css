@@ -62,8 +62,20 @@
 		box-sizing: border-box;
 	}
 
+	/* The app fills the screen and never scrolls itself: the pages scroll in the
+	   layout's .scroll, and the tabs sit below it (above it on a laptop). A bar
+	   fixed to the bottom of a scrolling page drifts up the screen in iOS home-screen
+	   apps when the keyboard or a sheet leaves the viewport mis-sized. */
+	html,
+	body {
+		height: 100%;
+		overflow: hidden;
+	}
+
 	body {
 		margin: 0;
+		display: flex;
+		flex-direction: column;
 		/* Clear of the status bar in the home-screen app, as the other apps are. */
 		padding-top: env(safe-area-inset-top);
 		background: var(--bg);
@@ -89,7 +101,7 @@
 	.page {
 		max-width: 640px;
 		margin: 0 auto;
-		padding: 28px 16px calc(var(--tabs) + 44px + env(safe-area-inset-bottom));
+		padding: 28px 16px 44px;
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
@@ -103,10 +115,6 @@
 
 	/* Laptops: the tabs are along the top, and the column is wider. */
 	@media (min-width: 960px) {
-		body {
-			padding-top: 64px;
-		}
-
 		.page {
 			max-width: 832px;
 			padding: 48px 32px 64px;
