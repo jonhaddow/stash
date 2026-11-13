@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
-	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
+	import type { Snapshot } from '@sveltejs/kit';
+	import { afterNavigate, beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
 	import { page, updated } from '$app/state';
 	import PullToRefresh from '#lib/components/PullToRefresh.svelte';
 	import { setUnreadChange } from '#lib/unread.ts';
@@ -26,6 +27,20 @@
 			active: path.startsWith('/settings') || path === '/archive'
 		}
 	]);
+
+	// The pages scroll in here, not the window, so SvelteKit's own scroll handling
+	// doesn't reach them: back and forward return to where the page was left, and
+	// going somewhere new (or tapping a tab again) starts at the top.
+	let scroller = $state<HTMLElement>();
+	export const snapshot: Snapshot<number> = {
+		capture: () => scroller?.scrollTop ?? 0,
+		restore: (top) => scroller?.scrollTo(0, top)
+	};
+	afterNavigate(({ type, from, to }) => {
+		if (type === 'link' || (type === 'goto' && from?.url.href !== to?.url.href)) {
+			scroller?.scrollTo(0, 0);
+		}
+	});
 
 	// A new version was deployed: load it fully on the next tap.
 	beforeNavigate(({ willUnload, to }) => {
@@ -67,10 +82,12 @@
 
 <svelte:document onvisibilitychange={onVisible} />
 
-{@render children()}
+<div class="scroll" bind:this={scroller}>
+	{@render children()}
+</div>
 
 {#if data.user}
-	<PullToRefresh />
+	<PullToRefresh {scroller} />
 	<!-- Each tab's code loads straight away, so the first tap only waits for data. -->
 	<nav class="tabs" aria-label="Main" data-sveltekit-preload-code="eager">
 		{#each tabs as tab (tab.href)}
@@ -113,12 +130,15 @@
 {/if}
 
 <style>
-	/* Docked along the bottom, under a rule. */
+	.scroll {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+	}
+
+	/* Along the bottom, under a rule. */
 	nav {
-		position: fixed;
-		left: 0;
-		bottom: 0;
-		width: 100%;
+		flex: none;
 		height: calc(var(--tabs) + env(safe-area-inset-bottom));
 		padding-bottom: env(safe-area-inset-bottom);
 		background: var(--bg);
@@ -180,8 +200,7 @@
 	/* On a laptop: a masthead along the top, words only. */
 	@media (min-width: 960px) {
 		nav {
-			top: 0;
-			bottom: auto;
+			order: -1;
 			height: 64px;
 			/* In line with the page's column: 384px is half of .page's 832px, less its 32px padding. */
 			padding: 0 max(32px, calc(50% - 384px));

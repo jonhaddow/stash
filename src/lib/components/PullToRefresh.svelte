@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
+	let { scroller }: { scroller?: HTMLElement } = $props();
+
 	// Pulling down from the top of the page reloads its data, as in Safari (home-screen
 	// apps don't have it). A navigation to the same URL, so pages can reset what they hold.
 	const PULL = 70;
@@ -10,7 +12,7 @@
 	let refreshing = $state(false);
 
 	function ontouchstart(e: TouchEvent) {
-		if (refreshing || scrollY > 0 || e.touches.length > 1) return;
+		if (refreshing || (scroller?.scrollTop ?? 0) > 0 || e.touches.length > 1) return;
 		start = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 	}
 
