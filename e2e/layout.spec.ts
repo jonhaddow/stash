@@ -14,9 +14,12 @@ test('the tabs stay below the page, and back returns to where it was', async ({ 
 	expect(box.y + box.height).toBe(300);
 	expect((await scroller.boundingBox())!.height).toBe(box.y);
 
-	// How far depends on what other specs left unread.
-	const top = await scroller.evaluate((el) => (el.scrollTo(0, 150), el.scrollTop));
+	// The keys scroll it, without clicking in it first. How far depends on what
+	// other specs left unread.
+	await page.keyboard.press('End');
+	const top = await scroller.evaluate((el) => el.scrollHeight - el.clientHeight);
 	expect(top).toBeGreaterThan(0);
+	await expect(scroller).toHaveJSProperty('scrollTop', top);
 	await tabs.getByRole('link', { name: 'Later' }).click();
 	await expect(page).toHaveURL('/later');
 	await expect(scroller).toHaveJSProperty('scrollTop', 0);

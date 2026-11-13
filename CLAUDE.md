@@ -18,3 +18,5 @@ Jon's read-it-later app and feed reader, replacing Readkit (with Instapaper and 
 ## Review focus
 
 One person uses it. Workers CPU in the cron's feed parsing, feeds that differ from the parser's assumptions. Public routes: only `/login`, `/auth/*`, `/sync` and `/api/save`.
+
+- Pages scroll in the layout's `.scroll`, not the window (the tab bar is a flex item below it, so iOS can't strand it mid-screen). So SvelteKit's scroll handling doesn't apply: the layout keeps scroll positions itself, and tapping the iPhone status bar no longer jumps to the top (tapping the open tab does).

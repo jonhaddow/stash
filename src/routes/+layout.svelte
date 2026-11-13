@@ -1,7 +1,12 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
-	import type { Snapshot } from '@sveltejs/kit';
-	import { afterNavigate, beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
+	import {
+		afterNavigate,
+		beforeNavigate,
+		invalidateAll,
+		onNavigate,
+		snapshot
+	} from '$app/navigation';
 	import { page, updated } from '$app/state';
 	import PullToRefresh from '#lib/components/PullToRefresh.svelte';
 	import { setUnreadChange } from '#lib/unread.ts';
@@ -30,16 +35,19 @@
 
 	// The pages scroll in here, not the window, so SvelteKit's own scroll handling
 	// doesn't reach them: back and forward return to where the page was left, and
-	// going somewhere new (or tapping a tab again) starts at the top.
+	// going somewhere new (or tapping a tab again) starts at the top. It also takes
+	// the focus SvelteKit gives the body, so the keys (Space, arrows) scroll it.
 	let scroller = $state<HTMLElement>();
-	export const snapshot: Snapshot<number> = {
+	snapshot({
+		id: 'scroll',
 		capture: () => scroller?.scrollTop ?? 0,
-		restore: (top) => scroller?.scrollTo(0, top)
-	};
+		restore: (top: number) => scroller?.scrollTo(0, top)
+	});
 	afterNavigate(({ type, from, to }) => {
 		if (type === 'link' || (type === 'goto' && from?.url.href !== to?.url.href)) {
 			scroller?.scrollTo(0, 0);
 		}
+		if (document.activeElement === document.body) scroller?.focus({ preventScroll: true });
 	});
 
 	// A new version was deployed: load it fully on the next tap.
@@ -82,7 +90,7 @@
 
 <svelte:document onvisibilitychange={onVisible} />
 
-<div class="scroll" bind:this={scroller}>
+<div class="scroll" tabindex="-1" bind:this={scroller}>
 	{@render children()}
 </div>
 
@@ -134,6 +142,7 @@
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
+		outline: none;
 	}
 
 	/* Along the bottom, under a rule. */
