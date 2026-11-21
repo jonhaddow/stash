@@ -89,8 +89,9 @@
 	></iframe>
 	<div class="bar">
 		<p>{title}</p>
-		<Button variant="secondary" href={url} target="_blank" rel="noopener noreferrer">YouTube</Button
-		>
+		<Button variant="secondary" href={url} target="_blank" rel="noopener noreferrer">
+			YouTube
+		</Button>
 		<form method="dialog"><Button>Close</Button></form>
 	</div>
 </dialog>

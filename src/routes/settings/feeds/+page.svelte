@@ -111,8 +111,10 @@
 								name="pick"
 								value={r.url}
 								disabled={!!busy}
-								aria-label="Add {r.title}">Add</Button
+								aria-label="Add {r.title}"
 							>
+								Add
+							</Button>
 						</li>
 					{/each}
 				</ul>
@@ -132,8 +134,9 @@
 							<SyncStatus status={f.lastStatus} />
 							<span class="name">{f.title}</span>
 							<span class="muted when">
-								{#if f.lastStatus === 'error'}<span class="over">failed</span
-									>{:else if f.lastFetchedAt}{ago(f.lastFetchedAt)}{/if}
+								{#if f.lastStatus === 'error'}<span class="over">
+										failed
+									</span>{:else if f.lastFetchedAt}{ago(f.lastFetchedAt)}{/if}
 							</span>
 						</a>
 					</li>

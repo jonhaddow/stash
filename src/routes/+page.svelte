@@ -29,8 +29,10 @@
 			class:on={data.unreadOnly}
 			href={withParam('all', data.unreadOnly ? '1' : null)}
 			aria-current={data.unreadOnly ? 'true' : undefined}
-			data-sveltekit-replacestate>Unread</a
+			data-sveltekit-replacestate
 		>
+			Unread
+		</a>
 	</div>
 
 	<ItemList items={data.items} order={data.order} more={data.more}>

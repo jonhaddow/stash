@@ -25,7 +25,9 @@
 		<a
 			href={href(o.value)}
 			aria-current={kind === o.value ? 'page' : undefined}
-			data-sveltekit-replacestate>{o.label}</a
+			data-sveltekit-replacestate
 		>
+			{o.label}
+		</a>
 	{/each}
 </nav>

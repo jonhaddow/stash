@@ -30,18 +30,19 @@
 		<p class="muted url">{url}</p>
 		<div class="chips">
 			{#each SORTS as s (s)}
-				<label class="chip"><input type="radio" name="sort" value={s} bind:group={sort} />{s}</label
-				>
+				<label class="chip">
+					<input type="radio" name="sort" value={s} bind:group={sort} />{s}
+				</label>
 			{/each}
 		</div>
 		{#if sort === 'top'}
 			<div class="chips">
 				{#each WINDOWS as w (w)}
-					<label class="chip"
-						><input type="radio" name="t" value={w} bind:group={t} />{w === 'all'
+					<label class="chip">
+						<input type="radio" name="t" value={w} bind:group={t} />{w === 'all'
 							? 'all time'
-							: `this ${w}`}</label
-					>
+							: `this ${w}`}
+					</label>
 				{/each}
 			</div>
 		{/if}

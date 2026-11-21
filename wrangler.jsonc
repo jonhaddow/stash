@@ -3,10 +3,8 @@
 	"name": "stash",
 	"compatibility_date": "2026-10-03",
 	"compatibility_flags": ["nodejs_als"],
-	"main": ".svelte-kit/cloudflare/_worker.js",
 	"assets": {
-		"binding": "ASSETS",
-		"directory": ".svelte-kit/cloudflare"
+		"binding": "ASSETS"
 	},
 	// Only served on stash.app.haddow.me (sign-in sends people back there).
 	"workers_dev": false,

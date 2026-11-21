@@ -98,9 +98,9 @@
 				<p class="muted">You made a key on {formatDateTime(data.tokenCreatedAt)}.</p>
 			{/if}
 			<form method="POST" action="?/token" use:enhance>
-				<Button variant="outline" class="w-full"
-					>{data.tokenCreatedAt ? 'Make a new key' : 'Make a key'}</Button
-				>
+				<Button variant="outline" class="w-full">
+					{data.tokenCreatedAt ? 'Make a new key' : 'Make a key'}
+				</Button>
 			</form>
 		{/if}
 	</section>
@@ -110,8 +110,10 @@
 		<p class="muted">
 			Saves the page you’re reading on a computer. Copy it into a bookmark’s URL, or drag <a
 				href={bookmarklet}
-				onclick={(e) => e.preventDefault()}>Save to Stash</a
-			> there.
+				onclick={(e) => e.preventDefault()}
+			>
+				Save to Stash
+			</a> there.
 		</p>
 		<Button variant="outline" class="w-full" onclick={copy}>{copied ? 'Copied' : 'Copy'}</Button>
 	</section>

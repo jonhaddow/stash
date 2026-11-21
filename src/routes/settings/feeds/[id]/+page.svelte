@@ -53,8 +53,10 @@
 						<span class="at">{formatDateTime(l.at)}</span>
 						<span class="what">
 							{STATUS[l.status]}{#if l.itemsAdded}, +{l.itemsAdded}{/if}{#if l.error}&nbsp;<span
-									class="muted">· {l.error}</span
-								>{/if}
+									class="muted"
+								>
+									· {l.error}
+								</span>{/if}
 						</span>
 						<span class="muted ms">{(l.ms / 1000).toFixed(1)}s</span>
 					</li>
