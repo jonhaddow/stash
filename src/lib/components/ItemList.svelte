@@ -115,9 +115,9 @@
 		{/each}
 	</ul>
 	{#if more}
-		<Button variant="secondary" class="self-center" href={withParam('from', more)}
-			>{order === 'oldest' ? 'Newer' : 'Older'}</Button
-		>
+		<Button variant="secondary" class="self-center" href={withParam('from', more)}>
+			{order === 'oldest' ? 'Newer' : 'Older'}
+		</Button>
 	{/if}
 {:else}
 	{@render empty()}

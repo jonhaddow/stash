@@ -32,8 +32,10 @@
 					fill="none"
 					stroke="currentColor"
 					stroke-width="2.5"
-					aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg
+					aria-hidden="true"
 				>
+					<path d="M20 6 9 17l-5-5" />
+				</svg>
 			{/if}
 		</span>
 		<!-- eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- bits-ui's snippet type doesn't resolve -->
